@@ -13,6 +13,77 @@
   const regularTemplates = templates.filter((template) => template.id !== "convection");
   const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
+  const ORBIT_GEOMETRY = Object.freeze({
+    width: 840,
+    height: 520,
+    centerX: 420,
+    centerY: 260,
+    eraRadius: 82,
+    safeGap: 16,
+    maxVisualBodyRadius: 34,
+    labelGap: 14,
+    sol: Object.freeze({ radiusX: 310, radiusY: 172, maxRadialOffset: 34 }),
+    yol: Object.freeze({ radiusX: 240, radiusY: 158, maxRadialOffset: 30 }),
+  });
+
+  const HORIZON_GEOMETRY = Object.freeze({
+    width: 840,
+    height: 280,
+    centerX: 420,
+    horizonY: 176,
+    usableHalfWidth: 300,
+    maxSkyHeight: 112,
+  });
+
+  const HORIZON_DIRECTIONS = Object.freeze({
+    north: Object.freeze({
+      id: "north",
+      abbreviation: "N",
+      name: "Norden",
+      baseAngle: -90,
+      vector: Object.freeze({ x: 0, y: -1 }),
+      leftLabel: "Westen",
+      rightLabel: "Osten",
+    }),
+    east: Object.freeze({
+      id: "east",
+      abbreviation: "O",
+      name: "Osten",
+      baseAngle: 0,
+      vector: Object.freeze({ x: 1, y: 0 }),
+      leftLabel: "Norden",
+      rightLabel: "Süden",
+    }),
+    south: Object.freeze({
+      id: "south",
+      abbreviation: "S",
+      name: "Süden",
+      baseAngle: 90,
+      vector: Object.freeze({ x: 0, y: 1 }),
+      leftLabel: "Osten",
+      rightLabel: "Westen",
+    }),
+    west: Object.freeze({
+      id: "west",
+      abbreviation: "W",
+      name: "Westen",
+      baseAngle: 180,
+      vector: Object.freeze({ x: -1, y: 0 }),
+      leftLabel: "Süden",
+      rightLabel: "Norden",
+    }),
+  });
+
+  const HORIZON_DIRECTION_ORDER = Object.freeze(["north", "east", "south", "west"]);
+  const HORIZON_HEIGHT_SCALE = Object.freeze({
+    hold: 0.46,
+    horizon: 0.22,
+    "reverse-horizon": 0.22,
+    parabola: 1,
+    "fixed-orbit": 0.72,
+    convection: 0,
+  });
+
   const elements = {
     phaseSelect: document.querySelector("#phase-select"),
     jumpPhase: document.querySelector("#jump-phase"),
@@ -32,16 +103,41 @@
     stateCategoryIconUse: document.querySelector("#state-category-icon-use"),
     orbitView: document.querySelector("#orbit-view"),
     orbitDescription: document.querySelector("#orbit-description"),
+    orbitSol: document.querySelector(".orbit-sol"),
+    orbitYol: document.querySelector(".orbit-yol"),
     solBody: document.querySelector("#sol-body"),
     yolBody: document.querySelector("#yol-body"),
     solDisc: document.querySelector("#sol-disc"),
     yolDisc: document.querySelector("#yol-disc"),
     solHalo: document.querySelector("#sol-halo"),
     yolHalo: document.querySelector("#yol-halo"),
-    eraMeridian: document.querySelector("#era-meridian"),
+    solLabel: document.querySelector("#sol-label"),
+    yolLabel: document.querySelector("#yol-label"),
+    eraSurface: document.querySelector("#era-surface"),
+    eraFrontHalf: document.querySelector("#era-front-half"),
+    eraHorizonCut: document.querySelector("#era-horizon-cut"),
+    eraViewArrow: document.querySelector("#era-view-arrow"),
+    eraViewLetter: document.querySelector("#era-view-letter"),
     directionPathSol: document.querySelector("#direction-path-sol"),
     directionPathYol: document.querySelector("#direction-path-yol"),
     convectionMessage: document.querySelector("#convection-message"),
+    horizonDirectionGroup: document.querySelector("#horizon-direction-group"),
+    horizonDirectionButtons: Object.freeze({
+      north: document.querySelector("#horizon-direction-north"),
+      east: document.querySelector("#horizon-direction-east"),
+      south: document.querySelector("#horizon-direction-south"),
+      west: document.querySelector("#horizon-direction-west"),
+    }),
+    horizonTitle: document.querySelector("#horizon-title"),
+    horizonSvgTitle: document.querySelector("#horizon-svg-title"),
+    horizonView: document.querySelector("#horizon-view"),
+    horizonDescription: document.querySelector("#horizon-description"),
+    horizonSolBody: document.querySelector("#horizon-sol-body"),
+    horizonYolBody: document.querySelector("#horizon-yol-body"),
+    horizonLeftLabel: document.querySelector("#horizon-left-label"),
+    horizonCenterLabel: document.querySelector("#horizon-center-label"),
+    horizonRightLabel: document.querySelector("#horizon-right-label"),
+    horizonConvectionField: document.querySelector("#horizon-convection-field"),
     eraTime: document.querySelector("#era-time"),
     solIntensity: document.querySelector("#sol-intensity"),
     yolIntensity: document.querySelector("#yol-intensity"),
@@ -89,7 +185,10 @@
     lastRenderedSegment: -1,
     reducedMotion: reducedMotionQuery.matches,
     theme: document.documentElement?.dataset?.theme === "light" ? "light" : "dark",
+    horizonDirection: readStoredHorizonDirection(),
   };
+
+  let lastRenderFrame = null;
 
   const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
@@ -176,6 +275,154 @@
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
+  }
+
+  function normalizeDegrees(value) {
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) return 0;
+    return ((numericValue % 360) + 360) % 360;
+  }
+
+  function readStoredHorizonDirection() {
+    try {
+      const storedDirection = localStorage.getItem("era-horizon-direction");
+      return HORIZON_DIRECTIONS[storedDirection] ? storedDirection : "north";
+    } catch (_) {
+      return "north";
+    }
+  }
+
+  function getEraRotationDegrees(ms, motion) {
+    const safeMs = Number.isFinite(Number(ms)) ? Number(ms) : 0;
+    const sampledMs = state.reducedMotion ? Math.round(safeMs / 1000) * 1000 : safeMs;
+    const degreesPerSecond = 2.8;
+    return normalizeDegrees((sampledMs / 1000) * degreesPerSecond);
+  }
+
+  function getIntensityTier(intensity) {
+    const safeIntensity = Number.isFinite(Number(intensity)) ? Number(intensity) : 1;
+    return clamp(Math.ceil(clamp(safeIntensity, 1, 10) / 2), 1, 5);
+  }
+
+  function getBodyVisualRadius(intensity, bodyName) {
+    if (intensity === null || intensity === undefined) return 0;
+    const tier = getIntensityTier(intensity);
+    const baseRadius = bodyName === "yol" ? 13 : 14;
+    return Math.min(ORBIT_GEOMETRY.maxVisualBodyRadius, baseRadius + tier * 4);
+  }
+
+  function ensureOrbitClearance(point, visualRadius) {
+    const requestedRadius = Number(visualRadius);
+    const bodyRadius = clamp(
+      Number.isFinite(requestedRadius) ? requestedRadius : 0,
+      0,
+      ORBIT_GEOMETRY.maxVisualBodyRadius,
+    );
+    const edgePadding = bodyRadius + ORBIT_GEOMETRY.labelGap;
+    const minimumDistance = ORBIT_GEOMETRY.eraRadius + bodyRadius + ORBIT_GEOMETRY.safeGap;
+    let x = Number(point?.x);
+    let y = Number(point?.y);
+
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      x = ORBIT_GEOMETRY.centerX + minimumDistance;
+      y = ORBIT_GEOMETRY.centerY;
+    }
+
+    function pushOutsideEra() {
+      const deltaX = x - ORBIT_GEOMETRY.centerX;
+      const deltaY = y - ORBIT_GEOMETRY.centerY;
+      const distance = Math.hypot(deltaX, deltaY);
+      if (distance >= minimumDistance) return;
+      const unitX = distance > 0.000001 ? deltaX / distance : 1;
+      const unitY = distance > 0.000001 ? deltaY / distance : 0;
+      x = ORBIT_GEOMETRY.centerX + unitX * minimumDistance;
+      y = ORBIT_GEOMETRY.centerY + unitY * minimumDistance;
+    }
+
+    pushOutsideEra();
+    x = clamp(x, edgePadding, ORBIT_GEOMETRY.width - edgePadding);
+    y = clamp(y, edgePadding, ORBIT_GEOMETRY.height - edgePadding);
+    pushOutsideEra();
+    x = clamp(x, edgePadding, ORBIT_GEOMETRY.width - edgePadding);
+    y = clamp(y, edgePadding, ORBIT_GEOMETRY.height - edgePadding);
+
+    return { x, y };
+  }
+
+  function getOrbitPoint(snapshot, bodyName) {
+    const orbit = ORBIT_GEOMETRY[bodyName];
+    const bodySnapshot = snapshot?.[bodyName];
+    if (!orbit || !bodySnapshot) {
+      return ensureOrbitClearance(
+        { x: ORBIT_GEOMETRY.centerX, y: ORBIT_GEOMETRY.centerY },
+        ORBIT_GEOMETRY.maxVisualBodyRadius,
+      );
+    }
+
+    const radians = (normalizeDegrees(bodySnapshot.angle) * Math.PI) / 180;
+    const baseX = orbit.radiusX * Math.cos(radians);
+    const baseY = orbit.radiusY * Math.sin(radians);
+    const baseDistance = Math.hypot(baseX, baseY) || 1;
+    const requestedOffset = Number(bodySnapshot.radialOffset);
+    const radialOffset = clamp(
+      Number.isFinite(requestedOffset) ? requestedOffset : 0,
+      -orbit.maxRadialOffset,
+      orbit.maxRadialOffset,
+    );
+    const point = {
+      x: ORBIT_GEOMETRY.centerX + baseX + (baseX / baseDistance) * radialOffset,
+      y: ORBIT_GEOMETRY.centerY + baseY + (baseY / baseDistance) * radialOffset,
+    };
+    return ensureOrbitClearance(
+      point,
+      getBodyVisualRadius(bodySnapshot.intensity, bodyName),
+    );
+  }
+
+  function getViewBasis(directionId, eraRotationDegrees) {
+    const direction = HORIZON_DIRECTIONS[directionId] || HORIZON_DIRECTIONS.north;
+    const angleDegrees = normalizeDegrees(direction.baseAngle + normalizeDegrees(eraRotationDegrees));
+    const radians = (angleDegrees * Math.PI) / 180;
+    const forward = Object.freeze({ x: Math.cos(radians), y: Math.sin(radians) });
+    const right = Object.freeze({ x: -forward.y, y: forward.x });
+    return Object.freeze({
+      directionId: direction.id,
+      direction,
+      angleDegrees,
+      forward,
+      right,
+      viewForward: forward,
+      viewRight: right,
+    });
+  }
+
+  function projectOrbitPointToHorizon(point, viewBasis, motion) {
+    const basis = viewBasis || getViewBasis("north", 0);
+    const deltaX = Number(point?.x) - ORBIT_GEOMETRY.centerX;
+    const deltaY = Number(point?.y) - ORBIT_GEOMETRY.centerY;
+    const distance = Math.hypot(deltaX, deltaY);
+    const unitX = distance > 0.000001 && Number.isFinite(distance) ? deltaX / distance : 0;
+    const unitY = distance > 0.000001 && Number.isFinite(distance) ? deltaY / distance : -1;
+    const forwardAmount = clamp(unitX * basis.forward.x + unitY * basis.forward.y, -1, 1);
+    const rightAmount = clamp(unitX * basis.right.x + unitY * basis.right.y, -1, 1);
+    const heightScale = HORIZON_HEIGHT_SCALE[motion] ?? 0.76;
+    const visible = motion !== "convection" && forwardAmount >= -0.000001;
+    const height =
+      Math.pow(Math.max(0, forwardAmount), 0.8) * HORIZON_GEOMETRY.maxSkyHeight * heightScale;
+
+    return Object.freeze({
+      x: clamp(
+        HORIZON_GEOMETRY.centerX + rightAmount * HORIZON_GEOMETRY.usableHalfWidth,
+        0,
+        HORIZON_GEOMETRY.width,
+      ),
+      y: clamp(HORIZON_GEOMETRY.horizonY - height, 0, HORIZON_GEOMETRY.height),
+      visible,
+      forward: forwardAmount,
+      right: rightAmount,
+      height,
+      heightScale,
+    });
   }
 
   function shuffle(values, random) {
@@ -410,6 +657,7 @@
           parameters.frequency *
           Math.cos(parameters.frequency * localSeconds + parameters.phase);
       const speed = clamp(Math.abs(derivative), parameters.minSpeed, parameters.maxSpeed);
+      const directionSign = Math.abs(derivative) < 0.0001 ? 0 : derivative > 0 ? 1 : -1;
       const intensity = bodyConfig.intensity
         ? clamp(
             bodyConfig.intensity[0] +
@@ -427,7 +675,15 @@
       const radialOffset =
         bodyConfig.radialAmplitude *
         Math.sin(parameters.radialPhase + positionProgress * Math.PI * 2);
-      return { angle, speed, intensity, radialOffset, visible: bodyConfig.visible };
+      return {
+        angle,
+        angularVelocity: derivative,
+        directionSign,
+        speed,
+        intensity,
+        radialOffset,
+        visible: bodyConfig.visible,
+      };
     }
 
     return {
@@ -436,6 +692,7 @@
       template,
       progress,
       cycleUm,
+      positionMs,
       sol: bodySnapshot("sol"),
       yol: bodySnapshot("yol"),
     };
@@ -464,34 +721,342 @@
     return `${segment.umStart.toLocaleString("de-DE")}–${segment.umEnd.toLocaleString("de-DE")} Um · ${duration.toLocaleString("de-DE")} Um`;
   }
 
-  function bodyPoint(angleDegrees, radiusX, radiusY, radialOffset) {
-    const radians = (angleDegrees * Math.PI) / 180;
-    return {
-      x: 420 + (radiusX + radialOffset) * Math.cos(radians),
-      y: 268 + (radiusY + radialOffset * 0.35) * Math.sin(radians),
-    };
+  function setBodyElementState(element, bodySnapshot, bodyName, point, visible) {
+    if (!element) return;
+    const intensityTier = getIntensityTier(bodySnapshot.intensity);
+    element.setAttribute(
+      "transform",
+      `translate(${Math.round(point.x)} ${Math.round(point.y)})`,
+    );
+    element.setAttribute("data-intensity-tier", String(intensityTier));
+    element.setAttribute("data-source-angle", normalizeDegrees(bodySnapshot.angle).toFixed(3));
+    element.setAttribute("data-direction-sign", String(bodySnapshot.directionSign));
+    element.setAttribute("data-world-x", point.x.toFixed(3));
+    element.setAttribute("data-world-y", point.y.toFixed(3));
+    element.setAttribute(
+      "data-visual-radius",
+      getBodyVisualRadius(bodySnapshot.intensity, bodyName).toFixed(3),
+    );
+    element.setAttribute("aria-hidden", String(!visible));
+    element.style.opacity = visible ? "1" : "0";
+    element.style.visibility = visible ? "visible" : "hidden";
   }
 
-  function verticalScaleFor(motion) {
-    if (motion === "horizon" || motion === "reverse-horizon") return 0.46;
-    if (motion === "parabola") return 1.12;
-    return 1;
+  function positionOrbitLabel(label, point, bodySnapshot, bodyName) {
+    if (!label) return;
+    const deltaX = point.x - ORBIT_GEOMETRY.centerX;
+    const deltaY = point.y - ORBIT_GEOMETRY.centerY;
+    const distance = Math.hypot(deltaX, deltaY) || 1;
+    const unitX = deltaX / distance;
+    const unitY = deltaY / distance;
+    const offset =
+      getBodyVisualRadius(bodySnapshot.intensity, bodyName) + ORBIT_GEOMETRY.labelGap;
+    label.setAttribute("x", String(Math.round(unitX * offset)));
+    label.setAttribute("y", String(Math.round(unitY * offset)));
+    label.setAttribute("text-anchor", unitX > 0.34 ? "start" : unitX < -0.34 ? "end" : "middle");
+    label.setAttribute(
+      "dominant-baseline",
+      unitY > 0.34 ? "hanging" : unitY < -0.34 ? "auto" : "middle",
+    );
   }
 
-  function updateBodyElement(element, disc, halo, snapshot, bodyName, motion) {
-    const radiusX = bodyName === "sol" ? 300 : 244;
-    const baseRadiusY = bodyName === "sol" ? 178 : 142;
-    const radiusY = baseRadiusY * verticalScaleFor(motion);
-    const point = bodyPoint(snapshot.angle, radiusX, radiusY, snapshot.radialOffset);
-    element.setAttribute("transform", `translate(${point.x.toFixed(2)} ${point.y.toFixed(2)})`);
-    element.style.opacity = snapshot.visible ? "1" : "0";
-    if (snapshot.intensity !== null) {
-      const base = bodyName === "sol" ? 10.5 : 9.5;
-      const radius = base + snapshot.intensity * 0.75;
-      const haloRadius = radius + 11 + snapshot.intensity * 1.15;
-      disc.setAttribute("r", radius.toFixed(2));
-      halo.setAttribute("r", haloRadius.toFixed(2));
-      halo.style.opacity = String(0.08 + snapshot.intensity * 0.018);
+  function buildBlockArrowPath(bodyName, directionSign) {
+    if (!directionSign) return "";
+    const orbit = ORBIT_GEOMETRY[bodyName];
+    if (!orbit) return "";
+    const arrowAngles = bodyName === "sol" ? [28, 148, 268] : [78, 198, 318];
+
+    return arrowAngles
+      .map((angleDegrees) => {
+        const radians = (angleDegrees * Math.PI) / 180;
+        const centerX = ORBIT_GEOMETRY.centerX + orbit.radiusX * Math.cos(radians);
+        const centerY = ORBIT_GEOMETRY.centerY + orbit.radiusY * Math.sin(radians);
+        const tangentX = -orbit.radiusX * Math.sin(radians) * directionSign;
+        const tangentY = orbit.radiusY * Math.cos(radians) * directionSign;
+        const tangentLength = Math.hypot(tangentX, tangentY) || 1;
+        const unitX = tangentX / tangentLength;
+        const unitY = tangentY / tangentLength;
+        const normalX = -unitY;
+        const normalY = unitX;
+        const pointAt = (along, across) =>
+          `${Math.round(centerX + unitX * along + normalX * across)} ${Math.round(
+            centerY + unitY * along + normalY * across,
+          )}`;
+        return [
+          `M ${pointAt(11, 0)}`,
+          `L ${pointAt(2, 7)}`,
+          `L ${pointAt(2, 3)}`,
+          `L ${pointAt(-10, 3)}`,
+          `L ${pointAt(-10, -3)}`,
+          `L ${pointAt(2, -3)}`,
+          `L ${pointAt(2, -7)}`,
+          "Z",
+        ].join(" ");
+      })
+      .join(" ");
+  }
+
+  function createFrameProjection(point, viewBasis, snapshot, bodyName) {
+    const projection = projectOrbitPointToHorizon(point, viewBasis, snapshot.template.motion);
+    return Object.freeze({
+      ...projection,
+      visible: projection.visible && snapshot[bodyName].visible,
+    });
+  }
+
+  function createRenderFrame(snapshot) {
+    const worldPoints = Object.freeze({
+      sol: Object.freeze(getOrbitPoint(snapshot, "sol")),
+      yol: Object.freeze(getOrbitPoint(snapshot, "yol")),
+    });
+    const eraRotationDegrees = getEraRotationDegrees(snapshot.ms, snapshot.template.motion);
+    const viewBasis = getViewBasis(state.horizonDirection, eraRotationDegrees);
+    const horizonProjection = Object.freeze({
+      sol: createFrameProjection(worldPoints.sol, viewBasis, snapshot, "sol"),
+      yol: createFrameProjection(worldPoints.yol, viewBasis, snapshot, "yol"),
+    });
+    return Object.freeze({
+      snapshot,
+      worldPoints,
+      eraRotationDegrees,
+      viewBasis,
+      horizonProjection,
+    });
+  }
+
+  function reprojectRenderFrame(frame) {
+    const viewBasis = getViewBasis(state.horizonDirection, frame.eraRotationDegrees);
+    return Object.freeze({
+      snapshot: frame.snapshot,
+      worldPoints: frame.worldPoints,
+      eraRotationDegrees: frame.eraRotationDegrees,
+      viewBasis,
+      horizonProjection: Object.freeze({
+        sol: createFrameProjection(frame.worldPoints.sol, viewBasis, frame.snapshot, "sol"),
+        yol: createFrameProjection(frame.worldPoints.yol, viewBasis, frame.snapshot, "yol"),
+      }),
+    });
+  }
+
+  function updateDirectionControls() {
+    const activeDirection = HORIZON_DIRECTIONS[state.horizonDirection];
+    if (elements.horizonDirectionGroup) {
+      elements.horizonDirectionGroup.setAttribute("role", "radiogroup");
+      elements.horizonDirectionGroup.setAttribute(
+        "aria-label",
+        "Blickrichtung für den Horizontverlauf",
+      );
+    }
+    for (const directionId of HORIZON_DIRECTION_ORDER) {
+      const button = elements.horizonDirectionButtons[directionId];
+      if (!button) continue;
+      const direction = HORIZON_DIRECTIONS[directionId];
+      const active = directionId === state.horizonDirection;
+      button.setAttribute("role", "radio");
+      button.setAttribute("aria-checked", String(active));
+      button.setAttribute("aria-pressed", String(active));
+      button.setAttribute("aria-label", `Blick nach ${direction.name}`);
+      button.setAttribute("tabindex", active ? "0" : "-1");
+      button.classList.toggle("is-active", active);
+    }
+    if (elements.horizonTitle) {
+      elements.horizonTitle.textContent = `Horizontverlauf · Blick nach ${activeDirection.name}`;
+    }
+    if (elements.horizonSvgTitle) {
+      elements.horizonSvgTitle.textContent = `Horizontverlauf mit Blick nach ${activeDirection.name}`;
+    }
+    if (elements.horizonLeftLabel) {
+      elements.horizonLeftLabel.textContent = activeDirection.leftLabel;
+    }
+    if (elements.horizonCenterLabel) {
+      elements.horizonCenterLabel.textContent = `${activeDirection.abbreviation} · ${activeDirection.name}`;
+    }
+    if (elements.horizonRightLabel) {
+      elements.horizonRightLabel.textContent = activeDirection.rightLabel;
+    }
+  }
+
+  function updateEraOrientation(frame) {
+    const { forward, right } = frame.viewBasis;
+    const centerX = ORBIT_GEOMETRY.centerX;
+    const centerY = ORBIT_GEOMETRY.centerY;
+    const eraRadius = ORBIT_GEOMETRY.eraRadius;
+    if (elements.eraSurface) {
+      elements.eraSurface.setAttribute(
+        "transform",
+        `rotate(${frame.eraRotationDegrees.toFixed(3)} ${centerX} ${centerY})`,
+      );
+      elements.eraSurface.setAttribute(
+        "data-era-rotation",
+        frame.eraRotationDegrees.toFixed(3),
+      );
+    }
+    if (elements.eraFrontHalf) {
+      elements.eraFrontHalf.setAttribute(
+        "d",
+        `M ${centerX - eraRadius} ${centerY} A ${eraRadius} ${eraRadius} 0 0 1 ${
+          centerX + eraRadius
+        } ${centerY} L ${centerX - eraRadius} ${centerY} Z`,
+      );
+      elements.eraFrontHalf.setAttribute(
+        "transform",
+        `rotate(${(frame.viewBasis.angleDegrees + 90).toFixed(3)} ${centerX} ${centerY})`,
+      );
+    }
+    const cutX1 = centerX - right.x * eraRadius;
+    const cutY1 = centerY - right.y * eraRadius;
+    const cutX2 = centerX + right.x * eraRadius;
+    const cutY2 = centerY + right.y * eraRadius;
+    if (elements.eraHorizonCut) {
+      elements.eraHorizonCut.setAttribute("x1", String(Math.round(cutX1)));
+      elements.eraHorizonCut.setAttribute("y1", String(Math.round(cutY1)));
+      elements.eraHorizonCut.setAttribute("x2", String(Math.round(cutX2)));
+      elements.eraHorizonCut.setAttribute("y2", String(Math.round(cutY2)));
+      elements.eraHorizonCut.setAttribute(
+        "d",
+        `M ${Math.round(cutX1)} ${Math.round(cutY1)} L ${Math.round(cutX2)} ${Math.round(
+          cutY2,
+        )}`,
+      );
+    }
+    if (elements.eraViewArrow) {
+      const arrowPath = elements.eraViewArrow.querySelector?.("path") || elements.eraViewArrow;
+      const startX = centerX + forward.x * 16;
+      const startY = centerY + forward.y * 16;
+      const tipX = centerX + forward.x * (eraRadius - 8);
+      const tipY = centerY + forward.y * (eraRadius - 8);
+      const neckX = tipX - forward.x * 14;
+      const neckY = tipY - forward.y * 14;
+      const side = 7;
+      arrowPath.setAttribute(
+        "d",
+        [
+          `M ${Math.round(startX - right.x * 3)} ${Math.round(startY - right.y * 3)}`,
+          `L ${Math.round(neckX - right.x * 3)} ${Math.round(neckY - right.y * 3)}`,
+          `L ${Math.round(neckX - right.x * side)} ${Math.round(neckY - right.y * side)}`,
+          `L ${Math.round(tipX)} ${Math.round(tipY)}`,
+          `L ${Math.round(neckX + right.x * side)} ${Math.round(neckY + right.y * side)}`,
+          `L ${Math.round(neckX + right.x * 3)} ${Math.round(neckY + right.y * 3)}`,
+          `L ${Math.round(startX + right.x * 3)} ${Math.round(startY + right.y * 3)}`,
+          "Z",
+        ].join(" "),
+      );
+    }
+    if (elements.eraViewLetter) {
+      const direction = HORIZON_DIRECTIONS[state.horizonDirection];
+      elements.eraViewLetter.textContent = direction.abbreviation;
+      elements.eraViewLetter.setAttribute(
+        "x",
+        String(Math.round(centerX + forward.x * (eraRadius - 21))),
+      );
+      elements.eraViewLetter.setAttribute(
+        "y",
+        String(Math.round(centerY + forward.y * (eraRadius - 21))),
+      );
+    }
+  }
+
+  function updateOrbitGeometry(frame) {
+    const { snapshot, worldPoints } = frame;
+    const isConvection = snapshot.template.motion === "convection";
+    if (elements.orbitSol) {
+      elements.orbitSol.setAttribute("cx", String(ORBIT_GEOMETRY.centerX));
+      elements.orbitSol.setAttribute("cy", String(ORBIT_GEOMETRY.centerY));
+      elements.orbitSol.setAttribute("rx", String(ORBIT_GEOMETRY.sol.radiusX));
+      elements.orbitSol.setAttribute("ry", String(ORBIT_GEOMETRY.sol.radiusY));
+    }
+    if (elements.orbitYol) {
+      elements.orbitYol.setAttribute("cx", String(ORBIT_GEOMETRY.centerX));
+      elements.orbitYol.setAttribute("cy", String(ORBIT_GEOMETRY.centerY));
+      elements.orbitYol.setAttribute("rx", String(ORBIT_GEOMETRY.yol.radiusX));
+      elements.orbitYol.setAttribute("ry", String(ORBIT_GEOMETRY.yol.radiusY));
+    }
+    setBodyElementState(
+      elements.solBody,
+      snapshot.sol,
+      "sol",
+      worldPoints.sol,
+      snapshot.sol.visible && !isConvection,
+    );
+    setBodyElementState(
+      elements.yolBody,
+      snapshot.yol,
+      "yol",
+      worldPoints.yol,
+      snapshot.yol.visible && !isConvection,
+    );
+    positionOrbitLabel(elements.solLabel, worldPoints.sol, snapshot.sol, "sol");
+    positionOrbitLabel(elements.yolLabel, worldPoints.yol, snapshot.yol, "yol");
+    if (elements.directionPathSol) {
+      elements.directionPathSol.setAttribute(
+        "d",
+        isConvection ? "" : buildBlockArrowPath("sol", snapshot.sol.directionSign),
+      );
+      elements.directionPathSol.setAttribute("data-direction-sign", String(snapshot.sol.directionSign));
+    }
+    if (elements.directionPathYol) {
+      elements.directionPathYol.setAttribute(
+        "d",
+        isConvection ? "" : buildBlockArrowPath("yol", snapshot.yol.directionSign),
+      );
+      elements.directionPathYol.setAttribute("data-direction-sign", String(snapshot.yol.directionSign));
+    }
+    elements.orbitView.classList.toggle("is-convection", isConvection);
+    elements.convectionMessage.hidden = !isConvection;
+    elements.orbitDescription.textContent = isConvection
+      ? "Nordpol-Draufsicht während der Konvektion: Sol und Yol sind nicht sichtbar; ferne Splitterwelten treten hervor."
+      : `${snapshot.template.label}: vollständige schematische Orbits aus der Nordpol-Draufsicht. Blickpfeil und Schnittlinie markieren die gewählte Horizontprojektion.`;
+  }
+
+  function updateHorizonGeometry(frame) {
+    const { snapshot, worldPoints, horizonProjection } = frame;
+    const isConvection = snapshot.template.motion === "convection";
+    const solVisible = snapshot.sol.visible && horizonProjection.sol.visible && !isConvection;
+    const yolVisible = snapshot.yol.visible && horizonProjection.yol.visible && !isConvection;
+    setBodyElementState(
+      elements.horizonSolBody,
+      snapshot.sol,
+      "sol",
+      horizonProjection.sol,
+      solVisible,
+    );
+    setBodyElementState(
+      elements.horizonYolBody,
+      snapshot.yol,
+      "yol",
+      horizonProjection.yol,
+      yolVisible,
+    );
+    if (elements.horizonSolBody) {
+      elements.horizonSolBody.setAttribute("data-world-x", worldPoints.sol.x.toFixed(3));
+      elements.horizonSolBody.setAttribute("data-world-y", worldPoints.sol.y.toFixed(3));
+      elements.horizonSolBody.setAttribute("data-forward", horizonProjection.sol.forward.toFixed(6));
+    }
+    if (elements.horizonYolBody) {
+      elements.horizonYolBody.setAttribute("data-world-x", worldPoints.yol.x.toFixed(3));
+      elements.horizonYolBody.setAttribute("data-world-y", worldPoints.yol.y.toFixed(3));
+      elements.horizonYolBody.setAttribute("data-forward", horizonProjection.yol.forward.toFixed(6));
+    }
+    if (elements.horizonView) {
+      elements.horizonView.classList.toggle("is-convection", isConvection);
+      elements.horizonView.setAttribute(
+        "data-era-rotation",
+        frame.eraRotationDegrees.toFixed(3),
+      );
+      elements.horizonView.setAttribute("data-direction", state.horizonDirection);
+    }
+    if (elements.horizonConvectionField) {
+      elements.horizonConvectionField.classList.toggle("is-visible", isConvection);
+      elements.horizonConvectionField.setAttribute("aria-hidden", String(!isConvection));
+    }
+    if (elements.horizonDescription) {
+      const direction = HORIZON_DIRECTIONS[state.horizonDirection];
+      const visibilityText = isConvection
+        ? "Sol und Yol sind nicht sichtbar."
+        : `Sol ist ${solVisible ? "vor" : "hinter"} dem lokalen Horizont, Yol ist ${
+            yolVisible ? "vor" : "hinter"
+          } dem lokalen Horizont.`;
+      elements.horizonDescription.textContent = `Schematischer Horizont bei Blick nach ${direction.name}. ${visibilityText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht.`;
     }
   }
 
@@ -559,44 +1124,21 @@
 
   function render(ms = state.currentMs) {
     const snapshot = getSnapshot(ms);
-    const isConvection = snapshot.template.id === "convection";
+    lastRenderFrame = createRenderFrame(snapshot);
+    const isConvection = snapshot.template.motion === "convection";
     const solSpeedText = `${snapshot.sol.speed.toFixed(1).replace(".", ",")}°/s`;
     const yolSpeedText = `${snapshot.yol.speed.toFixed(1).replace(".", ",")}°/s`;
 
-    updateBodyElement(
-      elements.solBody,
-      elements.solDisc,
-      elements.solHalo,
-      snapshot.sol,
-      "sol",
-      snapshot.template.motion,
-    );
-    updateBodyElement(
-      elements.yolBody,
-      elements.yolDisc,
-      elements.yolHalo,
-      snapshot.yol,
-      "yol",
-      snapshot.template.motion,
-    );
-
-    elements.orbitView.classList.toggle("is-convection", isConvection);
-    elements.convectionMessage.hidden = !isConvection;
-    elements.solBody.setAttribute("aria-hidden", String(!snapshot.sol.visible));
-    elements.yolBody.setAttribute("aria-hidden", String(!snapshot.yol.visible));
-    elements.eraMeridian.style.transformOrigin = "420px 268px";
-    const eraRotationSpeed = snapshot.template.motion === "fixed-orbit" ? 9 : 2.8;
-    elements.eraMeridian.style.transform = `rotate(${((ms / 1000) * eraRotationSpeed).toFixed(2)}deg)`;
-    elements.directionPathSol.setAttribute("d", "M 132 250 A 300 178 0 0 1 699 210");
-    elements.directionPathYol.setAttribute("d", "M 188 286 A 244 142 0 0 0 645 316");
-    elements.directionPathSol.style.strokeDashoffset = `${(-snapshot.sol.angle / 7).toFixed(1)}`;
-    elements.directionPathYol.style.strokeDashoffset = `${(-snapshot.yol.angle / 7).toFixed(1)}`;
+    updateDirectionControls();
+    updateEraOrientation(lastRenderFrame);
+    updateOrbitGeometry(lastRenderFrame);
+    updateHorizonGeometry(lastRenderFrame);
 
     elements.eraTime.textContent = formatEraTime(snapshot.cycleUm);
-    elements.solIntensity.textContent = snapshot.sol.intensity
+    elements.solIntensity.textContent = snapshot.sol.intensity !== null
       ? `S-Int ${snapshot.sol.intensity.toFixed(1).replace(".", ",")}`
       : "nicht sichtbar";
-    elements.yolIntensity.textContent = snapshot.yol.intensity
+    elements.yolIntensity.textContent = snapshot.yol.intensity !== null
       ? `S-Int ${snapshot.yol.intensity.toFixed(1).replace(".", ",")}`
       : "nicht sichtbar";
     elements.solSpeed.textContent = isConvection ? "—" : solSpeedText;
@@ -615,9 +1157,6 @@
     elements.yolSpeedMeterLabel.textContent = isConvection ? "nicht sichtbar" : yolSpeedText;
     elements.solSpeedMeter.style.width = `${isConvection ? 0 : clamp(snapshot.sol.speed / 14, 0, 1) * 100}%`;
     elements.yolSpeedMeter.style.width = `${isConvection ? 0 : clamp(snapshot.yol.speed / 14, 0, 1) * 100}%`;
-    elements.orbitDescription.textContent = isConvection
-      ? "Konvektion: Sol und Yol sind nicht sichtbar. Die Darstellung zeigt den verdichteten Dunkelzustand."
-      : `${snapshot.template.label}: Sol und Yol bewegen sich schematisch mit seed-basierten Geschwindigkeiten. Keine astronomisch exakte Umlaufbahn.`;
 
     updatePhaseDetails(snapshot);
     updateTimelineProgress(snapshot);
@@ -793,7 +1332,82 @@
       .slice(0, 4)}`;
   }
 
+  function persistHorizonDirection(directionId) {
+    try {
+      localStorage.setItem("era-horizon-direction", directionId);
+    } catch (_) {
+      // Die Blickrichtung bleibt auch ohne verfügbaren lokalen Speicher bedienbar.
+    }
+  }
+
+  function setHorizonDirection(directionId, options = {}) {
+    const normalizedDirection = HORIZON_DIRECTIONS[directionId] ? directionId : "north";
+    const changed = normalizedDirection !== state.horizonDirection;
+    state.horizonDirection = normalizedDirection;
+    if (options.persist !== false) persistHorizonDirection(normalizedDirection);
+    updateDirectionControls();
+
+    if (lastRenderFrame) {
+      lastRenderFrame = reprojectRenderFrame(lastRenderFrame);
+      updateEraOrientation(lastRenderFrame);
+      updateHorizonGeometry(lastRenderFrame);
+      elements.orbitView.setAttribute("data-horizon-direction", normalizedDirection);
+    }
+
+    const activeButton = elements.horizonDirectionButtons[normalizedDirection];
+    if (options.focus && typeof activeButton?.focus === "function") activeButton.focus();
+    if (changed && options.announce !== false) {
+      announce(`Horizontblick nach ${HORIZON_DIRECTIONS[normalizedDirection].name}.`);
+    }
+  }
+
+  function moveHorizonDirection(directionId, offset) {
+    const currentIndex = HORIZON_DIRECTION_ORDER.indexOf(directionId);
+    const safeIndex = currentIndex === -1 ? 0 : currentIndex;
+    const nextIndex =
+      (safeIndex + offset + HORIZON_DIRECTION_ORDER.length) % HORIZON_DIRECTION_ORDER.length;
+    setHorizonDirection(HORIZON_DIRECTION_ORDER[nextIndex], { focus: true });
+  }
+
+  function getLastRenderFrame() {
+    return lastRenderFrame;
+  }
+
+  function getState() {
+    return Object.freeze({
+      seed: state.seed,
+      currentMs: state.currentMs,
+      presentationMs: state.presentationMs,
+      horizonDirection: state.horizonDirection,
+      playing: state.playing,
+      playbackRate: state.playbackRate,
+      reducedMotion: state.reducedMotion,
+      theme: state.theme,
+      scenario: state.scenario,
+    });
+  }
+
   function attachEvents() {
+    for (const directionId of HORIZON_DIRECTION_ORDER) {
+      const button = elements.horizonDirectionButtons[directionId];
+      if (!button) continue;
+      button.addEventListener("click", () => setHorizonDirection(directionId));
+      button.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+          event.preventDefault?.();
+          moveHorizonDirection(directionId, 1);
+        } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+          event.preventDefault?.();
+          moveHorizonDirection(directionId, -1);
+        } else if (event.key === "Home") {
+          event.preventDefault?.();
+          setHorizonDirection(HORIZON_DIRECTION_ORDER[0], { focus: true });
+        } else if (event.key === "End") {
+          event.preventDefault?.();
+          setHorizonDirection(HORIZON_DIRECTION_ORDER.at(-1), { focus: true });
+        }
+      });
+    }
     elements.phaseSelect.addEventListener("change", () => {
       jumpToTemplate(elements.phaseSelect.value);
     });
@@ -849,6 +1463,22 @@
       reducedMotionQuery.addListener(onReducedMotionChange);
     }
   }
+
+  window.ERA_CYCLE_CONTRACT = Object.freeze({
+    ORBIT_GEOMETRY,
+    HORIZON_GEOMETRY,
+    HORIZON_DIRECTIONS,
+    normalizeDegrees,
+    getEraRotationDegrees,
+    getOrbitPoint,
+    getBodyVisualRadius,
+    ensureOrbitClearance,
+    getViewBasis,
+    projectOrbitPointToHorizon,
+    getSnapshot,
+    getLastRenderFrame,
+    getState,
+  });
 
   applyTheme(state.theme, { persist: false });
   buildPhaseSelect();

@@ -9,6 +9,7 @@
     />
     <meta id="theme-color" name="theme-color" content="#120e18" />
     <title>Era – Zeitzyklen von Sol und Yol</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <script>
       (() => {
         try {
@@ -27,10 +28,10 @@
     <script defer src="app.js"></script>
   </head>
   <body>
-    <svg class="icon-sprite" aria-hidden="true">
+    <svg class="icon-sprite" aria-hidden="true" shape-rendering="crispEdges">
       <defs>
         <symbol id="icon-era-cycle" viewBox="0 0 24 24">
-          <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+          <g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5">
             <circle cx="12" cy="12" r="3.4" /><ellipse cx="12" cy="12" rx="9" ry="5.5" />
             <path d="M12 3v2M12 19v2M3 12h2M19 12h2M6.2 6.2l1.4 1.4M16.4 16.4l1.4 1.4" />
             <circle cx="19.2" cy="10.1" r="1.2" fill="currentColor" stroke="none" />
@@ -38,49 +39,49 @@
           </g>
         </symbol>
         <symbol id="icon-theme-sun" viewBox="0 0 24 24">
-          <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.7"><circle cx="12" cy="12" r="4" /><path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6" /></g>
+          <g fill="none" stroke="currentColor" stroke-linecap="square" stroke-width="1.7"><circle cx="12" cy="12" r="4" /><path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6" /></g>
         </symbol>
-        <symbol id="icon-theme-moon" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="m12 3 6 5-2 8-4 5-4-5-2-8Z" /><path d="m12 3-1 6 5 7M11 9 8 16M6 8l5 1 7-1" /><path d="M4 4h1M19 4h1M4 20h1M19 20h1" /></g></symbol>
-        <symbol id="icon-grand-cycle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><circle cx="12" cy="12" r="8" /><path d="M12 4v3M12 17v3M4 12h3M17 12h3M7 7l2.1 2.1M14.9 14.9 17 17M17 7l-2.1 2.1M9.1 14.9 7 17" /><circle cx="12" cy="12" r="2" /></g></symbol>
-        <symbol id="icon-convection-time" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9s8 4 8 9" /><path d="m10 16 2-1 2 1v2h-4Z" /></g></symbol>
-        <symbol id="icon-presentation" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><circle cx="12" cy="13" r="8" /><path d="M9 2h6M12 5v2M18.5 6.5 20 5M12 13l4-2" /></g></symbol>
-        <symbol id="icon-library" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M4 5.5c3.2-.7 5.9 0 8 2v12c-2.1-2-4.8-2.7-8-2ZM20 5.5c-3.2-.7-5.9 0-8 2v12c2.1-2 4.8-2.7 8-2Z" /><path d="M7 9h2M15 9h2M7 12h2M15 12h2" /></g></symbol>
-        <symbol id="icon-random" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M4 8c3.5 0 4.5 8 8 8h6M16 13l3 3-3 3M4 16c3.5 0 4.5-8 8-8h6M16 5l3 3-3 3" /></g></symbol>
-        <symbol id="icon-timeline" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M3 12h18" /><circle cx="6" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="18" cy="12" r="2" /><path d="M6 8V5M12 16v3M18 8V5" /></g></symbol>
+        <symbol id="icon-theme-moon" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><path d="m12 3 6 5-2 8-4 5-4-5-2-8Z" /><path d="m12 3-1 6 5 7M11 9 8 16M6 8l5 1 7-1" /><path d="M4 4h1M19 4h1M4 20h1M19 20h1" /></g></symbol>
+        <symbol id="icon-grand-cycle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><circle cx="12" cy="12" r="8" /><path d="M12 4v3M12 17v3M4 12h3M17 12h3M7 7l2.1 2.1M14.9 14.9 17 17M17 7l-2.1 2.1M9.1 14.9 7 17" /><circle cx="12" cy="12" r="2" /></g></symbol>
+        <symbol id="icon-convection-time" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9s8 4 8 9" /><path d="m10 16 2-1 2 1v2h-4Z" /></g></symbol>
+        <symbol id="icon-presentation" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><circle cx="12" cy="13" r="8" /><path d="M9 2h6M12 5v2M18.5 6.5 20 5M12 13l4-2" /></g></symbol>
+        <symbol id="icon-library" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><path d="M4 5.5c3.2-.7 5.9 0 8 2v12c-2.1-2-4.8-2.7-8-2ZM20 5.5c-3.2-.7-5.9 0-8 2v12c2.1-2 4.8-2.7 8-2Z" /><path d="M7 9h2M15 9h2M7 12h2M15 12h2" /></g></symbol>
+        <symbol id="icon-random" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><path d="M4 8c3.5 0 4.5 8 8 8h6M16 13l3 3-3 3M4 16c3.5 0 4.5-8 8-8h6M16 5l3 3-3 3" /></g></symbol>
+        <symbol id="icon-timeline" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><path d="M3 12h18" /><circle cx="6" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="18" cy="12" r="2" /><path d="M6 8V5M12 16v3M18 8V5" /></g></symbol>
         <symbol id="icon-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7Z" fill="currentColor" /></symbol>
         <symbol id="icon-pause" viewBox="0 0 24 24"><path d="M7 5h3v14H7zM14 5h3v14h-3z" fill="currentColor" /></symbol>
-        <symbol id="icon-restart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"><path d="M5.2 8.2A8 8 0 1 1 4 15" /><path d="M4 4v5h5" /></g></symbol>
-        <symbol id="icon-arrow-left" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" /></symbol>
-        <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" /></symbol>
-        <symbol id="icon-canon" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="m12 3 2.1 3.7 4.2.8-2.9 3.1.5 4.3-3.9-1.8-3.9 1.8.5-4.3-2.9-3.1 4.2-.8Z" /><circle cx="12" cy="18.5" r="2.2" /></g></symbol>
-        <symbol id="icon-simulation" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M8 3h8M9 3v5l-5 9a2.5 2.5 0 0 0 2.2 4h11.6a2.5 2.5 0 0 0 2.2-4l-5-9V3" /><path d="M7 16c2 1 3-1 5 0s3-1 5 0" /></g></symbol>
-        <symbol id="icon-compression" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M4 4l6 6M4 10h6V4M20 4l-6 6M14 4v6h6M4 20l6-6M4 14h6v6M20 20l-6-6M14 20v-6h6" /></g></symbol>
+        <symbol id="icon-restart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.8"><path d="M5.2 8.2A8 8 0 1 1 4 15" /><path d="M4 4v5h5" /></g></symbol>
+        <symbol id="icon-arrow-left" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6" fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.8" /></symbol>
+        <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.8" /></symbol>
+        <symbol id="icon-canon" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><path d="m12 3 2.1 3.7 4.2.8-2.9 3.1.5 4.3-3.9-1.8-3.9 1.8.5-4.3-2.9-3.1 4.2-.8Z" /><circle cx="12" cy="18.5" r="2.2" /></g></symbol>
+        <symbol id="icon-simulation" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><path d="M8 3h8M9 3v5l-5 9a2.5 2.5 0 0 0 2.2 4h11.6a2.5 2.5 0 0 0 2.2-4l-5-9V3" /><path d="M7 16c2 1 3-1 5 0s3-1 5 0" /></g></symbol>
+        <symbol id="icon-compression" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><path d="M4 4l6 6M4 10h6V4M20 4l-6 6M14 4v6h6M4 20l6-6M4 14h6v6M20 20l-6-6M14 20v-6h6" /></g></symbol>
 
-        <symbol id="icon-category-synchron" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.6"><path d="M4 9c4-5 12-5 16 0M4 15c4 5 12 5 16 0" /><circle cx="7" cy="8" r="1.5" fill="currentColor" stroke="none" /><circle cx="17" cy="16" r="1.5" fill="currentColor" stroke="none" /></g></symbol>
-        <symbol id="icon-category-langsam" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><circle cx="12" cy="12" r="8" /><path d="M12 7v5l3 2M5 5l2 2" /></g></symbol>
-        <symbol id="icon-category-stehend" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><circle cx="12" cy="7" r="3" /><path d="M7 20h10M9 17h6M10 10v7M14 10v7" /></g></symbol>
-        <symbol id="icon-category-asynchron" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M5 8h14l-3-3M19 16H5l3 3" /><circle cx="12" cy="12" r="2" /></g></symbol>
-        <symbol id="icon-category-wechselnd" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M4 6h5l6 12h5M17 15l3 3-3 3M4 18h5l2-4M15 6h5M17 3l3 3-3 3" /></g></symbol>
-        <symbol id="icon-category-konvektion" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="4" /><path d="M4 12h16M12 4v16" /></g></symbol>
+        <symbol id="icon-category-synchron" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-width="1.6"><path d="M4 9c4-5 12-5 16 0M4 15c4 5 12 5 16 0" /><circle cx="7" cy="8" r="1.5" fill="currentColor" stroke="none" /><circle cx="17" cy="16" r="1.5" fill="currentColor" stroke="none" /></g></symbol>
+        <symbol id="icon-category-langsam" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><circle cx="12" cy="12" r="8" /><path d="M12 7v5l3 2M5 5l2 2" /></g></symbol>
+        <symbol id="icon-category-stehend" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><circle cx="12" cy="7" r="3" /><path d="M7 20h10M9 17h6M10 10v7M14 10v7" /></g></symbol>
+        <symbol id="icon-category-asynchron" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><path d="M5 8h14l-3-3M19 16H5l3 3" /><circle cx="12" cy="12" r="2" /></g></symbol>
+        <symbol id="icon-category-wechselnd" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><path d="M4 6h5l6 12h5M17 15l3 3-3 3M4 18h5l2-4M15 6h5M17 3l3 3-3 3" /></g></symbol>
+        <symbol id="icon-category-konvektion" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="4" /><path d="M4 12h16M12 4v16" /></g></symbol>
 
-        <symbol id="icon-sync-standing" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><circle cx="12" cy="8" r="3.2" /><path d="M12 3V1.8M7.8 4.3 7 3.4M16.2 4.3l.8-.9M6 8H4.5M19.5 8H18M8 20h8M10 17h4M12 11.2V17" /></g></symbol>
-        <symbol id="icon-sync-morning-evening" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 15h18M6 15a6 6 0 0 1 12 0" /><path d="M7 8 5.5 6.5M17 8l1.5-1.5M12 6V3" /><path d="M6 19h12" /></g></symbol>
-        <symbol id="icon-sync-long-night-morning" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 17h18M7 17a5 5 0 0 1 8.5-3.6" /><path d="m16 4 3 2.5-1 4-2 2-2-2-1-4Z" /><path d="M4 20h16M7 12h2M4 12h1" /></g></symbol>
-        <symbol id="icon-sync-long-morning" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M2 16h20M7 16a5 5 0 0 1 10 0M12 6v3M5 9l2 2M19 9l-2 2M3 20h18" /><path d="M8 5h8" /></g></symbol>
-        <symbol id="icon-sync-wandering" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="7" cy="15" r="2.3" /><path d="M3 15c1-7 8-11 15-8M15 4l3 3-3 3M10 18c3 2 6 2 10 0" /></g></symbol>
-        <symbol id="icon-sync-oscillating" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M4 7h16M12 7v3" /><path d="M12 10l-5 7M12 10l5 7" /><circle cx="7" cy="18" r="2" /><circle cx="17" cy="18" r="2" /><path d="M5 4h14" /></g></symbol>
-        <symbol id="icon-sync-short-day" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 17h18M8 17a4 4 0 0 1 8 0" /><circle cx="12" cy="13" r="1.5" /><path d="M5 7a8 8 0 0 1 14 0M7 5l-2 2 3 .5" /></g></symbol>
-        <symbol id="icon-sync-short-night" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="10" r="4" /><path d="M12 3V1.5M5 3l2 2M19 3l-2 2M4 10H2M22 10h-2M4 18h16" /><path d="m15 16 2 1.6-.7 2.4-1.3 1-1.3-1-.7-2.4Z" /></g></symbol>
-        <symbol id="icon-slow-day-night" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="12" r="8" /><path d="M12 4v16M12 8a4 4 0 0 1 0 8" /><path d="M8 9 6.8 8M8 15l-1.2 1M16 9l1.2-1M16 15l1.2 1" /></g></symbol>
-        <symbol id="icon-slow-normal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2" /><path d="M12 5v2M12 17v2M5 12h2M17 12h2M15.5 6.5 17 5M7 19l1.5-1.5" /></g></symbol>
-        <symbol id="icon-slow-tan" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="12" r="8" /><path d="M12 4v8l4 2M6.4 6.4l1.4 1.4M4 12h2M6.4 17.6l1.4-1.4M12 20v-2" /><path d="M16 5h3v3" /></g></symbol>
-        <symbol id="icon-slow-dir" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="12" r="8" /><path d="M12 4v16M4 12h16M6.4 6.4l11.2 11.2M17.6 6.4 6.4 17.6" /><circle cx="12" cy="12" r="2" /></g></symbol>
-        <symbol id="icon-standing-suns" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="8" cy="8" r="2.5" /><circle cx="16" cy="8" r="2.5" /><path d="M8 3V2M16 3V2M4 8H3M21 8h-1M8 13v5M16 13v5M5 18h14M7 21h10" /></g></symbol>
-        <symbol id="icon-async-wandering" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M20 8C16 3 8 3 4 9M7 6 4 9l4 2" /><circle cx="16" cy="15" r="2.5" /><path d="M4 18c4 2 9 2 13 0" /></g></symbol>
-        <symbol id="icon-async-horizon" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 17h18M19 13c-4-3-10-3-14 0M8 10l-3 3 4 1" /><circle cx="17" cy="13" r="1.8" /><path d="M5 20h14" /></g></symbol>
-        <symbol id="icon-async-parabola" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M20 18C17 4 7 4 4 18M7 14l-3 4 5 1" /><circle cx="12" cy="7.5" r="2" /><path d="M3 20h18" /></g></symbol>
-        <symbol id="icon-changing" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M4 6h5l6 12h5M17 15l3 3-3 3M4 18h5l6-12h5M17 3l3 3-3 3" /><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" /></g></symbol>
-        <symbol id="icon-convection" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="12" r="8" /><path d="M6.3 6.3 17.7 17.7M17.7 6.3 6.3 17.7" /><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" /><path d="M12 1v2M12 21v2M1 12h2M21 12h2" /></g></symbol>
+        <symbol id="icon-sync-standing" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><circle cx="12" cy="8" r="3.2" /><path d="M12 3V1.8M7.8 4.3 7 3.4M16.2 4.3l.8-.9M6 8H4.5M19.5 8H18M8 20h8M10 17h4M12 11.2V17" /></g></symbol>
+        <symbol id="icon-sync-morning-evening" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><path d="M3 15h18M6 15a6 6 0 0 1 12 0" /><path d="M7 8 5.5 6.5M17 8l1.5-1.5M12 6V3" /><path d="M6 19h12" /></g></symbol>
+        <symbol id="icon-sync-long-night-morning" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><path d="M3 17h18M7 17a5 5 0 0 1 8.5-3.6" /><path d="m16 4 3 2.5-1 4-2 2-2-2-1-4Z" /><path d="M4 20h16M7 12h2M4 12h1" /></g></symbol>
+        <symbol id="icon-sync-long-morning" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><path d="M2 16h20M7 16a5 5 0 0 1 10 0M12 6v3M5 9l2 2M19 9l-2 2M3 20h18" /><path d="M8 5h8" /></g></symbol>
+        <symbol id="icon-sync-wandering" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><circle cx="7" cy="15" r="2.3" /><path d="M3 15c1-7 8-11 15-8M15 4l3 3-3 3M10 18c3 2 6 2 10 0" /></g></symbol>
+        <symbol id="icon-sync-oscillating" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><path d="M4 7h16M12 7v3" /><path d="M12 10l-5 7M12 10l5 7" /><circle cx="7" cy="18" r="2" /><circle cx="17" cy="18" r="2" /><path d="M5 4h14" /></g></symbol>
+        <symbol id="icon-sync-short-day" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><path d="M3 17h18M8 17a4 4 0 0 1 8 0" /><circle cx="12" cy="13" r="1.5" /><path d="M5 7a8 8 0 0 1 14 0M7 5l-2 2 3 .5" /></g></symbol>
+        <symbol id="icon-sync-short-night" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><circle cx="12" cy="10" r="4" /><path d="M12 3V1.5M5 3l2 2M19 3l-2 2M4 10H2M22 10h-2M4 18h16" /><path d="m15 16 2 1.6-.7 2.4-1.3 1-1.3-1-.7-2.4Z" /></g></symbol>
+        <symbol id="icon-slow-day-night" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><circle cx="12" cy="12" r="8" /><path d="M12 4v16M12 8a4 4 0 0 1 0 8" /><path d="M8 9 6.8 8M8 15l-1.2 1M16 9l1.2-1M16 15l1.2 1" /></g></symbol>
+        <symbol id="icon-slow-normal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2" /><path d="M12 5v2M12 17v2M5 12h2M17 12h2M15.5 6.5 17 5M7 19l1.5-1.5" /></g></symbol>
+        <symbol id="icon-slow-tan" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><circle cx="12" cy="12" r="8" /><path d="M12 4v8l4 2M6.4 6.4l1.4 1.4M4 12h2M6.4 17.6l1.4-1.4M12 20v-2" /><path d="M16 5h3v3" /></g></symbol>
+        <symbol id="icon-slow-dir" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><circle cx="12" cy="12" r="8" /><path d="M12 4v16M4 12h16M6.4 6.4l11.2 11.2M17.6 6.4 6.4 17.6" /><circle cx="12" cy="12" r="2" /></g></symbol>
+        <symbol id="icon-standing-suns" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><circle cx="8" cy="8" r="2.5" /><circle cx="16" cy="8" r="2.5" /><path d="M8 3V2M16 3V2M4 8H3M21 8h-1M8 13v5M16 13v5M5 18h14M7 21h10" /></g></symbol>
+        <symbol id="icon-async-wandering" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><path d="M20 8C16 3 8 3 4 9M7 6 4 9l4 2" /><circle cx="16" cy="15" r="2.5" /><path d="M4 18c4 2 9 2 13 0" /></g></symbol>
+        <symbol id="icon-async-horizon" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><path d="M3 17h18M19 13c-4-3-10-3-14 0M8 10l-3 3 4 1" /><circle cx="17" cy="13" r="1.8" /><path d="M5 20h14" /></g></symbol>
+        <symbol id="icon-async-parabola" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><path d="M20 18C17 4 7 4 4 18M7 14l-3 4 5 1" /><circle cx="12" cy="7.5" r="2" /><path d="M3 20h18" /></g></symbol>
+        <symbol id="icon-changing" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><path d="M4 6h5l6 12h5M17 15l3 3-3 3M4 18h5l6-12h5M17 3l3 3-3 3" /><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" /></g></symbol>
+        <symbol id="icon-convection" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.5"><circle cx="12" cy="12" r="8" /><path d="M6.3 6.3 17.7 17.7M17.7 6.3 6.3 17.7" /><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" /><path d="M12 1v2M12 21v2M1 12h2M21 12h2" /></g></symbol>
       </defs>
     </svg>
     <a class="skip-link" href="#simulation">Zur Simulation springen</a>
@@ -170,8 +171,8 @@
           <section class="panel visual-panel" aria-labelledby="sky-title">
             <div class="visual-heading">
               <div>
-                <p class="panel-index">02 · SCHEMATISCHE HIMMELSANSICHT</p>
-                <h2 id="sky-title">Aktueller Weltzustand</h2>
+                <p class="panel-index">02 · NORDPOL-OBSERVATORIUM</p>
+                <h2 id="sky-title">Kosmologischer Weltzustand</h2>
               </div>
               <div class="state-badge" id="state-badge-shell">
                 <svg aria-hidden="true"><use id="state-category-icon-use" href="#icon-category-synchron"></use></svg>
@@ -179,108 +180,119 @@
               </div>
             </div>
 
-            <div class="sky-stage">
+            <figure class="sky-stage">
               <svg
                 id="orbit-view"
                 viewBox="0 0 840 520"
                 role="img"
                 aria-labelledby="orbit-title orbit-description"
+                shape-rendering="crispEdges"
+                stroke-linecap="square"
+                stroke-linejoin="miter"
               >
-                <title id="orbit-title">Schematische Bewegung von Sol und Yol um Era</title>
+                <title id="orbit-title">Orbitale Nordpol-Draufsicht auf Era, Sol und Yol</title>
                 <desc id="orbit-description">
-                  Die Positionen, Richtungen und Intensitäten werden aus dem aktuellen Seed und der
-                  gewählten Zeit berechnet. Die Darstellung ist keine astronomisch exakte Umlaufbahn.
+                  Era liegt im Zentrum. Die vollständigen schematischen Bahnen von Sol und Yol werden
+                  aus dem aktuellen Seed und derselben Zeit wie der Horizontverlauf berechnet.
                 </desc>
                 <defs>
-                  <radialGradient id="era-gradient" cx="42%" cy="35%">
-                    <stop offset="0" stop-color="#75849b" />
-                    <stop offset="0.48" stop-color="#344255" />
-                    <stop offset="1" stop-color="#121824" />
-                  </radialGradient>
-                  <radialGradient id="sol-gradient">
-                    <stop offset="0" stop-color="#fff7c5" />
-                    <stop offset="0.38" stop-color="#ffc15c" />
-                    <stop offset="1" stop-color="#ff6b35" />
-                  </radialGradient>
-                  <radialGradient id="yol-gradient">
-                    <stop offset="0" stop-color="#e9e5ff" />
-                    <stop offset="0.38" stop-color="#9d8cff" />
-                    <stop offset="1" stop-color="#5641d8" />
-                  </radialGradient>
-                  <filter id="sol-glow" x="-160%" y="-160%" width="420%" height="420%">
-                    <feGaussianBlur stdDeviation="12" result="blur" />
-                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                  </filter>
-                  <filter id="yol-glow" x="-160%" y="-160%" width="420%" height="420%">
-                    <feGaussianBlur stdDeviation="9" result="blur" />
-                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                  </filter>
-                  <filter id="zehs-glow" x="-240%" y="-240%" width="580%" height="580%">
-                    <feGaussianBlur stdDeviation="6" result="blur" />
-                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                  </filter>
-                  <linearGradient id="convection-gradient" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stop-color="#6d4aff" stop-opacity="0.08" />
-                    <stop offset="0.5" stop-color="#ff6f3c" stop-opacity="0.18" />
-                    <stop offset="1" stop-color="#61d8ff" stop-opacity="0.08" />
-                  </linearGradient>
+                  <pattern id="orbit-grid-pattern" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <path class="orbit-grid-pixel" d="M0 0H4V4H0Z" />
+                  </pattern>
+                  <pattern id="era-surface-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <path class="era-dither-a" d="M0 0H4V4H0ZM4 4H8V8H4Z" />
+                  </pattern>
+                  <pattern id="era-front-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <path class="era-front-pixel" d="M0 0H4V4H0Z" />
+                  </pattern>
+                  <clipPath id="era-clip">
+                    <path d="M396 178H444V182H464V190H480V202H490V218H498V238H502V282H498V302H490V318H480V330H464V338H444V342H396V338H376V330H360V318H350V302H342V282H338V238H342V218H350V202H360V190H376V182H396Z" />
+                  </clipPath>
+                  <marker id="sol-direction-arrow" viewBox="0 0 24 16" refX="22" refY="8" markerWidth="24" markerHeight="16" orient="auto" markerUnits="userSpaceOnUse">
+                    <path class="sol-arrow-head" d="M0 4H12V0L24 8 12 16V12H0Z" />
+                  </marker>
+                  <marker id="yol-direction-arrow" viewBox="0 0 24 16" refX="22" refY="8" markerWidth="24" markerHeight="16" orient="auto" markerUnits="userSpaceOnUse">
+                    <path class="yol-arrow-head" d="M0 4H12V0L24 8 12 16V12H0Z" />
+                  </marker>
+
+                  <g id="sol-tier-1-shape"><path class="sol-core" d="M-8-8H8V-4H12V8H8V12H-8V8H-12V-4H-8Z" /><path class="sol-core-light" d="M-4-4H4V4H-4Z" /></g>
+                  <g id="sol-tier-2-shape"><path class="sol-ring" d="M-16-8H-12V-16H-4V-20H4V-16H12V-8H20V4H16V12H8V16H-8V12H-16V4H-20V-8Z" /></g>
+                  <g id="sol-tier-3-shape"><path class="sol-ray" d="M-4-26H4V-20H-4ZM-4 20H4V26H-4ZM-26-4H-20V4H-26ZM20-4H26V4H20ZM-24-24H-16V-16H-24ZM16-24H24V-16H16ZM-24 16H-16V24H-24ZM16 16H24V24H16Z" /></g>
+                  <g id="sol-tier-4-shape"><path class="sol-ray-outer" d="M-4-30H4V-26H-4ZM-4 26H4V30H-4ZM-30-4H-26V4H-30ZM26-4H30V4H26Z" /></g>
+                  <g id="sol-tier-5-shape"><path class="sol-ray-bright" d="M-26-34H-18V-26H-26ZM18-34H26V-26H18ZM-34 18H-26V26H-34ZM26 18H34V26H26Z" /></g>
+                  <g id="yol-tier-1-shape"><path class="yol-core" d="M-8-12H8V-8H12V8H8V12H-8V8H-12V-8H-8Z" /><path class="yol-core-light" d="M-4-8H4V0H8V4H0V8H-4Z" /></g>
+                  <g id="yol-tier-2-shape"><path class="yol-ring" d="M-16-12H-8V-20H8V-16H16V-8H20V8H16V16H8V20H-8V16H-16V8H-20V-8H-16Z" /></g>
+                  <g id="yol-tier-3-shape"><path class="yol-magic" d="M-4-25H4V-20H-4ZM-4 20H4V25H-4ZM-25-4H-20V4H-25ZM20-4H25V4H20ZM-24-24H-16V-16H-24ZM16 16H24V24H16Z" /></g>
+                  <g id="yol-tier-4-shape"><path class="yol-magic-outer" d="M-28-12H-20V-20H-12V-28H-4V-20H-12V-12H-20V-4H-28ZM12 12H20V4H28V12H24V20H16V28H8V20H12Z" /></g>
+                  <g id="yol-tier-5-shape"><path class="yol-magic-bright" d="M18-33H26V-25H33V-17H26V-21H18ZM-33 17H-26V21H-18V29H-26V33H-33Z" /></g>
                 </defs>
 
+                <rect class="orbit-sky" width="840" height="520" />
+                <rect class="orbit-grid" x="20" y="20" width="800" height="480" fill="url(#orbit-grid-pattern)" />
                 <g class="star-field" aria-hidden="true">
-                  <circle cx="82" cy="91" r="1.6" /><circle cx="142" cy="172" r="1.2" />
-                  <circle cx="228" cy="78" r="1.1" /><circle cx="314" cy="142" r="1.4" />
-                  <circle cx="418" cy="68" r="1.1" /><circle cx="530" cy="122" r="1.5" />
-                  <circle cx="638" cy="72" r="1.1" /><circle cx="752" cy="153" r="1.7" />
-                  <circle cx="110" cy="376" r="1.2" /><circle cx="218" cy="438" r="1.6" />
-                  <circle cx="330" cy="402" r="1.1" /><circle cx="520" cy="430" r="1.3" />
-                  <circle cx="692" cy="398" r="1.4" /><circle cx="786" cy="337" r="1.1" />
+                  <path d="M80 88H84V92H80ZM140 168H144V172H140ZM224 76H228V80H224ZM312 140H316V144H312ZM416 64H420V68H416ZM528 120H532V124H528ZM636 68H640V72H636ZM752 148H756V152H752ZM108 376H112V380H108ZM216 436H220V440H216ZM328 400H332V404H328ZM520 428H524V432H520ZM692 396H696V400H692ZM784 336H788V340H784Z" />
                 </g>
 
-                <ellipse class="orbit orbit-sol" cx="420" cy="268" rx="300" ry="178" />
-                <ellipse class="orbit orbit-yol" cx="420" cy="268" rx="244" ry="142" />
-                <path id="direction-path-sol" class="direction-arc direction-sol" />
-                <path id="direction-path-yol" class="direction-arc direction-yol" />
+                <g class="orbit-plane" aria-hidden="true">
+                  <ellipse id="orbit-sol-path" class="orbit orbit-sol" cx="420" cy="260" rx="310" ry="172" />
+                  <ellipse id="orbit-yol-path" class="orbit orbit-yol" cx="420" cy="260" rx="240" ry="158" />
+                  <path id="direction-path-sol" class="direction-arc direction-sol" d="M110 260A310 172 0 0 1 730 260" marker-end="url(#sol-direction-arrow)" />
+                  <path id="direction-path-yol" class="direction-arc direction-yol" d="M660 260A240 158 0 0 0 180 260" marker-end="url(#yol-direction-arrow)" />
+                </g>
 
                 <g id="convection-field" class="convection-field" aria-hidden="true">
-                  <ellipse cx="420" cy="268" rx="326" ry="201" fill="url(#convection-gradient)" />
-                  <path d="M120 340 C240 188 302 406 430 233 S660 178 742 340" />
-                  <path d="M130 206 C258 364 328 126 466 286 S676 352 728 190" />
-                  <path d="M196 104 C340 230 480 66 654 166" />
+                  <path class="convection-band convection-band-a" d="M92 180H180V164H268V188H356V148H444V172H532V136H620V164H748V188H660V204H572V180H484V220H396V196H308V228H220V204H92Z" />
+                  <path class="convection-band convection-band-b" d="M108 324H196V300H284V332H372V292H460V316H548V276H636V304H732V328H644V344H556V324H468V356H380V332H292V364H204V340H108Z" />
+                  <path class="convection-shard" d="M176 108H204V124H220V152H192V140H164V120H176ZM620 88H652V108H668V132H640V124H612V104H620ZM696 364H724V380H740V408H712V396H684V376H696Z" />
                 </g>
 
                 <g id="era-group">
-                  <circle class="era-shadow" cx="420" cy="278" r="86" />
-                  <circle class="era" cx="420" cy="268" r="82" fill="url(#era-gradient)" />
-                  <path
-                    id="era-meridian"
-                    class="era-meridian"
-                    d="M420 190 C374 220 374 316 420 346 C466 316 466 220 420 190"
-                  />
-                  <ellipse class="era-equator" cx="420" cy="268" rx="80" ry="26" />
-                  <text x="420" y="274" text-anchor="middle" class="era-label">ERA</text>
+                  <path class="era-shadow" d="M400 186H448V190H468V198H484V210H494V226H502V246H506V290H502V310H494V326H484V338H468V346H448V350H400V346H380V338H364V326H354V310H346V290H342V246H346V226H354V210H364V198H380V190H400Z" />
+                  <path class="era-rim" d="M396 178H444V182H464V190H480V202H490V218H498V238H502V282H498V302H490V318H480V330H464V338H444V342H396V338H376V330H360V318H350V302H342V282H338V238H342V218H350V202H360V190H376V182H396Z" />
+                  <g id="era-surface" class="era-surface" clip-path="url(#era-clip)">
+                    <g id="era-surface-details">
+                      <rect class="era-surface-base" x="338" y="178" width="164" height="164" />
+                      <rect x="338" y="178" width="164" height="164" fill="url(#era-surface-pattern)" />
+                      <path class="era-ring" d="M396 194H444V198H464V206H480V222H488V242H492V278H488V298H480V314H464V322H444V326H396V322H376V314H360V298H352V278H348V242H352V222H360V206H376V198H396Z" />
+                      <path class="era-land" d="M368 214H392V222H404V238H396V250H376V262H356V246H360V226H368ZM448 198H468V210H480V230H468V242H456V258H440V246H432V226H440V210H448ZM424 274H444V282H464V298H456V314H436V326H416V310H408V294H416ZM368 286H388V298H400V314H384V326H364V314H352V298H360Z" />
+                      <path class="era-rune-lines" d="M420 182V206M420 314V338M342 260H366M474 260H498M364 204L380 220M460 300L476 316M364 316L380 300M460 220L476 204" />
+                    </g>
+                  </g>
+                  <path id="era-front-half" class="era-front-half" d="M338 178H502V260H338Z" clip-path="url(#era-clip)" fill="url(#era-front-pattern)" />
+                  <path id="era-horizon-cut" class="era-horizon-cut" d="M338 260H502" />
+                  <g id="era-view-arrow" class="era-view-arrow">
+                    <path d="M416 252V216H408L420 198 432 216H424V252Z" />
+                  </g>
+                  <text id="era-view-letter" class="era-view-letter" x="420" y="194" text-anchor="middle">N</text>
+                  <path class="era-pole-rune" d="M412 252H428V268H412ZM416 256V264H424V256Z" fill-rule="evenodd" />
+                  <text x="420" y="292" text-anchor="middle" class="era-label">ERA</text>
                 </g>
 
-                <g id="sol-body" class="body body-sol">
-                  <circle id="sol-halo" class="body-halo sol-halo" r="30" />
-                  <circle id="sol-disc" r="16" fill="url(#sol-gradient)" filter="url(#sol-glow)" />
-                  <text x="0" y="44" text-anchor="middle">SOL</text>
+                <g id="sol-body" class="body body-sol" data-intensity-tier="3" transform="translate(730 260)">
+                  <g id="sol-halo" class="body-halo sol-halo">
+                    <use class="body-tier tier-5" href="#sol-tier-5-shape" />
+                    <use class="body-tier tier-4" href="#sol-tier-4-shape" />
+                    <use class="body-tier tier-3" href="#sol-tier-3-shape" />
+                    <use class="body-tier tier-2" href="#sol-tier-2-shape" />
+                  </g>
+                  <g id="sol-disc"><use class="body-tier tier-1" href="#sol-tier-1-shape" /></g>
+                  <text id="sol-label" x="0" y="54" text-anchor="middle">SOL</text>
                 </g>
 
-                <g id="yol-body" class="body body-yol">
-                  <circle id="yol-halo" class="body-halo yol-halo" r="26" />
-                  <circle id="yol-disc" r="14" fill="url(#yol-gradient)" filter="url(#yol-glow)" />
-                  <text x="0" y="40" text-anchor="middle">YOL</text>
+                <g id="yol-body" class="body body-yol" data-intensity-tier="3" transform="translate(180 260)">
+                  <g id="yol-halo" class="body-halo yol-halo">
+                    <use class="body-tier tier-5" href="#yol-tier-5-shape" />
+                    <use class="body-tier tier-4" href="#yol-tier-4-shape" />
+                    <use class="body-tier tier-3" href="#yol-tier-3-shape" />
+                    <use class="body-tier tier-2" href="#yol-tier-2-shape" />
+                  </g>
+                  <g id="yol-disc"><use class="body-tier tier-1" href="#yol-tier-1-shape" /></g>
+                  <text id="yol-label" x="0" y="50" text-anchor="middle">YOL</text>
                 </g>
 
-                <g class="zehs" filter="url(#zehs-glow)">
-                  <path d="M748 64 L754 82 L772 88 L754 94 L748 112 L742 94 L724 88 L742 82 Z" />
-                  <text x="748" y="132" text-anchor="middle">ZEHS · REFERENZ</text>
-                </g>
-
-                <g class="compass" aria-hidden="true">
-                  <line x1="94" y1="456" x2="188" y2="456" />
-                  <path d="M94 456 l10 -6 v12 z" /><path d="M188 456 l-10 -6 v12 z" />
-                  <text x="86" y="461">W</text><text x="196" y="461">O</text>
+                <g class="zehs">
+                  <path d="M752 44H760V64H780V72H760V92H752V72H732V64H752ZM744 56H768V80H744Z" fill-rule="evenodd" />
+                  <text x="756" y="112" text-anchor="middle">ZEHS · REFERENZ</text>
                 </g>
               </svg>
 
@@ -289,7 +301,83 @@
                 <strong>Sol und Yol sind nicht sichtbar</strong>
                 <span>Splitterwelten und Sphärenreiche Heras treten hervor.</span>
               </div>
-            </div>
+            </figure>
+
+            <section class="horizon-section" aria-labelledby="horizon-title">
+              <div class="horizon-heading">
+                <div>
+                  <p class="panel-index">LOKALE SICHTLINIE</p>
+                  <h3 id="horizon-title">Horizontverlauf · Blick nach Norden</h3>
+                  <p>Dieselben Positionen, aus Eras rotierender Blickrichtung projiziert.</p>
+                </div>
+                <div
+                  id="horizon-direction-group"
+                  class="horizon-direction-group"
+                  role="radiogroup"
+                  aria-label="Blickrichtung für den Horizontverlauf"
+                >
+                  <button id="horizon-direction-north" class="direction-button is-active" type="button" role="radio" aria-checked="true" aria-label="Blick nach Norden" data-direction="north" tabindex="0"><span>N</span><small>Norden</small></button>
+                  <button id="horizon-direction-east" class="direction-button" type="button" role="radio" aria-checked="false" aria-label="Blick nach Osten" data-direction="east" tabindex="-1"><span>O</span><small>Osten</small></button>
+                  <button id="horizon-direction-south" class="direction-button" type="button" role="radio" aria-checked="false" aria-label="Blick nach Süden" data-direction="south" tabindex="-1"><span>S</span><small>Süden</small></button>
+                  <button id="horizon-direction-west" class="direction-button" type="button" role="radio" aria-checked="false" aria-label="Blick nach Westen" data-direction="west" tabindex="-1"><span>W</span><small>Westen</small></button>
+                </div>
+              </div>
+
+              <figure class="horizon-stage">
+                <svg
+                  id="horizon-view"
+                  viewBox="0 0 840 280"
+                  role="img"
+                  aria-labelledby="horizon-svg-title horizon-description"
+                  shape-rendering="crispEdges"
+                  stroke-linecap="square"
+                  stroke-linejoin="miter"
+                >
+                  <title id="horizon-svg-title">Horizontverlauf mit Blick nach Norden</title>
+                  <desc id="horizon-description">
+                    Schematische Projektion derselben Sol- und Yol-Positionen aus der gewählten lokalen Blickrichtung auf Era.
+                  </desc>
+
+                  <rect class="horizon-sky-band sky-band-1" width="840" height="44" />
+                  <rect class="horizon-sky-band sky-band-2" y="44" width="840" height="44" />
+                  <rect class="horizon-sky-band sky-band-3" y="88" width="840" height="44" />
+                  <rect class="horizon-sky-band sky-band-4" y="132" width="840" height="44" />
+                  <path class="horizon-dither" d="M0 40H840V44H0ZM0 84H840V88H0ZM0 128H840V132H0ZM12 36H16V40H12ZM40 36H44V40H40ZM68 36H72V40H68ZM96 36H100V40H96ZM124 36H128V40H124ZM152 36H156V40H152ZM180 36H184V40H180ZM208 36H212V40H208ZM236 36H240V40H236ZM264 36H268V40H264ZM292 36H296V40H292ZM320 36H324V40H320ZM348 36H352V40H348ZM376 36H380V40H376ZM404 36H408V40H404ZM432 36H436V40H432ZM460 36H464V40H460ZM488 36H492V40H488ZM516 36H520V40H516ZM544 36H548V40H544ZM572 36H576V40H572ZM600 36H604V40H600ZM628 36H632V40H628ZM656 36H660V40H656ZM684 36H688V40H684ZM712 36H716V40H712ZM740 36H744V40H740ZM768 36H772V40H768ZM796 36H800V40H796ZM824 36H828V40H824Z" />
+                  <g class="horizon-stars" aria-hidden="true"><path d="M72 24H76V28H72ZM160 68H164V72H160ZM260 32H264V36H260ZM364 76H368V80H364ZM472 20H476V24H472ZM576 64H580V68H576ZM676 28H680V32H676ZM764 72H768V76H764Z" /></g>
+
+                  <g id="horizon-convection-field" class="horizon-convection-field" aria-hidden="true">
+                    <path class="horizon-convection-band band-a" d="M0 36H96V24H192V52H288V32H384V60H480V28H576V48H672V20H840V64H744V76H648V52H552V80H456V56H360V88H264V64H168V84H72V68H0Z" />
+                    <path class="horizon-convection-band band-b" d="M0 104H120V88H240V116H360V92H480V124H600V96H720V112H840V148H720V132H600V156H480V140H360V160H240V136H120V152H0Z" />
+                    <path class="horizon-shards" d="M132 52H148V60H156V76H140V84H124V68H132ZM684 40H704V52H712V68H696V76H676V60H684ZM396 92H412V100H424V116H404V124H388V108H396Z" />
+                  </g>
+
+                  <g id="horizon-sol-body" class="body body-sol horizon-body" data-intensity-tier="3" transform="translate(560 92)">
+                    <g class="body-halo sol-halo"><use class="body-tier tier-5" href="#sol-tier-5-shape" /><use class="body-tier tier-4" href="#sol-tier-4-shape" /><use class="body-tier tier-3" href="#sol-tier-3-shape" /><use class="body-tier tier-2" href="#sol-tier-2-shape" /></g>
+                    <use class="body-tier tier-1" href="#sol-tier-1-shape" />
+                    <text class="horizon-body-label" x="0" y="50" text-anchor="middle">SOL</text>
+                  </g>
+                  <g id="horizon-yol-body" class="body body-yol horizon-body" data-intensity-tier="3" transform="translate(280 124)">
+                    <g class="body-halo yol-halo"><use class="body-tier tier-5" href="#yol-tier-5-shape" /><use class="body-tier tier-4" href="#yol-tier-4-shape" /><use class="body-tier tier-3" href="#yol-tier-3-shape" /><use class="body-tier tier-2" href="#yol-tier-2-shape" /></g>
+                    <use class="body-tier tier-1" href="#yol-tier-1-shape" />
+                    <text class="horizon-body-label" x="0" y="48" text-anchor="middle">YOL</text>
+                  </g>
+
+                  <path class="mountain-back" d="M0 176V152H52L84 124 116 152H152L196 112 240 152H284L320 132 356 152H400L448 108 496 152H544L580 128 616 152H660L704 116 748 152H792L816 136 840 148V176Z" />
+                  <path class="mountain-front" d="M0 176V160H72L104 144 136 160H216L252 136 288 160H360L396 148 432 160H520L560 136 600 160H684L720 140 756 160H840V176Z" />
+                  <g class="horizon-ruins" aria-hidden="true">
+                    <path d="M96 176V144H104V132H112V144H120V176ZM104 148H112V156H104ZM692 176V136H700V120H708V136H716V176ZM700 144H708V152H700Z" fill-rule="evenodd" />
+                    <path d="M388 176V152H396V144H404V152H412V176ZM428 176V148H436V140H444V148H452V176ZM404 160H436V168H404Z" />
+                  </g>
+                  <path class="forest-line" d="M0 176H840V208H0ZM24 172L36 148 48 172ZM56 176L72 144 88 176ZM752 176L768 144 784 176ZM792 176L808 148 824 176Z" />
+                  <path class="horizon-line" d="M0 176H840V180H0Z" />
+                  <rect class="horizon-ground" y="208" width="840" height="72" />
+                  <path class="horizon-ground-dither" d="M0 216H840V220H0ZM0 232H840V236H0ZM0 248H840V252H0Z" />
+                  <text id="horizon-left-label" class="horizon-compass-label" x="40" y="268">W · WESTEN</text>
+                  <text id="horizon-center-label" class="horizon-compass-label is-center" x="420" y="268" text-anchor="middle">N · NORDEN</text>
+                  <text id="horizon-right-label" class="horizon-compass-label" x="800" y="268" text-anchor="end">O · OSTEN</text>
+                </svg>
+              </figure>
+            </section>
 
             <div class="readout-grid" aria-label="Aktuelle Messwerte">
               <div class="readout">
