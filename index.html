@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Interaktive, auf drei Minuten komprimierte Darstellung der Zeitzyklen von Sol und Yol auf Era."
+    />
+    <meta id="theme-color" name="theme-color" content="#120e18" />
+    <title>Era – Zeitzyklen von Sol und Yol</title>
+    <script>
+      (() => {
+        try {
+          const saved = localStorage.getItem("era-theme");
+          const theme = saved === "light" || saved === "dark"
+            ? saved
+            : matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+          document.documentElement.dataset.theme = theme;
+        } catch (_) {
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="phases.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <svg class="icon-sprite" aria-hidden="true">
+      <defs>
+        <symbol id="icon-era-cycle" viewBox="0 0 24 24">
+          <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+            <circle cx="12" cy="12" r="3.4" /><ellipse cx="12" cy="12" rx="9" ry="5.5" />
+            <path d="M12 3v2M12 19v2M3 12h2M19 12h2M6.2 6.2l1.4 1.4M16.4 16.4l1.4 1.4" />
+            <circle cx="19.2" cy="10.1" r="1.2" fill="currentColor" stroke="none" />
+            <circle cx="5.9" cy="14.7" r=".9" fill="currentColor" stroke="none" />
+          </g>
+        </symbol>
+        <symbol id="icon-theme-sun" viewBox="0 0 24 24">
+          <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.7"><circle cx="12" cy="12" r="4" /><path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6" /></g>
+        </symbol>
+        <symbol id="icon-theme-moon" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="m12 3 6 5-2 8-4 5-4-5-2-8Z" /><path d="m12 3-1 6 5 7M11 9 8 16M6 8l5 1 7-1" /><path d="M4 4h1M19 4h1M4 20h1M19 20h1" /></g></symbol>
+        <symbol id="icon-grand-cycle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><circle cx="12" cy="12" r="8" /><path d="M12 4v3M12 17v3M4 12h3M17 12h3M7 7l2.1 2.1M14.9 14.9 17 17M17 7l-2.1 2.1M9.1 14.9 7 17" /><circle cx="12" cy="12" r="2" /></g></symbol>
+        <symbol id="icon-convection-time" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9s8 4 8 9" /><path d="m10 16 2-1 2 1v2h-4Z" /></g></symbol>
+        <symbol id="icon-presentation" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><circle cx="12" cy="13" r="8" /><path d="M9 2h6M12 5v2M18.5 6.5 20 5M12 13l4-2" /></g></symbol>
+        <symbol id="icon-library" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M4 5.5c3.2-.7 5.9 0 8 2v12c-2.1-2-4.8-2.7-8-2ZM20 5.5c-3.2-.7-5.9 0-8 2v12c2.1-2 4.8-2.7 8-2Z" /><path d="M7 9h2M15 9h2M7 12h2M15 12h2" /></g></symbol>
+        <symbol id="icon-random" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M4 8c3.5 0 4.5 8 8 8h6M16 13l3 3-3 3M4 16c3.5 0 4.5-8 8-8h6M16 5l3 3-3 3" /></g></symbol>
+        <symbol id="icon-timeline" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M3 12h18" /><circle cx="6" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="18" cy="12" r="2" /><path d="M6 8V5M12 16v3M18 8V5" /></g></symbol>
+        <symbol id="icon-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7Z" fill="currentColor" /></symbol>
+        <symbol id="icon-pause" viewBox="0 0 24 24"><path d="M7 5h3v14H7zM14 5h3v14h-3z" fill="currentColor" /></symbol>
+        <symbol id="icon-restart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"><path d="M5.2 8.2A8 8 0 1 1 4 15" /><path d="M4 4v5h5" /></g></symbol>
+        <symbol id="icon-arrow-left" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" /></symbol>
+        <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" /></symbol>
+        <symbol id="icon-canon" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="m12 3 2.1 3.7 4.2.8-2.9 3.1.5 4.3-3.9-1.8-3.9 1.8.5-4.3-2.9-3.1 4.2-.8Z" /><circle cx="12" cy="18.5" r="2.2" /></g></symbol>
+        <symbol id="icon-simulation" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M8 3h8M9 3v5l-5 9a2.5 2.5 0 0 0 2.2 4h11.6a2.5 2.5 0 0 0 2.2-4l-5-9V3" /><path d="M7 16c2 1 3-1 5 0s3-1 5 0" /></g></symbol>
+        <symbol id="icon-compression" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M4 4l6 6M4 10h6V4M20 4l-6 6M14 4v6h6M4 20l6-6M4 14h6v6M20 20l-6-6M14 20v-6h6" /></g></symbol>
+
+        <symbol id="icon-category-synchron" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.6"><path d="M4 9c4-5 12-5 16 0M4 15c4 5 12 5 16 0" /><circle cx="7" cy="8" r="1.5" fill="currentColor" stroke="none" /><circle cx="17" cy="16" r="1.5" fill="currentColor" stroke="none" /></g></symbol>
+        <symbol id="icon-category-langsam" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><circle cx="12" cy="12" r="8" /><path d="M12 7v5l3 2M5 5l2 2" /></g></symbol>
+        <symbol id="icon-category-stehend" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><circle cx="12" cy="7" r="3" /><path d="M7 20h10M9 17h6M10 10v7M14 10v7" /></g></symbol>
+        <symbol id="icon-category-asynchron" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M5 8h14l-3-3M19 16H5l3 3" /><circle cx="12" cy="12" r="2" /></g></symbol>
+        <symbol id="icon-category-wechselnd" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M4 6h5l6 12h5M17 15l3 3-3 3M4 18h5l2-4M15 6h5M17 3l3 3-3 3" /></g></symbol>
+        <symbol id="icon-category-konvektion" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="4" /><path d="M4 12h16M12 4v16" /></g></symbol>
+
+        <symbol id="icon-sync-standing" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><circle cx="12" cy="8" r="3.2" /><path d="M12 3V1.8M7.8 4.3 7 3.4M16.2 4.3l.8-.9M6 8H4.5M19.5 8H18M8 20h8M10 17h4M12 11.2V17" /></g></symbol>
+        <symbol id="icon-sync-morning-evening" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 15h18M6 15a6 6 0 0 1 12 0" /><path d="M7 8 5.5 6.5M17 8l1.5-1.5M12 6V3" /><path d="M6 19h12" /></g></symbol>
+        <symbol id="icon-sync-long-night-morning" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 17h18M7 17a5 5 0 0 1 8.5-3.6" /><path d="m16 4 3 2.5-1 4-2 2-2-2-1-4Z" /><path d="M4 20h16M7 12h2M4 12h1" /></g></symbol>
+        <symbol id="icon-sync-long-morning" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M2 16h20M7 16a5 5 0 0 1 10 0M12 6v3M5 9l2 2M19 9l-2 2M3 20h18" /><path d="M8 5h8" /></g></symbol>
+        <symbol id="icon-sync-wandering" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="7" cy="15" r="2.3" /><path d="M3 15c1-7 8-11 15-8M15 4l3 3-3 3M10 18c3 2 6 2 10 0" /></g></symbol>
+        <symbol id="icon-sync-oscillating" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M4 7h16M12 7v3" /><path d="M12 10l-5 7M12 10l5 7" /><circle cx="7" cy="18" r="2" /><circle cx="17" cy="18" r="2" /><path d="M5 4h14" /></g></symbol>
+        <symbol id="icon-sync-short-day" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 17h18M8 17a4 4 0 0 1 8 0" /><circle cx="12" cy="13" r="1.5" /><path d="M5 7a8 8 0 0 1 14 0M7 5l-2 2 3 .5" /></g></symbol>
+        <symbol id="icon-sync-short-night" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="10" r="4" /><path d="M12 3V1.5M5 3l2 2M19 3l-2 2M4 10H2M22 10h-2M4 18h16" /><path d="m15 16 2 1.6-.7 2.4-1.3 1-1.3-1-.7-2.4Z" /></g></symbol>
+        <symbol id="icon-slow-day-night" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="12" r="8" /><path d="M12 4v16M12 8a4 4 0 0 1 0 8" /><path d="M8 9 6.8 8M8 15l-1.2 1M16 9l1.2-1M16 15l1.2 1" /></g></symbol>
+        <symbol id="icon-slow-normal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2" /><path d="M12 5v2M12 17v2M5 12h2M17 12h2M15.5 6.5 17 5M7 19l1.5-1.5" /></g></symbol>
+        <symbol id="icon-slow-tan" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="12" r="8" /><path d="M12 4v8l4 2M6.4 6.4l1.4 1.4M4 12h2M6.4 17.6l1.4-1.4M12 20v-2" /><path d="M16 5h3v3" /></g></symbol>
+        <symbol id="icon-slow-dir" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="12" r="8" /><path d="M12 4v16M4 12h16M6.4 6.4l11.2 11.2M17.6 6.4 6.4 17.6" /><circle cx="12" cy="12" r="2" /></g></symbol>
+        <symbol id="icon-standing-suns" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="8" cy="8" r="2.5" /><circle cx="16" cy="8" r="2.5" /><path d="M8 3V2M16 3V2M4 8H3M21 8h-1M8 13v5M16 13v5M5 18h14M7 21h10" /></g></symbol>
+        <symbol id="icon-async-wandering" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M20 8C16 3 8 3 4 9M7 6 4 9l4 2" /><circle cx="16" cy="15" r="2.5" /><path d="M4 18c4 2 9 2 13 0" /></g></symbol>
+        <symbol id="icon-async-horizon" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 17h18M19 13c-4-3-10-3-14 0M8 10l-3 3 4 1" /><circle cx="17" cy="13" r="1.8" /><path d="M5 20h14" /></g></symbol>
+        <symbol id="icon-async-parabola" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M20 18C17 4 7 4 4 18M7 14l-3 4 5 1" /><circle cx="12" cy="7.5" r="2" /><path d="M3 20h18" /></g></symbol>
+        <symbol id="icon-changing" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M4 6h5l6 12h5M17 15l3 3-3 3M4 18h5l6-12h5M17 3l3 3-3 3" /><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" /></g></symbol>
+        <symbol id="icon-convection" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="12" r="8" /><path d="M6.3 6.3 17.7 17.7M17.7 6.3 6.3 17.7" /><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" /><path d="M12 1v2M12 21v2M1 12h2M21 12h2" /></g></symbol>
+      </defs>
+    </svg>
+    <a class="skip-link" href="#simulation">Zur Simulation springen</a>
+
+    <div class="site-shell">
+      <header class="site-header">
+        <div class="brand-lockup">
+          <div class="brand-sigil" aria-hidden="true">
+            <svg><use href="#icon-era-cycle"></use></svg>
+          </div>
+          <div>
+            <p class="eyebrow">DIE CHRONIK VON ERA · KOSMOLOGISCHE ZEITRECHNUNG</p>
+            <h1>Zeitzyklen von Sol und Yol</h1>
+            <p class="subtitle">
+              70.000 Um werden didaktisch auf 3:00 oder 6:00 Minuten verdichtet. Die Konvektion wird bewusst
+              vergrößert, damit ihr Ablauf lesbar bleibt.
+            </p>
+          </div>
+        </div>
+        <div class="header-tools">
+          <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="true">
+            <svg class="theme-toggle-icon" aria-hidden="true"><use id="theme-icon-use" href="#icon-theme-moon"></use></svg>
+            <span><small>Erscheinungsbild</small><strong id="theme-label">Dunkle Chronik</strong></span>
+          </button>
+          <div class="header-facts" aria-label="Kanonische Eckdaten">
+            <div><svg aria-hidden="true"><use href="#icon-grand-cycle"></use></svg><strong>10</strong><span>Mohn pro Großzyklus</span></div>
+            <div><svg aria-hidden="true"><use href="#icon-convection-time"></use></svg><strong>400</strong><span>Um Konvektion</span></div>
+            <div><svg aria-hidden="true"><use href="#icon-presentation"></use></svg><strong>3 · 6</strong><span>Minuten Zeitfassung</span></div>
+          </div>
+        </div>
+      </header>
+
+      <main id="simulation">
+        <section class="workspace" aria-label="Interaktive Zyklussimulation">
+          <aside class="panel phase-panel" aria-labelledby="phase-library-title">
+            <div class="panel-heading">
+              <div class="section-seal" aria-hidden="true"><svg><use href="#icon-library"></use></svg><span>01</span></div>
+              <div>
+                <h2 id="phase-library-title">Phasenbibliothek</h2>
+                <p>Jede Vorlage ist im erzeugten Zyklus mindestens einmal enthalten.</p>
+              </div>
+            </div>
+
+            <label class="field-label" for="phase-select">Zyklusphase auswählen</label>
+            <select id="phase-select" class="field-control"></select>
+            <button id="jump-phase" class="button button-primary" type="button">
+              <svg class="button-icon" aria-hidden="true"><use href="#icon-timeline"></use></svg>
+              Zur nächsten Phase springen
+            </button>
+
+            <div class="button-row" aria-label="Phasenweise navigieren">
+              <button id="previous-phase" class="button button-quiet" type="button"><svg class="button-icon" aria-hidden="true"><use href="#icon-arrow-left"></use></svg>Vorherige</button>
+              <button id="next-phase" class="button button-quiet" type="button">Nächste<svg class="button-icon" aria-hidden="true"><use href="#icon-arrow-right"></use></svg></button>
+            </div>
+
+            <p class="field-label sigil-label">Alle Zyklus-Siegel</p>
+            <div id="phase-sigils" class="phase-sigils" aria-label="Alle Zyklusphasen als anwählbare Siegel"></div>
+
+            <article class="phase-card" aria-labelledby="active-phase-name">
+              <div class="phase-card-topline">
+                <span id="active-category" class="category-label">Synchron</span>
+                <span id="phase-occurrence" class="occurrence-label">1 / 1</span>
+              </div>
+              <div class="active-phase-heading">
+                <div id="active-phase-sigil" class="active-phase-sigil" aria-hidden="true">
+                  <svg><use id="active-phase-icon-use" href="#icon-sync-standing"></use></svg>
+                </div>
+                <h3 id="active-phase-name">Stehend synchron</h3>
+              </div>
+              <p id="active-phase-description"></p>
+              <dl class="phase-metadata">
+                <div><dt>Richtung</dt><dd id="active-direction">Ost → West</dd></div>
+                <div><dt>Vorlagenanteil</dt><dd id="active-span">—</dd></div>
+              </dl>
+            </article>
+
+            <details class="method-note">
+              <summary>Kanon und Simulation unterscheiden</summary>
+              <p>
+                Die Einheiten, die Konvektionsdauer und die Laufarten sind kanonisch. Reihenfolge,
+                Einzeldauer, Geschwindigkeit und Intensitätsverlauf dieses Beispiels entstehen aus
+                dem gewählten Seed.
+              </p>
+            </details>
+          </aside>
+
+          <section class="panel visual-panel" aria-labelledby="sky-title">
+            <div class="visual-heading">
+              <div>
+                <p class="panel-index">02 · SCHEMATISCHE HIMMELSANSICHT</p>
+                <h2 id="sky-title">Aktueller Weltzustand</h2>
+              </div>
+              <div class="state-badge" id="state-badge-shell">
+                <svg aria-hidden="true"><use id="state-category-icon-use" href="#icon-category-synchron"></use></svg>
+                <span id="state-badge">Synchron</span>
+              </div>
+            </div>
+
+            <div class="sky-stage">
+              <svg
+                id="orbit-view"
+                viewBox="0 0 840 520"
+                role="img"
+                aria-labelledby="orbit-title orbit-description"
+              >
+                <title id="orbit-title">Schematische Bewegung von Sol und Yol um Era</title>
+                <desc id="orbit-description">
+                  Die Positionen, Richtungen und Intensitäten werden aus dem aktuellen Seed und der
+                  gewählten Zeit berechnet. Die Darstellung ist keine astronomisch exakte Umlaufbahn.
+                </desc>
+                <defs>
+                  <radialGradient id="era-gradient" cx="42%" cy="35%">
+                    <stop offset="0" stop-color="#75849b" />
+                    <stop offset="0.48" stop-color="#344255" />
+                    <stop offset="1" stop-color="#121824" />
+                  </radialGradient>
+                  <radialGradient id="sol-gradient">
+                    <stop offset="0" stop-color="#fff7c5" />
+                    <stop offset="0.38" stop-color="#ffc15c" />
+                    <stop offset="1" stop-color="#ff6b35" />
+                  </radialGradient>
+                  <radialGradient id="yol-gradient">
+                    <stop offset="0" stop-color="#e9e5ff" />
+                    <stop offset="0.38" stop-color="#9d8cff" />
+                    <stop offset="1" stop-color="#5641d8" />
+                  </radialGradient>
+                  <filter id="sol-glow" x="-160%" y="-160%" width="420%" height="420%">
+                    <feGaussianBlur stdDeviation="12" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                  <filter id="yol-glow" x="-160%" y="-160%" width="420%" height="420%">
+                    <feGaussianBlur stdDeviation="9" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                  <filter id="zehs-glow" x="-240%" y="-240%" width="580%" height="580%">
+                    <feGaussianBlur stdDeviation="6" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                  <linearGradient id="convection-gradient" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#6d4aff" stop-opacity="0.08" />
+                    <stop offset="0.5" stop-color="#ff6f3c" stop-opacity="0.18" />
+                    <stop offset="1" stop-color="#61d8ff" stop-opacity="0.08" />
+                  </linearGradient>
+                </defs>
+
+                <g class="star-field" aria-hidden="true">
+                  <circle cx="82" cy="91" r="1.6" /><circle cx="142" cy="172" r="1.2" />
+                  <circle cx="228" cy="78" r="1.1" /><circle cx="314" cy="142" r="1.4" />
+                  <circle cx="418" cy="68" r="1.1" /><circle cx="530" cy="122" r="1.5" />
+                  <circle cx="638" cy="72" r="1.1" /><circle cx="752" cy="153" r="1.7" />
+                  <circle cx="110" cy="376" r="1.2" /><circle cx="218" cy="438" r="1.6" />
+                  <circle cx="330" cy="402" r="1.1" /><circle cx="520" cy="430" r="1.3" />
+                  <circle cx="692" cy="398" r="1.4" /><circle cx="786" cy="337" r="1.1" />
+                </g>
+
+                <ellipse class="orbit orbit-sol" cx="420" cy="268" rx="300" ry="178" />
+                <ellipse class="orbit orbit-yol" cx="420" cy="268" rx="244" ry="142" />
+                <path id="direction-path-sol" class="direction-arc direction-sol" />
+                <path id="direction-path-yol" class="direction-arc direction-yol" />
+
+                <g id="convection-field" class="convection-field" aria-hidden="true">
+                  <ellipse cx="420" cy="268" rx="326" ry="201" fill="url(#convection-gradient)" />
+                  <path d="M120 340 C240 188 302 406 430 233 S660 178 742 340" />
+                  <path d="M130 206 C258 364 328 126 466 286 S676 352 728 190" />
+                  <path d="M196 104 C340 230 480 66 654 166" />
+                </g>
+
+                <g id="era-group">
+                  <circle class="era-shadow" cx="420" cy="278" r="86" />
+                  <circle class="era" cx="420" cy="268" r="82" fill="url(#era-gradient)" />
+                  <path
+                    id="era-meridian"
+                    class="era-meridian"
+                    d="M420 190 C374 220 374 316 420 346 C466 316 466 220 420 190"
+                  />
+                  <ellipse class="era-equator" cx="420" cy="268" rx="80" ry="26" />
+                  <text x="420" y="274" text-anchor="middle" class="era-label">ERA</text>
+                </g>
+
+                <g id="sol-body" class="body body-sol">
+                  <circle id="sol-halo" class="body-halo sol-halo" r="30" />
+                  <circle id="sol-disc" r="16" fill="url(#sol-gradient)" filter="url(#sol-glow)" />
+                  <text x="0" y="44" text-anchor="middle">SOL</text>
+                </g>
+
+                <g id="yol-body" class="body body-yol">
+                  <circle id="yol-halo" class="body-halo yol-halo" r="26" />
+                  <circle id="yol-disc" r="14" fill="url(#yol-gradient)" filter="url(#yol-glow)" />
+                  <text x="0" y="40" text-anchor="middle">YOL</text>
+                </g>
+
+                <g class="zehs" filter="url(#zehs-glow)">
+                  <path d="M748 64 L754 82 L772 88 L754 94 L748 112 L742 94 L724 88 L742 82 Z" />
+                  <text x="748" y="132" text-anchor="middle">ZEHS · REFERENZ</text>
+                </g>
+
+                <g class="compass" aria-hidden="true">
+                  <line x1="94" y1="456" x2="188" y2="456" />
+                  <path d="M94 456 l10 -6 v12 z" /><path d="M188 456 l-10 -6 v12 z" />
+                  <text x="86" y="461">W</text><text x="196" y="461">O</text>
+                </g>
+              </svg>
+
+              <div id="convection-message" class="convection-message" hidden>
+                <span class="convection-kicker">KONVEKTION</span>
+                <strong>Sol und Yol sind nicht sichtbar</strong>
+                <span>Splitterwelten und Sphärenreiche Heras treten hervor.</span>
+              </div>
+            </div>
+
+            <div class="readout-grid" aria-label="Aktuelle Messwerte">
+              <div class="readout">
+                <span>Zeit auf Era</span>
+                <strong id="era-time">Mohn 0 · Dir 0 · Tan 0 · Um 0</strong>
+              </div>
+              <div class="readout">
+                <span>Sol</span>
+                <strong><span id="sol-intensity">S-Int 5,0</span> · <span id="sol-speed">0°/s</span></strong>
+              </div>
+              <div class="readout">
+                <span>Yol</span>
+                <strong><span id="yol-intensity">S-Int 5,0</span> · <span id="yol-speed">0°/s</span></strong>
+              </div>
+              <div class="readout">
+                <span>Darstellungszeit</span>
+                <strong id="presentation-time">0:00 / 3:00</strong>
+              </div>
+            </div>
+          </section>
+
+          <aside class="panel algorithm-panel" aria-labelledby="algorithm-title">
+            <div class="panel-heading">
+              <div class="section-seal" aria-hidden="true"><svg><use href="#icon-random"></use></svg><span>03</span></div>
+              <div>
+                <h2 id="algorithm-title">Zufallssteuerung</h2>
+                <p>Gleicher Seed, gleicher vollständiger Zyklus.</p>
+              </div>
+            </div>
+
+            <label class="field-label" for="seed-input">Szenario-Seed</label>
+            <input id="seed-input" class="field-control" value="ERA-3500" maxlength="64" />
+            <div class="button-row button-row-equal">
+              <button id="apply-seed" class="button button-primary" type="button"><svg class="button-icon" aria-hidden="true"><use href="#icon-era-cycle"></use></svg>Seed anwenden</button>
+              <button id="new-seed" class="button button-quiet" type="button"><svg class="button-icon" aria-hidden="true"><use href="#icon-random"></use></svg>Neu würfeln</button>
+            </div>
+
+            <div class="algorithm-meter">
+              <div>
+                <span>Sol-Geschwindigkeit</span>
+                <strong id="sol-speed-meter-label">0°/s</strong>
+              </div>
+              <div class="meter-track"><span id="sol-speed-meter"></span></div>
+            </div>
+            <div class="algorithm-meter">
+              <div>
+                <span>Yol-Geschwindigkeit</span>
+                <strong id="yol-speed-meter-label">0°/s</strong>
+              </div>
+              <div class="meter-track meter-yol"><span id="yol-speed-meter"></span></div>
+            </div>
+
+            <dl class="algorithm-facts">
+              <div><dt>Phasen im Szenario</dt><dd id="phase-count">—</dd></div>
+              <div><dt>Wiederholungen</dt><dd id="repeat-count">—</dd></div>
+              <div><dt>Aktueller Abschnitt</dt><dd id="segment-range">—</dd></div>
+              <div><dt>Zeitabbildung</dt><dd>semantisch komprimiert</dd></div>
+            </dl>
+
+            <p class="algorithm-caption">
+              Ein deterministischer Zufall variiert Reihenfolge, Wiederholungen, Geschwindigkeit und
+              S-Int. Die Konvektion bleibt als fester Abschluss bei 70.000 Um erhalten.
+            </p>
+          </aside>
+        </section>
+
+        <section class="panel timeline-panel" aria-labelledby="timeline-title">
+          <div class="timeline-heading">
+            <div class="timeline-title-lockup">
+              <div class="section-seal" aria-hidden="true"><svg><use href="#icon-timeline"></use></svg><span>04</span></div>
+              <div>
+                <p class="panel-index">GESAMTZYKLUS</p>
+                <h2 id="timeline-title">Drei-Minuten-Zeitlinie</h2>
+              </div>
+            </div>
+            <p>
+              Abschnittsbreiten zeigen die Erklärzeit, nicht das reale Verhältnis der Um. Die
+              Konvektion erhält je nach Zeitfassung 16 oder 32 Sekunden.
+            </p>
+          </div>
+
+          <div id="phase-track" class="phase-track" aria-label="Klickbare Abschnitte des erzeugten Zyklus"></div>
+
+          <label class="sr-only" for="time-slider">Darstellungszeit im Gesamtzyklus</label>
+          <input
+            id="time-slider"
+            class="time-slider"
+            type="range"
+            min="0"
+            max="180000"
+            step="50"
+            value="0"
+            aria-valuetext="0 Minuten 0 Sekunden"
+          />
+
+          <div class="playback-controls">
+            <button id="play-toggle" class="button button-play" type="button" aria-pressed="false">
+              <svg id="play-icon" class="button-icon" aria-hidden="true"><use id="play-icon-use" href="#icon-play"></use></svg>
+              <span id="play-label">Abspielen</span>
+            </button>
+            <button id="restart" class="button button-quiet" type="button"><svg class="button-icon" aria-hidden="true"><use href="#icon-restart"></use></svg>Zum Anfang</button>
+            <label class="inline-field" for="duration-mode">
+              Zeitfassung
+              <select id="duration-mode" class="field-control field-compact">
+                <option value="180000">3 Minuten</option>
+                <option value="360000">6 Minuten</option>
+              </select>
+            </label>
+            <label class="inline-field" for="playback-rate">
+              Tempo
+              <select id="playback-rate" class="field-control field-compact">
+                <option value="1">1× · 3:00</option>
+                <option value="1.5">1,5× · 2:00</option>
+                <option value="2">2× · 1:30</option>
+                <option value="4">4× · 0:45</option>
+              </select>
+            </label>
+            <div class="timeline-position" aria-hidden="true">
+              <span id="timeline-now">0:00</span><span id="timeline-total">3:00</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="explanation" aria-labelledby="reading-title">
+          <div>
+            <p class="panel-index">LESEHILFE</p>
+            <h2 id="reading-title">Was diese Darstellung behauptet – und was nicht</h2>
+          </div>
+          <div class="explanation-grid">
+            <article>
+              <svg class="explanation-icon" aria-hidden="true"><use href="#icon-canon"></use></svg>
+              <h3>Kanonische Struktur</h3>
+              <p>
+                1 Tan = 20 Um, 1 Dir = 200 Um, 1 Mohn = 7.000 Um. Ein Großzyklus umfasst
+                70.000 Um; die Konvektion dauert 400 Um.
+              </p>
+            </article>
+            <article>
+              <svg class="explanation-icon" aria-hidden="true"><use href="#icon-simulation"></use></svg>
+              <h3>Illustratives Szenario</h3>
+              <p>
+                Phasenfolge, Einzeldauern, Geschwindigkeiten und S-Int werden reproduzierbar erzeugt.
+                Sie sind eine Anschauung und kein festgeschriebenes historisches Datum.
+              </p>
+            </article>
+            <article>
+              <svg class="explanation-icon" aria-hidden="true"><use href="#icon-compression"></use></svg>
+              <h3>Bewusste Zeitverzerrung</h3>
+              <p>
+                Die kurzen 400 Um der Konvektion würden linear kaum sichtbar. Für Verständlichkeit
+                erhalten sie 16 Sekunden in der kurzen und 32 Sekunden in der langen Zeitfassung.
+              </p>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <span class="footer-mark"><svg aria-hidden="true"><use href="#icon-era-cycle"></use></svg>Era · Interaktives Zyklusmodell</span>
+        <span>Offline-fähig · ohne externe Abhängigkeiten</span>
+      </footer>
+    </div>
+
+    <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  </body>
+</html>
