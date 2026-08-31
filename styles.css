@@ -3604,6 +3604,7 @@ footer {
 
 .horizon-artwork {
   display: none;
+  visibility: hidden;
 }
 
 .horizon-atmosphere {
@@ -3620,13 +3621,21 @@ footer {
   opacity: 0.12;
 }
 
-:root[data-theme="dark"] #horizon-view[data-biome="polar"] .horizon-artwork-night.horizon-artwork-polar,
-:root[data-theme="dark"] #horizon-view[data-biome="temperate"] .horizon-artwork-night.horizon-artwork-temperate,
-:root[data-theme="dark"] #horizon-view[data-biome="desert"] .horizon-artwork-night.horizon-artwork-desert,
-:root[data-theme="light"] #horizon-view[data-biome="polar"] .horizon-artwork-day.horizon-artwork-polar,
-:root[data-theme="light"] #horizon-view[data-biome="temperate"] .horizon-artwork-day.horizon-artwork-temperate,
-:root[data-theme="light"] #horizon-view[data-biome="desert"] .horizon-artwork-day.horizon-artwork-desert {
+:root[data-theme="dark"] #horizon-view[data-direction="north"] .horizon-artwork-night.horizon-artwork-north,
+:root[data-theme="dark"] #horizon-view[data-direction="east"] .horizon-artwork-night.horizon-artwork-east,
+:root[data-theme="dark"] #horizon-view[data-direction="south"] .horizon-artwork-night.horizon-artwork-south,
+:root[data-theme="dark"] #horizon-view[data-direction="west"] .horizon-artwork-night.horizon-artwork-west,
+:root[data-theme="light"] #horizon-view[data-direction="north"] .horizon-artwork-day.horizon-artwork-north,
+:root[data-theme="light"] #horizon-view[data-direction="east"] .horizon-artwork-day.horizon-artwork-east,
+:root[data-theme="light"] #horizon-view[data-direction="south"] .horizon-artwork-day.horizon-artwork-south,
+:root[data-theme="light"] #horizon-view[data-direction="west"] .horizon-artwork-day.horizon-artwork-west {
   display: inline;
+}
+
+#horizon-view[data-biome="polar"] .horizon-artwork-polar,
+#horizon-view[data-biome="temperate"] .horizon-artwork-temperate,
+#horizon-view[data-biome="desert"] .horizon-artwork-desert {
+  visibility: visible;
 }
 
 :root[data-theme="dark"] .horizon-artwork-night {
@@ -3677,16 +3686,16 @@ footer {
 
 .horizon-irradiance {
   pointer-events: none;
+  image-rendering: auto;
+  shape-rendering: geometricPrecision;
 }
 
 .horizon-irradiance-warm {
-  fill: #ff7a32;
   opacity: var(--irradiance-warm);
   mix-blend-mode: screen;
 }
 
 .horizon-irradiance-cool {
-  fill: #397dff;
   opacity: var(--irradiance-cool);
   mix-blend-mode: screen;
 }
@@ -3696,27 +3705,26 @@ footer {
   mix-blend-mode: screen;
   transform-box: fill-box;
   transform-origin: center;
+  will-change: opacity, transform;
 }
 
 .horizon-shimmer-a {
-  fill: #8de9ff;
-  animation: horizon-shimmer-a 2.8s steps(4, end) infinite;
+  animation: horizon-shimmer-a 8.4s ease-in-out infinite alternate;
 }
 
 .horizon-shimmer-b {
-  fill: #ffd0a0;
-  animation: horizon-shimmer-b 3.6s steps(4, end) infinite;
+  animation: horizon-shimmer-b 11.6s ease-in-out infinite alternate-reverse;
 }
 
 @keyframes horizon-shimmer-a {
   0%,
   100% {
     opacity: var(--irradiance-shimmer-low);
-    transform: translate(0, 0);
+    transform: translate3d(-1.2%, 0, 0) scale(1.015);
   }
   50% {
     opacity: var(--irradiance-shimmer);
-    transform: translate(4px, -2px);
+    transform: translate3d(1.2%, -0.8%, 0) scale(1.035);
   }
 }
 
@@ -3724,11 +3732,11 @@ footer {
   0%,
   100% {
     opacity: var(--irradiance-shimmer);
-    transform: translate(0, 0);
+    transform: translate3d(1%, -0.4%, 0) scale(1.025);
   }
   50% {
     opacity: var(--irradiance-shimmer-low);
-    transform: translate(-4px, 2px);
+    transform: translate3d(-1%, 0.7%, 0) scale(1.04);
   }
 }
 

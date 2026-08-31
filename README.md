@@ -35,10 +35,11 @@ Laufzeitabhängigkeiten.
 - Ein **Seed** erzeugt immer wieder dieselbe Phasenfolge und dieselben Bewegungswerte.
 - **Neu würfeln** erzeugt einen anderen Seed.
 - Der kleine **Doppelkreis-Schalter** neben Abspielen/Pause würfelt nach jeder vollständig
-  beendeten Konvektion automatisch einen neuen Seed und startet den nächsten Zyklus.
+  beendeten Konvektion automatisch einen neuen Seed und startet den nächsten Zyklus. Sol, Yol
+  und Eras letzter Rotationswinkel werden dabei ohne Positionssprung übernommen.
 - 1×, 1,5×, 2× und 4× verändern nur das Wiedergabetempo; das Zeitmodell bleibt gleich.
 - **Helles Pergament / Dunkle Chronik** wechselt das vollständige Pixel-Fantasy-Farbsystem und
-  die eigenen Tag-/Nachtpanoramen aller drei Biome.
+  die eigenen Tag-/Nachtpanoramen aller drei Biome und vier Blickrichtungen.
 - Der Pixelkompass schaltet den Horizontblick zwischen **N**, **O**, **S** und **W** um.
 - Die Breitensteuerung verschiebt den Beobachter um **0°**, **30°** oder **60°** vom Nordpol in Richtung Äquator.
 
@@ -70,8 +71,9 @@ außen. Eine blockige Beobachtermarke verbindet Ring und gewählte Blickrichtung
 
 Die Ellipsen von Sol und Yol sind schematische Bahnformen in einer gemeinsamen zweidimensionalen
 Ebene. Sie sind kein perspektivischer Effekt. Eine Horizontphase verändert daher niemals Höhe
-oder Form der Orbits. Phasen beeinflussen Bewegungsrichtung, Geschwindigkeit, Intensität und die
-separate Horizontprojektion. Jede Bahn besteht aus drei mit `geometricPrecision` gerenderten
+oder Form der Orbits. Phasen beeinflussen Bewegungsrichtung, Geschwindigkeit und Intensität;
+derselbe Weltpunkt behält beim reinen Phasenwechsel dieselbe Horizontprojektion. Jede Bahn besteht
+aus drei mit `geometricPrecision` gerenderten
 Vektorlagen: dunkle Trennkontur, farbiger Kern und feine Messmarkierungen. Dadurch bleibt sie bei
 jeder Displayauflösung scharf. Die früheren orbitalen Richtungspfeile wurden entfernt, weil sie
 keinen zusätzlichen geometrischen Wert lieferten.
@@ -114,10 +116,12 @@ Era-Rotation ist als 1 Um beziehungsweise 90 irdische Vergleichsminuten definier
 ## Horizontverlauf
 
 Der Horizontverlauf ist eine getrennte, hochauflösende Pixelart-Grafik mit echter Tiefenstaffelung.
-Für jedes Biom und jede Tagesfassung liegt `hd1` hinter den Himmelskörpern und `hd2` davor. Das
-dunkle Theme verwendet sechs Nacht-, das helle Theme sechs eigenständige Tag-Ebenen. Alle
-Tag-/Nacht-Paare besitzen pixelgenau dieselben Alphamasken und schließen deshalb an denselben
-Gelände- und Gebirgskanten. In der Nacht werden Sterne transparent vor `hd1`, Sol, Yol und ZEHS
+Für jedes Biom, jede Blickrichtung und jede Tagesfassung liegt `hd1` hinter den Himmelskörpern und
+`hd2` davor. Das dunkle Theme verwendet 24 Nacht-, das helle Theme 24 eigenständige Tag-Ebenen.
+Alle Tag-/Nacht-Paare besitzen pixelgenau dieselben Alphamasken und schließen deshalb an denselben
+Gelände- und Gebirgskanten. Norden bleibt jeweils das bisherige Motiv; Osten, Süden und Westen
+besitzen eigenständige Städte, Siedlungen, Häfen, Schluchten oder Ruinen. In der Nacht werden
+Sterne transparent vor `hd1`, Sol, Yol und ZEHS
 in der Mitte und eine sehr transparente Wolkenebene vor den Himmelskörpern gezeichnet. Im hellen
 Theme sind sämtliche dekorativen Sterne und Konstellationen vollständig ausgeblendet. Dadurch
 verschwinden die bewegten Körper sichtbar hinter Bergen, Gebäuden und Gelände von `hd2`, statt
@@ -141,13 +145,13 @@ festen sphärischen Projektionsanteil an. Der Äquator bei 90° ist weder über 
 ZEHS verhält sich als nordsternartiger Gegenpol: Er steht bei 0° am höchsten und sinkt über 30°
 bis zur flachsten Stellung bei 60°.
 
-Jede Breitenstufe besitzt ein vollständiges, zur Auswahl passendes Pixelpanorama:
+Jede Breitenstufe besitzt vier vollständige, zur Auswahl passende Pixelpanoramen:
 
-| Breite | Landschaft | sichtbare Details |
-| --- | --- | --- |
-| 0° | Polare Eiswelt | Gletscher, Schneefelder, Eisspitzen und Polarobservatorium |
-| 30° | Gemäßigtes Tannenland | Bergketten, Tannenwald, Fluss und Waldhütte |
-| 60° | Heiße Wüstenlandschaft | Dünen, Mesas, Kakteen und Wüstenruinen |
+| Breite | Norden | Osten | Süden | Westen |
+| --- | --- | --- | --- | --- |
+| 0° · Polare Eiswelt | Polarobservatorium | gefrorener Hafen | Gletschersiedlung | Basaltbögen und Expeditionsruinen |
+| 30° · Gemäßigtes | Tannenland und Sternwarte | Flussstadt und Brücken | weite Waldsenke und Ruinen | Aquädukt- und Wasserfallschlucht |
+| 60° · Wüste | Dünen und Observatoriumsruinen | Oase und Sandsteinstadt | Salzebene und Stufenruinen | Canyon und Felsenstadt |
 
 Die Biome wechseln Gelände, Himmel und Horizontfarben. Das Nacht-Theme blendet die gemeinsame
 Sternenebene, beide Themes eine sehr zurückhaltende Wolkenebene per Screen-Compositing ohne Blur
@@ -160,6 +164,10 @@ beide sichtbar, mischen sich warme und kalte Farbe mit einem stärkeren Glitzern
 Verweildauer und die relative Bewegung zu Era bestimmen die Stärke: exakt synchrone, scheinbar
 ortsfeste Läufe wirken am stärksten. 60° verwendet eine höhere Breitenverstärkung als 30°. Diese
 Regel gilt unverändert im Tag- und Nacht-Theme und wird bei der Konvektion vollständig deaktiviert.
+Eine 200-ms-Verlaufsspur zählt die sichtbare Verweildauer über Phasengrenzen hinweg weiter, solange
+der projizierte Körper sichtbar und räumlich stetig bleibt. Ein bloßer Phasenname setzt den Effekt
+daher nicht zurück. Warme und kühle Felder sowie das spektrale Rauschen werden hochauflösend und
+kontinuierlich statt als grobe Pixelkreuze gerendert.
 
 Die Daten fließen in einer festen Reihenfolge:
 
@@ -169,18 +177,21 @@ getSnapshot(ms)
   → unveränderte Nordpol-Orbitansicht
   → Projektion derselben Punkte in den gewählten Horizontblick
   → additive Höhenkorrektur für Sol/Yol, invertierte Breitenkorrektur für ZEHS
-  → deterministischer Einstrahlungsaufbau aus Sichtbarkeit, S-Int und relativer Bewegung
+  → phasenübergreifende Verweildauerspur aus Sichtbarkeit und räumlicher Kontinuität
+  → deterministischer Einstrahlungsaufbau aus Verweildauer, S-Int und relativer Bewegung
 ```
 
 Der Vorwärtsanteil eines Weltpunkts bestimmt Sichtbarkeit und Höhe, sein Rechtsanteil die
 horizontale Position. Ein Körper hinter der lokalen Horizontebene ist in dieser Blickrichtung
-nicht sichtbar; ein Punkt auf der Schnittlinie liegt am Horizont. Horizontläufe bleiben flach,
-der Parabellauf steigt deutlich höher. Diese Höhenfaktoren sind ausschließlich illustrative
-Präsentationswerte und verändern weder `phases.js` noch kanonische Lore-Werte.
+nicht sichtbar; ein Punkt auf der Schnittlinie liegt am Horizont. Orbit-, Horizont-, Umkehr- und
+Parabellauf verwenden für denselben Sol-/Yol-Weltpunkt denselben Projektionsfaktor. Dadurch kann
+ein Phasenwechsel die sichtbare Höhe nicht mehr künstlich versetzen. Die Breitenkorrektur bleibt
+davon unabhängig und verändert weder `phases.js` noch kanonische Lore-Werte.
 
 Ein Richtungs- oder Breitenwechsel berechnet keine neue Simulation: Zeitpunkt, Seed, Phase,
 Sol-/Yol-Winkel, Geschwindigkeit, Intensität und Körpergröße bleiben unverändert. Nur Blickbasis,
-Projektionshöhe sowie die zugehörigen Kompass- und Breitenmarkierungen ändern sich.
+Projektionshöhe, das richtungsgenaue Panorama sowie die zugehörigen Kompass- und
+Breitenmarkierungen ändern sich.
 
 Während der Konvektion sind Sol und Yol in beiden Grafiken unsichtbar. Zwei transparente
 HD-Texturen zeigen den verdichteten Dunkelzustand mit verschlungenen Energieströmen,
@@ -230,7 +241,10 @@ Der Ereignisplan enthält:
 4. eine feste Konvektion über die letzten 400 Um.
 
 Die Bewegung wird analytisch aus `Seed + Abschnitt + Darstellungszeit` berechnet. Sie hängt
-nicht von der Bildrate, der Blickrichtung oder dem vorherigen Navigationsweg ab.
+nicht von der Bildrate, der Blickrichtung oder dem vorherigen Navigationsweg ab. Jeder Abschnitt
+übernimmt Winkel, Radialposition und Intensität vom exakten Ende seines Vorgängers. Beim
+automatischen Vollzykluswechsel werden zusätzlich die finalen Sol-/Yol-Werte und Eras
+Rotationswinkel an den neuen Seed übergeben.
 
 ## Pixeltechnik und Barrierefreiheit
 
@@ -239,7 +253,10 @@ Blur. Die lokalen Chronikschriften bleiben großen Überschriften vorbehalten; B
 Messwerte verwenden blockige Monospace-Fallbacks. Die SVG-Grafiken arbeiten mit `crispEdges`,
 ganzzahligen Strichstärken, quadratischen Linecaps und Miter-Verbindungen. Hochauflösende
 Himmelskarten, Landschaftsebenen und Himmelsobjekte werden lokal als Rastergrafiken geladen;
-jede Theme-Fassung referenziert nur ihr zugehöriges Motiv. Sanfte, gemeinsame Radientokens runden
+jede Theme-Fassung referenziert nur ihr zugehöriges Motiv. Der Einstrahlungseffekt ist die bewusst
+glatte Ausnahme: Seine Vektorfelder nutzen `geometricPrecision`, ein Filterraster von 3360×1120
+und kontinuierliche Bewegungen, damit kein grobes Effektpixelraster sichtbar wird. Sanfte,
+gemeinsame Radientokens runden
 Instrumente, Icons und Eingabefelder ab, ohne die Pixelästhetik in Pillenformen aufzulösen.
 
 Beide Themes besitzen eine vollständige Materialpalette. Fokuszustände sind deutlich sichtbar,
@@ -258,9 +275,9 @@ phases.js                   kanonische Phasenvorlagen plus illustrative Werteber
 app.js                      Seed, Zeitmodell, Geometrie, Projektion, Animation und Interaktion
 Textdatei.txt               kanonische Lore- und Zeitreferenz
 assets/fonts/               lokal eingebettete, offen lizenzierte Chronikschrift
-assets/images/              Astral-Wallpaper, Himmelskörper und gestaffelte HD-Horizontebenen
-tests/smoke.cjs             Fake-DOM-, Interaktions-, Zustands- und Geometrievertrag
-tests/visual-contract.cjs   statischer Vertrag gegen moderne/unscharfe Gestaltungseffekte
+assets/images/              Astral-Wallpaper, Himmelskörper und 48 richtungsgenaue HD-Horizontebenen
+tests/smoke.cjs             Fake-DOM-, Interaktions-, Kontinuitäts- und Geometrievertrag
+tests/visual-contract.cjs   statischer HD-, Ebenen-, Theme- und Gestaltungsvertrag
 tests/zehs-latitude-contract.cjs eigener Regressionstest für die umgekehrte ZEHS-Breitenkurve
 ```
 
@@ -277,9 +294,10 @@ node tests/zehs-latitude-contract.cjs
 Der Smoke-Test prüft unter anderem alle 18 Vorlagen, Seed-Reproduzierbarkeit, die sechsminütige
 Zeitfassung, Theme-Speicherung, Auto-Neuwürfeln, Kompass- und Breitensteuerung per Maus und
 Tastatur, Zustandsinvarianz bei Projektionswechseln, die invertierte ZEHS-Breitenhöhe, die
-synchrone 5,6°/s-Kopplung, die vollständige Sol-/Yol-Einstrahlungsmatrix sowie mindestens 200
-Geometriesnapshots. Dabei werden endliche Koordinaten, S-Int-Grenzen, SVG-Grenzen und der
-Sicherheitsabstand zu Era kontrolliert.
+synchrone 5,6°/s-Kopplung, die vollständige Sol-/Yol-Einstrahlungsmatrix, jede erzeugte
+Phasengrenze und mindestens 200 Geometriesnapshots. Dabei werden Winkel, Radialwerte,
+Horizontpunkte und Einstrahlungsverweildauer in allen Blickrichtungen und Breiten sowie die
+positionsgleiche Übergabe von Sol, Yol, ZEHS und Eras Rotation an den nächsten Vollzyklus geprüft.
 
 Der eigenständige ZEHS-Vertrag prüft die exakte Gegenkurve zu Sol und Yol sowie die Reihenfolge
 0° am höchsten, 30° mittig und 60° am flachsten in allen vier Horizontblickrichtungen.
@@ -287,9 +305,9 @@ Der eigenständige ZEHS-Vertrag prüft die exakte Gegenkurve zu Sol und Yol sowi
 Der visuelle Vertrag liest HTML, CSS und JavaScript statisch und dekodiert die RGBA-PNGs ohne
 Zusatzpaket. Er untersagt unter anderem `backdrop-filter`, Gauß-Weichzeichnung, Pillenradien, alte
 SVG-Verläufe, orbitale Richtungspfeile und die frühere horizontabhängige Skalierung orbitaler
-Y-Radien. Außerdem prüft er die präzisen Vektorbahnen, getrennte Tag-/Nacht-Ebenen, vollständig
-sternfreie Tagespanoramen, pixelidentische Alphamasken, die feste Horizontebenen-Reihenfolge und
-den gemeinsamen Geometrievertrag.
+Y-Radien. Außerdem prüft er die präzisen Vektorbahnen, alle 48 richtungsgenauen Tag-/Nacht-Ebenen,
+vollständig sternfreie Tagespanoramen, pixelidentische Alphamasken, die feste
+Horizontebenen-Reihenfolge, den hochauflösenden Schimmer und den gemeinsamen Geometrievertrag.
 
 ## Grenzen der Darstellung
 

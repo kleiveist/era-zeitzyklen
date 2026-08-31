@@ -87,6 +87,8 @@
     latitudeStrength: Object.freeze({ 0: 0, 30: 0.64, 60: 1 }),
     delayMs: 2200,
     buildupMs: 12000,
+    sampleMs: 200,
+    continuityThresholdPx: 12,
     relativeSpeedScale: 4,
     minimumStability: 0.18,
   });
@@ -105,12 +107,8 @@
     modelStatus: "Weltenlogik · schematische Darstellung",
     worldPoint: Object.freeze({ x: 756, y: 68 }),
   });
-  const HORIZON_HEIGHT_SCALE = Object.freeze({
-    hold: 0.46,
-    horizon: 0.22,
-    "reverse-horizon": 0.22,
-    parabola: 1,
-    "fixed-orbit": 0.72,
+  const HORIZON_PROJECTION_SCALE = Object.freeze({
+    celestial: 0.76,
     zehs: 0.88,
     convection: 0,
   });
@@ -223,6 +221,7 @@
     autoCycle: false,
     playbackRate: 1,
     presentationMs: config.presentationMs,
+    eraRotationOffsetDegrees: 0,
     animationFrame: null,
     lastFrameAt: null,
     lastRenderedSegment: -1,
@@ -230,6 +229,7 @@
     theme: document.documentElement?.dataset?.theme === "light" ? "light" : "dark",
     horizonDirection: readStoredHorizonDirection(),
     horizonLatitude: readStoredHorizonLatitude(),
+    irradianceTimelines: new Map(),
   };
 
   let lastRenderFrame = null;
@@ -321,6 +321,15 @@
     return Math.min(max, Math.max(min, value));
   }
 
+  function smoothstep(value) {
+    const progress = clamp(Number(value) || 0, 0, 1);
+    return progress * progress * (3 - 2 * progress);
+  }
+
+  function interpolate(start, end, progress) {
+    return start + (end - start) * progress;
+  }
+
   function normalizeDegrees(value) {
     const numericValue = Number(value);
     if (!Number.isFinite(numericValue)) return 0;
@@ -365,7 +374,10 @@
   function getEraRotationDegrees(ms, motion) {
     const safeMs = Number.isFinite(Number(ms)) ? Number(ms) : 0;
     const sampledMs = state.reducedMotion ? Math.round(safeMs / 1000) * 1000 : safeMs;
-    return normalizeDegrees((sampledMs / 1000) * config.eraRotationDegreesPerSecond);
+    return normalizeDegrees(
+      state.eraRotationOffsetDegrees +
+        (sampledMs / 1000) * config.eraRotationDegreesPerSecond,
+    );
   }
 
   function getIntensityTier(intensity) {
@@ -465,7 +477,7 @@
     });
   }
 
-  function projectOrbitPointToHorizon(point, viewBasis, motion, latitudeDegrees = 0) {
+  function projectOrbitPointToHorizon(point, viewBasis, projectionKind, latitudeDegrees = 0) {
     const basis = viewBasis || getViewBasis("north", 0);
     const deltaX = Number(point?.x) - ORBIT_GEOMETRY.centerX;
     const deltaY = Number(point?.y) - ORBIT_GEOMETRY.centerY;
@@ -474,11 +486,16 @@
     const unitY = distance > 0.000001 && Number.isFinite(distance) ? deltaY / distance : -1;
     const forwardAmount = clamp(unitX * basis.forward.x + unitY * basis.forward.y, -1, 1);
     const rightAmount = clamp(unitX * basis.right.x + unitY * basis.right.y, -1, 1);
-    const heightScale = HORIZON_HEIGHT_SCALE[motion] ?? 0.76;
-    const visible = motion !== "convection" && forwardAmount >= -0.000001;
+    const normalizedKind = projectionKind === "zehs"
+      ? "zehs"
+      : projectionKind === "convection"
+        ? "convection"
+        : "celestial";
+    const heightScale = HORIZON_PROJECTION_SCALE[normalizedKind];
+    const visible = normalizedKind !== "convection" && forwardAmount >= -0.000001;
     const baseHeight =
       Math.pow(Math.max(0, forwardAmount), 0.8) * HORIZON_GEOMETRY.maxSkyHeight * heightScale;
-    const latitudeLift = visible ? getLatitudeLift(latitudeDegrees, motion) : 0;
+    const latitudeLift = visible ? getLatitudeLift(latitudeDegrees, normalizedKind) : 0;
     const height = baseHeight + latitudeLift;
 
     return Object.freeze({
@@ -503,22 +520,111 @@
     });
   }
 
+  function buildIrradianceTimeline(directionId, latitudeDegrees) {
+    const direction = HORIZON_DIRECTIONS[directionId] ? directionId : "north";
+    const latitude = normalizeHorizonLatitude(latitudeDegrees);
+    const samples = [];
+    let previous = {
+      sol: { visible: false, x: 0, y: 0, dwellMs: 0 },
+      yol: { visible: false, x: 0, y: 0, dwellMs: 0 },
+    };
+
+    for (let ms = 0; ms <= state.presentationMs; ms += IRRADIANCE_MODEL.sampleMs) {
+      const sampleMs = Math.min(ms, state.presentationMs);
+      const snapshot = getSnapshot(sampleMs, { exact: true });
+      const isConvection = snapshot.template.motion === "convection";
+      const viewBasis = getViewBasis(
+        direction,
+        getEraRotationDegrees(sampleMs, snapshot.template.motion),
+      );
+      const next = {};
+      for (const bodyName of ["sol", "yol"]) {
+        const point = getOrbitPoint(snapshot, bodyName);
+        const projection = projectOrbitPointToHorizon(
+          point,
+          viewBasis,
+          isConvection ? "convection" : "celestial",
+          latitude,
+        );
+        const visible = Boolean(!isConvection && snapshot[bodyName].visible && projection.visible);
+        const distance = Math.hypot(
+          projection.x - previous[bodyName].x,
+          projection.y - previous[bodyName].y,
+        );
+        const continuous = Boolean(
+          visible &&
+            previous[bodyName].visible &&
+            distance <= IRRADIANCE_MODEL.continuityThresholdPx,
+        );
+        next[bodyName] = {
+          visible,
+          x: projection.x,
+          y: projection.y,
+          dwellMs: continuous
+            ? previous[bodyName].dwellMs + IRRADIANCE_MODEL.sampleMs
+            : 0,
+        };
+      }
+      samples.push(Object.freeze({
+        ms: sampleMs,
+        solDwellMs: next.sol.dwellMs,
+        yolDwellMs: next.yol.dwellMs,
+      }));
+      previous = next;
+      if (sampleMs === state.presentationMs) break;
+    }
+    return Object.freeze(samples);
+  }
+
+  function getIrradianceDwellAt(
+    ms,
+    directionId = state.horizonDirection,
+    latitudeDegrees = state.horizonLatitude,
+  ) {
+    const latitude = normalizeHorizonLatitude(latitudeDegrees);
+    if (!state.scenario || latitude === 0) {
+      return Object.freeze({ solDwellMs: 0, yolDwellMs: 0 });
+    }
+    const direction = HORIZON_DIRECTIONS[directionId] ? directionId : "north";
+    const key = `${direction}|${latitude}`;
+    if (!state.irradianceTimelines.has(key)) {
+      state.irradianceTimelines.set(key, buildIrradianceTimeline(direction, latitude));
+    }
+    const timeline = state.irradianceTimelines.get(key);
+    const boundedMs = clamp(Number(ms) || 0, 0, state.presentationMs);
+    const exactIndex = boundedMs / IRRADIANCE_MODEL.sampleMs;
+    const lowerIndex = Math.min(Math.floor(exactIndex), timeline.length - 1);
+    const upperIndex = Math.min(lowerIndex + 1, timeline.length - 1);
+    const lower = timeline[lowerIndex];
+    const upper = timeline[upperIndex];
+    const span = Math.max(1, upper.ms - lower.ms);
+    const progress = clamp((boundedMs - lower.ms) / span, 0, 1);
+    return Object.freeze({
+      solDwellMs: interpolate(lower.solDwellMs, upper.solDwellMs, progress),
+      yolDwellMs: interpolate(lower.yolDwellMs, upper.yolDwellMs, progress),
+    });
+  }
+
   function getHorizonIrradiance(
     snapshot,
     horizonProjection,
     latitudeDegrees = state.horizonLatitude,
+    dwellHistory = null,
   ) {
     const latitude = normalizeHorizonLatitude(latitudeDegrees);
     const latitudeStrength = IRRADIANCE_MODEL.latitudeStrength[latitude] || 0;
     const isConvection = snapshot?.template?.motion === "convection";
-    const segmentStart = Number(snapshot?.segment?.displayStart) || 0;
     const sampledMs = Number(snapshot?.positionMs ?? snapshot?.ms);
-    const elapsedMs = Number.isFinite(sampledMs)
-      ? Math.max(0, sampledMs - segmentStart - IRRADIANCE_MODEL.delayMs)
+    const segmentStart = Number(snapshot?.segment?.displayStart) || 0;
+    const fallbackDwellMs = Number.isFinite(sampledMs)
+      ? Math.max(0, sampledMs - segmentStart)
       : 0;
-    const buildup = elapsedMs > 0
-      ? 1 - Math.exp(-elapsedMs / IRRADIANCE_MODEL.buildupMs)
-      : 0;
+    const belongsToScenario = Boolean(
+      state.scenario && state.scenario.segments[snapshot?.segment?.index] === snapshot?.segment,
+    );
+    const resolvedDwell = dwellHistory || (belongsToScenario
+      ? getIrradianceDwellAt(snapshot.ms, state.horizonDirection, latitude)
+      : { solDwellMs: fallbackDwellMs, yolDwellMs: fallbackDwellMs });
 
     function bodyExposure(bodyName) {
       const body = snapshot?.[bodyName];
@@ -529,7 +635,14 @@
           body?.visible &&
           projection?.visible,
       );
-      if (!visible || buildup <= 0) return 0;
+      const dwellMs = Math.max(0, Number(resolvedDwell?.[`${bodyName}DwellMs`]) || 0);
+      const effectiveDwellMs = Math.max(0, dwellMs - IRRADIANCE_MODEL.delayMs);
+      const buildup = effectiveDwellMs > 0
+        ? 1 - Math.exp(-effectiveDwellMs / IRRADIANCE_MODEL.buildupMs)
+        : 0;
+      if (!visible || buildup <= 0) {
+        return { value: 0, dwellMs, buildup: 0, stability: 0 };
+      }
 
       const intensity = clamp((Number(body.intensity) || 1) / 10, 0.1, 1);
       const angularVelocity = Number(body.angularVelocity);
@@ -541,15 +654,22 @@
         IRRADIANCE_MODEL.minimumStability,
         1,
       );
-      return clamp(
-        latitudeStrength * buildup * stability * (0.35 + intensity * 0.65),
-        0,
-        1,
-      );
+      return {
+        value: clamp(
+          latitudeStrength * buildup * stability * (0.35 + intensity * 0.65),
+          0,
+          1,
+        ),
+        dwellMs,
+        buildup,
+        stability,
+      };
     }
 
-    const sol = bodyExposure("sol");
-    const yol = bodyExposure("yol");
+    const solExposure = bodyExposure("sol");
+    const yolExposure = bodyExposure("yol");
+    const sol = solExposure.value;
+    const yol = yolExposure.value;
     const solActive = sol > 0.0001;
     const yolActive = yol > 0.0001;
     const mode = solActive && yolActive
@@ -562,7 +682,11 @@
     const warm = sol * (mode === "dual" ? 0.82 : 1);
     const cool = yol * (mode === "dual" ? 0.9 : 1);
     const shimmer = mode === "dual"
-      ? clamp(Math.min(sol, yol) * 0.82 + Math.max(sol, yol) * 0.18, 0, 1)
+      ? clamp(
+          Math.max(sol * 0.28, yol * 0.68) + Math.min(sol, yol) * 0.5,
+          0,
+          1,
+        )
       : mode === "yol"
         ? yol * 0.68
         : mode === "sol"
@@ -573,7 +697,11 @@
       mode,
       latitude,
       latitudeStrength,
-      buildup,
+      buildup: Math.max(solExposure.buildup, yolExposure.buildup),
+      solBuildup: solExposure.buildup,
+      yolBuildup: yolExposure.buildup,
+      solDwellMs: solExposure.dwellMs,
+      yolDwellMs: yolExposure.dwellMs,
       sol,
       yol,
       warm,
@@ -643,7 +771,7 @@
     return 1;
   }
 
-  function createMotionParameters(seed, segment, bodyName, startAngle) {
+  function createMotionParameters(seed, segment, bodyName, continuity = {}) {
     const template = segment.template;
     const bodyConfig = template[bodyName];
     const prefix = `${segment.index}|${template.id}|${bodyName}`;
@@ -674,8 +802,40 @@
       amplitude = 1.2;
     }
 
+    const radialAmplitude = Number(bodyConfig.radialAmplitude) || 0;
+    const requestedRadialStart = Number(continuity.radialOffset);
+    const startRadialOffset = Number.isFinite(requestedRadialStart)
+      ? requestedRadialStart
+      : radialAmplitude * (unitFor(seed, `${prefix}|radial-start`) * 1.2 - 0.6);
+    const endRadialOffset = radialAmplitude *
+      (unitFor(seed, `${prefix}|radial-end`) * 1.2 - 0.6);
+    const radialSwing = radialAmplitude *
+      (unitFor(seed, `${prefix}|radial-swing`) * 0.5 - 0.25);
+    const intensityRange = bodyConfig.intensity;
+    const requestedIntensityStart = Number(continuity.intensity);
+    const startIntensity = intensityRange
+      ? Number.isFinite(requestedIntensityStart)
+        ? clamp(requestedIntensityStart, 1, 10)
+        : interpolate(
+            intensityRange[0],
+            intensityRange[1],
+            unitFor(seed, `${prefix}|intensity-start`),
+          )
+      : null;
+    const endIntensity = intensityRange
+      ? interpolate(
+          intensityRange[0],
+          intensityRange[1],
+          unitFor(seed, `${prefix}|intensity-end`),
+        )
+      : null;
+    const intensitySwing = intensityRange
+      ? (intensityRange[1] - intensityRange[0]) *
+        (unitFor(seed, `${prefix}|intensity-swing`) * 0.4 - 0.2)
+      : 0;
+
     return {
-      startAngle,
+      startAngle: Number(continuity.angle) || 0,
       baseSpeed,
       minSpeed,
       maxSpeed,
@@ -683,9 +843,12 @@
       amplitude,
       frequency,
       phase,
-      intensityPhase: unitFor(seed, `${prefix}|intensity-phase`) * Math.PI * 2,
-      intensityCycles: 0.45 + unitFor(seed, `${prefix}|intensity-cycles`) * 1.8,
-      radialPhase: unitFor(seed, `${prefix}|radial-phase`) * Math.PI * 2,
+      startRadialOffset,
+      endRadialOffset,
+      radialSwing,
+      startIntensity,
+      endIntensity,
+      intensitySwing,
     };
   }
 
@@ -697,7 +860,7 @@
     return parameters.startAngle + parameters.drift * localSeconds + wave;
   }
 
-  function buildScenario(seed) {
+  function buildScenario(seed, initialCelestialState = null) {
     const random = mulberry32(hashString(`${config.schemaVersion}|${seed}|schedule`));
     const repeatTotal = Math.round(
       randomBetween(random, config.minRepeatedTemplates, config.maxRepeatedTemplates),
@@ -756,14 +919,39 @@
       motion: {},
     });
 
-    let solAngle = unitFor(seed, "initial|sol-angle") * 360;
-    let yolAngle = unitFor(seed, "initial|yol-angle") * 360 + 140;
+    const celestialState = {
+      sol: {
+        angle: Number.isFinite(Number(initialCelestialState?.sol?.angle))
+          ? Number(initialCelestialState.sol.angle)
+          : unitFor(seed, "initial|sol-angle") * 360,
+        radialOffset: Number(initialCelestialState?.sol?.radialOffset),
+        intensity: Number(initialCelestialState?.sol?.intensity),
+      },
+      yol: {
+        angle: Number.isFinite(Number(initialCelestialState?.yol?.angle))
+          ? Number(initialCelestialState.yol.angle)
+          : unitFor(seed, "initial|yol-angle") * 360 + 140,
+        radialOffset: Number(initialCelestialState?.yol?.radialOffset),
+        intensity: Number(initialCelestialState?.yol?.intensity),
+      },
+    };
     for (const segment of segments) {
-      segment.motion.sol = createMotionParameters(seed, segment, "sol", solAngle);
-      segment.motion.yol = createMotionParameters(seed, segment, "yol", yolAngle);
       const durationSeconds = (segment.displayEnd - segment.displayStart) / 1000;
-      solAngle = rawAngle(segment.motion.sol, durationSeconds);
-      yolAngle = rawAngle(segment.motion.yol, durationSeconds);
+      for (const bodyName of ["sol", "yol"]) {
+        const previousIntensity = celestialState[bodyName].intensity;
+        segment.motion[bodyName] = createMotionParameters(
+          seed,
+          segment,
+          bodyName,
+          celestialState[bodyName],
+        );
+        const parameters = segment.motion[bodyName];
+        celestialState[bodyName] = {
+          angle: rawAngle(parameters, durationSeconds),
+          radialOffset: parameters.endRadialOffset,
+          intensity: parameters.endIntensity ?? previousIntensity,
+        };
+      }
     }
 
     return {
@@ -772,6 +960,10 @@
       presentationMs: state.presentationMs,
       convectionPresentationMs,
       segments,
+      finalCelestialState: Object.freeze({
+        sol: Object.freeze({ ...celestialState.sol }),
+        yol: Object.freeze({ ...celestialState.yol }),
+      }),
       occurrences: segments.reduce((map, segment) => {
         const list = map.get(segment.template.id) || [];
         list.push(segment.index);
@@ -793,12 +985,16 @@
     );
   }
 
-  function getSnapshot(ms) {
+  function getSnapshot(ms, options = {}) {
     const segment = findSegment(ms);
     const displayDuration = Math.max(1, segment.displayEnd - segment.displayStart);
     const progress = clamp((ms - segment.displayStart) / displayDuration, 0, 1);
     const cycleUm = segment.umStart + (segment.umEnd - segment.umStart) * progress;
-    const positionMs = state.reducedMotion ? Math.round(ms / 1000) * 1000 : ms;
+    const positionMs = options.exact
+      ? ms
+      : state.reducedMotion
+        ? Math.round(ms / 1000) * 1000
+        : ms;
     const positionProgress = clamp(
       (positionMs - segment.displayStart) / displayDuration,
       0,
@@ -818,23 +1014,24 @@
           Math.cos(parameters.frequency * localSeconds + parameters.phase);
       const speed = clamp(Math.abs(derivative), parameters.minSpeed, parameters.maxSpeed);
       const directionSign = Math.abs(derivative) < 0.0001 ? 0 : derivative > 0 ? 1 : -1;
+      const transitionProgress = smoothstep(positionProgress);
+      const transitionArc = Math.sin(positionProgress * Math.PI);
       const intensity = bodyConfig.intensity
         ? clamp(
-            bodyConfig.intensity[0] +
-              (bodyConfig.intensity[1] - bodyConfig.intensity[0]) *
-                (0.5 +
-                  0.5 *
-                    Math.sin(
-                      parameters.intensityPhase +
-                        positionProgress * parameters.intensityCycles * Math.PI * 2,
-                    )),
+            interpolate(
+              parameters.startIntensity,
+              parameters.endIntensity,
+              transitionProgress,
+            ) + parameters.intensitySwing * transitionArc,
             1,
             10,
           )
         : null;
-      const radialOffset =
-        bodyConfig.radialAmplitude *
-        Math.sin(parameters.radialPhase + positionProgress * Math.PI * 2);
+      const radialOffset = interpolate(
+        parameters.startRadialOffset,
+        parameters.endRadialOffset,
+        transitionProgress,
+      ) + parameters.radialSwing * transitionArc;
       return {
         angle,
         angularVelocity: derivative,
@@ -944,7 +1141,7 @@
     const projection = projectOrbitPointToHorizon(
       point,
       viewBasis,
-      snapshot.template.motion,
+      snapshot.template.motion === "convection" ? "convection" : "celestial",
       state.horizonLatitude,
     );
     return Object.freeze({
@@ -1308,6 +1505,10 @@
       elements.horizonView.setAttribute("data-direction", state.horizonDirection);
       elements.horizonView.setAttribute("data-latitude-degrees", String(state.horizonLatitude));
       elements.horizonView.setAttribute("data-biome", HORIZON_LATITUDES[state.horizonLatitude].biome);
+      elements.horizonView.setAttribute(
+        "data-panorama",
+        `${HORIZON_LATITUDES[state.horizonLatitude].biome}-${state.horizonDirection}`,
+      );
       elements.horizonView.setAttribute("data-irradiance-mode", horizonIrradiance.mode);
       elements.horizonView.setAttribute("data-sol-exposure", horizonIrradiance.sol.toFixed(3));
       elements.horizonView.setAttribute("data-yol-exposure", horizonIrradiance.yol.toFixed(3));
@@ -1524,8 +1725,12 @@
 
   function loadScenario(seed, options = {}) {
     const normalized = normalizeSeed(seed);
+    if (Number.isFinite(Number(options.initialEraRotationDegrees))) {
+      state.eraRotationOffsetDegrees = normalizeDegrees(options.initialEraRotationDegrees);
+    }
     state.seed = normalized;
-    state.scenario = buildScenario(normalized);
+    state.scenario = buildScenario(normalized, options.initialCelestialState || null);
+    state.irradianceTimelines.clear();
     state.lastRenderedSegment = -1;
     elements.seedInput.value = normalized;
     elements.phaseCount.textContent = String(state.scenario.segments.length);
@@ -1621,8 +1826,17 @@
       render(state.currentMs);
       if (state.autoCycle) {
         const completedSeed = state.seed;
+        const initialCelestialState = state.scenario.finalCelestialState;
+        const initialEraRotationDegrees = getEraRotationDegrees(
+          state.presentationMs,
+          state.scenario.segments.at(-1).template.motion,
+        );
         state.currentMs = 0;
-        loadScenario(createNewSeed(), { announce: false });
+        loadScenario(createNewSeed(), {
+          announce: false,
+          initialCelestialState,
+          initialEraRotationDegrees,
+        });
         state.lastFrameAt = timestamp;
         state.animationFrame = requestAnimationFrame(tick);
         announce(`Konvektionszyklus ${completedSeed} beendet. Neuer Zyklus ${state.seed} läuft.`);
@@ -1740,6 +1954,7 @@
       playbackRate: state.playbackRate,
       reducedMotion: state.reducedMotion,
       theme: state.theme,
+      eraRotationOffsetDegrees: state.eraRotationOffsetDegrees,
       scenario: state.scenario,
     });
   }
@@ -1845,6 +2060,7 @@
     HORIZON_GEOMETRY,
     HORIZON_DIRECTIONS,
     HORIZON_LATITUDES,
+    HORIZON_PROJECTION_SCALE,
     IRRADIANCE_MODEL,
     ZEHS_PARAMETERS,
     normalizeDegrees,
@@ -1856,6 +2072,7 @@
     ensureOrbitClearance,
     getViewBasis,
     projectOrbitPointToHorizon,
+    getIrradianceDwellAt,
     getHorizonIrradiance,
     getSnapshot,
     formatEraTime,

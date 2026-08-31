@@ -31,7 +31,7 @@
     convectionPresentationMs: 32000,
     minRepeatedTemplates: 12,
     maxRepeatedTemplates: 18,
-    schemaVersion: 2,
+    schemaVersion: 3,
   });
 
   const CATEGORIES = Object.freeze([

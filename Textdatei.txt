@@ -295,6 +295,14 @@ Wirkung gehört zur Einstrahlung und kann daher bei heller wie dunkler
 
 Umgebung auftreten.
 
+Solange ein sichtbarer Himmelskörper seine regionale Horizontposition stetig
+
+beibehält, wächst diese Einstrahlungswirkung über benannte Phasenübergänge
+
+hinweg weiter. Ein Wechsel der Phasenbezeichnung allein beendet die Wirkung
+
+nicht; maßgeblich sind Sichtbarkeit und tatsächliche relative Bewegung.
+
 Während der Konvektion kann der Himmel an den Polen schimmernd hell und
 
 vielfarbig erscheinen. Der Effekt entsteht durch die Annäherung

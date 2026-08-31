@@ -38,6 +38,26 @@ const artworkSpecs = [
   { file: "zehs-star-hd.png", minWidth: 600, minHeight: 600, alpha: true },
 ];
 
+const directionalBiomes = Object.freeze({
+  polar: Object.freeze({ minWidth: 1600, minHeight: 700 }),
+  temperate: Object.freeze({ minWidth: 1600, minHeight: 700 }),
+  desert: Object.freeze({ minWidth: 2100, minHeight: 700 }),
+});
+const panoramaDirections = Object.freeze(["north", "east", "south", "west"]);
+for (const [biome, dimensions] of Object.entries(directionalBiomes)) {
+  for (const direction of panoramaDirections.slice(1)) {
+    for (const themePart of ["", "day-"]) {
+      for (const layer of ["hd1", "hd2"]) {
+        artworkSpecs.push({
+          file: `horizon-${biome}-${direction}-${themePart}${layer}.png`,
+          ...dimensions,
+          alpha: true,
+        });
+      }
+    }
+  }
+}
+
 for (const spec of artworkSpecs) {
   const artworkPath = path.join(root, "assets", "images", spec.file);
   const data = fs.readFileSync(artworkPath);
@@ -122,13 +142,28 @@ function readRgbaPngAlpha(file) {
   return { width, height, alpha };
 }
 
-for (const biome of ["polar", "temperate", "desert"]) {
-  for (const layer of ["hd1", "hd2"]) {
-    const night = readRgbaPngAlpha(`horizon-${biome}-${layer}.png`);
-    const day = readRgbaPngAlpha(`horizon-${biome}-day-${layer}.png`);
-    assert.equal(day.width, night.width, `${biome}/${layer}: Tag und Nacht besitzen dieselbe Breite`);
-    assert.equal(day.height, night.height, `${biome}/${layer}: Tag und Nacht besitzen dieselbe Höhe`);
-    assert.ok(day.alpha.equals(night.alpha), `${biome}/${layer}: Tag und Nacht besitzen exakt dieselbe Alphamaske`);
+function horizonArtworkFile(biome, direction, theme, layer) {
+  const directionPart = direction === "north" ? "" : `-${direction}`;
+  const themePart = theme === "day" ? "-day" : "";
+  return `horizon-${biome}${directionPart}${themePart}-${layer}.png`;
+}
+
+for (const biome of Object.keys(directionalBiomes)) {
+  for (const direction of panoramaDirections) {
+    for (const layer of ["hd1", "hd2"]) {
+      const nightFile = horizonArtworkFile(biome, direction, "night", layer);
+      const dayFile = horizonArtworkFile(biome, direction, "day", layer);
+      const night = readRgbaPngAlpha(nightFile);
+      const day = readRgbaPngAlpha(dayFile);
+      const north = readRgbaPngAlpha(horizonArtworkFile(biome, "north", "night", layer));
+      assert.equal(day.width, night.width, `${biome}/${direction}/${layer}: Tag und Nacht besitzen dieselbe Breite`);
+      assert.equal(day.height, night.height, `${biome}/${direction}/${layer}: Tag und Nacht besitzen dieselbe Höhe`);
+      assert.ok(day.alpha.equals(night.alpha), `${biome}/${direction}/${layer}: Tag und Nacht besitzen exakt dieselbe Alphamaske`);
+      assert.ok(
+        night.alpha.equals(north.alpha),
+        `${biome}/${direction}/${layer}: Richtungsvariante behält die geprüfte Ebenenkante ohne Gebirgslücke`,
+      );
+    }
   }
 }
 
@@ -155,7 +190,6 @@ const forbiddenPatterns = [
   ["styles.css", /radial-gradient\s*\(/i, "keine weichen dekorativen Radialverläufe"],
   ["styles.css", /filter\s*:\s*[^;]*(?:blur|drop-shadow)\s*\(/i, "keine CSS-Blur- oder Glow-Filter"],
   ["index.html", /<feGaussianBlur\b/i, "kein SVG-Gauß-Weichzeichner"],
-  ["index.html", /<radialGradient\b/i, "keine radialen SVG-Hochglanzflächen"],
   ["index.html", /\bstroke-linecap\s*=\s*["']round["']/i, "keine runden Linecaps"],
   ["index.html", /\bid\s*=\s*["'](?:era-gradient|sol-gradient|yol-gradient)["']/i, "alte Verlaufs-IDs sind entfernt"],
   ["index.html", /\bid\s*=\s*["'](?:era-equator|era-meridian)["']/i, "keine gekippte Kugel-/Äquatorperspektive"],
@@ -184,7 +218,10 @@ requireMatch("phases.js", /\bTAN_PER_DIR\s*=\s*8\b/, "ein Dir besteht aus 8 Tan"
 requireMatch("phases.js", /\bDIR_PER_MOHN\s*=\s*36\b/, "ein Mohn besteht aus 36 Dir");
 requireMatch("phases.js", /\bMOHN_PER_CYCLE\s*=\s*10\b/, "ein Konvektionszyklus besteht aus 10 Mohn");
 requireMatch("phases.js", /\beraRotationDegreesPerSecond\s*:\s*5\.6\b/, "Eras Eigenrotation ist auf 5,6 Grad pro Sekunde verdoppelt");
+requireMatch("phases.js", /\bschemaVersion\s*:\s*3\b/, "Szenarioschema schützt kontinuierliche Phasenübergänge");
 requireMatch("app.js", /template\.category\s*===\s*["']synchron["'][\s\S]*?drift\s*=\s*config\.eraRotationDegreesPerSecond[\s\S]*?amplitude\s*=\s*0\b/, "alle synchronen Phasen bleiben exakt an Eras Winkelgeschwindigkeit gekoppelt");
+requireMatch("app.js", /startRadialOffset[\s\S]*endRadialOffset[\s\S]*startIntensity[\s\S]*endIntensity/i, "Radialposition und Intensität besitzen explizite kontinuierliche Segmentenden");
+requireMatch("app.js", /finalCelestialState[\s\S]*initialCelestialState/i, "vollständige Zyklen übergeben ihre letzte Sternposition an den nächsten Seed");
 
 reject(
   "index.html",
@@ -199,6 +236,8 @@ assert.match(horizonTag, /\bshape-rendering\s*=\s*["']crispEdges["']/i, "Horizon
 assert.match(orbitTag, /\baria-labelledby\s*=/i, "Orbitansicht besitzt zugänglichen Titel und Beschreibung");
 assert.match(horizonTag, /\baria-labelledby\s*=/i, "Horizontansicht besitzt zugänglichen Titel und Beschreibung");
 assert.match(horizonTag, /\bdata-biome\s*=\s*["']polar["']/i, "Horizont startet mit der polaren Eiswelt");
+assert.match(horizonTag, /\bdata-direction\s*=\s*["']north["']/i, "Horizont startet mit dem bisherigen Nordpanorama");
+assert.match(horizonTag, /\bdata-panorama\s*=\s*["']polar-north["']/i, "Horizont protokolliert die aktive Panorama-ID");
 requireMatch("index.html", /\bstroke-linecap\s*=\s*["']square["']/i, "blockige SVG-Linien verwenden square linecaps");
 requireMatch("index.html", /\bstroke-linejoin\s*=\s*["']miter["']/i, "blockige SVG-Linien verwenden miter joins");
 requireMatch(
@@ -222,7 +261,7 @@ assert.match(autoCycleTag, /\baria-label\s*=/i, "Auto-Neuwürfeln besitzt einen 
 requireMatch("index.html", /\bid\s*=\s*["']icon-auto-cycle["'][\s\S]*?<circle\b[^>]*cx=["']7\.5["'][\s\S]*?<circle\b[^>]*cx=["']16\.5["']/i, "Doppelkreis-Icon zeigt zwei nebeneinanderliegende Kreise");
 requireMatch("index.html", /id=["']play-toggle["'][\s\S]*id=["']auto-cycle["'][\s\S]*id=["']restart["']/i, "Doppelkreis-Schalter sitzt rechts neben Abspielen/Pause und vor Zum Anfang");
 requireMatch("styles.css", /\.auto-cycle-toggle\s*\{[^}]*width\s*:\s*48px\b[^}]*flex\s*:\s*0\s+0\s+48px\b/is, "Doppelkreis-Schalter bleibt eine kleine quadratische Schaltfläche");
-requireMatch("app.js", /if\s*\(state\.autoCycle\)[\s\S]*?loadScenario\(createNewSeed\(\),\s*\{\s*announce\s*:\s*false\s*\}\)[\s\S]*?requestAnimationFrame\(tick\)/i, "aktiver Endlosmodus würfelt nach Zyklusende neu und läuft weiter");
+requireMatch("app.js", /if\s*\(state\.autoCycle\)[\s\S]*?initialCelestialState\s*=\s*state\.scenario\.finalCelestialState[\s\S]*?initialEraRotationDegrees\s*=\s*getEraRotationDegrees[\s\S]*?loadScenario\(createNewSeed\(\),\s*\{[\s\S]*?initialCelestialState,[\s\S]*?initialEraRotationDegrees,[\s\S]*?\}\)[\s\S]*?requestAnimationFrame\(tick\)/i, "aktiver Endlosmodus würfelt nach Zyklusende neu, übernimmt Sternpositionen und Eras Blickwinkel und läuft weiter");
 
 const directionIds = ["north", "east", "south", "west"];
 for (const direction of directionIds) {
@@ -331,28 +370,45 @@ requireMatch(
   /:root\[data-theme=["']dark["']\][^{]*\.orbit-artwork-dark[\s\S]*:root\[data-theme=["']light["']\][^{]*\.orbit-artwork-light/i,
   "Astralkarte besitzt getrennte hochauflösende Artworks für Hell und Dunkel",
 );
-for (const biome of ["polar", "temperate", "desert"]) {
+const panoramaArtworkTags = [
+  ...sources["index.html"].matchAll(/<image\b[^>]*\bclass=["'][^"']*\bhorizon-artwork\b[^"']*["'][^>]*>/gi),
+];
+assert.equal(panoramaArtworkTags.length, 48, "vier Richtungen, drei Biome, zwei Themes und zwei Ebenen ergeben exakt 48 Panoramabilder");
+
+for (const biome of Object.keys(directionalBiomes)) {
   requireMatch(
-    "index.html",
-    new RegExp(`horizon-${biome}-hd1\\.png[\\s\\S]*horizon-${biome}-day-hd1\\.png`, "i"),
-    `${biome}: Nacht- und Taghintergrund sind getrennt`,
+    "styles.css",
+    new RegExp(`#horizon-view\\[data-biome=["']${biome}["']\\]\\s+\\.horizon-artwork-${biome}[\\s\\S]*?visibility\\s*:\\s*visible`, "i"),
+    `${biome}: nur das aktive Biom wird sichtbar`,
   );
+  for (const direction of panoramaDirections) {
+    for (const theme of ["night", "day"]) {
+      for (const layer of ["hd1", "hd2"]) {
+        const file = horizonArtworkFile(biome, direction, theme, layer);
+        const layerClass = layer === "hd1" ? "back" : "front";
+        requireMatch(
+          "index.html",
+          new RegExp(`class=["'][^"']*horizon-artwork-${theme}[^"']*horizon-artwork-${layerClass}[^"']*horizon-artwork-${biome}[^"']*horizon-artwork-${direction}[^"']*["'][^>]*href=["']assets/images/${file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["']`, "i"),
+          `${biome}/${direction}/${theme}/${layer}: richtige Mehrfachebene ist eingebunden`,
+        );
+      }
+    }
+  }
+}
+
+for (const direction of panoramaDirections) {
   requireMatch(
-    "index.html",
-    new RegExp(`horizon-${biome}-hd2\\.png[\\s\\S]*horizon-${biome}-day-hd2\\.png`, "i"),
-    `${biome}: Nacht- und Tagvordergrund sind getrennt`,
+    "styles.css",
+    new RegExp(`data-theme=["']dark["'][^\\n]*data-direction=["']${direction}["'][^\\n]*horizon-artwork-night\\.horizon-artwork-${direction}`, "i"),
+    `${direction}: dunkles Theme verwendet das richtungsgenaue Nachtpanorama`,
   );
   requireMatch(
     "styles.css",
-    new RegExp(`data-theme=["']dark["'][^\\n]*data-biome=["']${biome}["'][^\\n]*horizon-artwork-night`, "i"),
-    `${biome}: dunkles Theme verwendet ausschließlich die Nachtfassung`,
-  );
-  requireMatch(
-    "styles.css",
-    new RegExp(`data-theme=["']light["'][^\\n]*data-biome=["']${biome}["'][^\\n]*horizon-artwork-day`, "i"),
-    `${biome}: helles Theme verwendet ausschließlich die Tagfassung`,
+    new RegExp(`data-theme=["']light["'][^\\n]*data-direction=["']${direction}["'][^\\n]*horizon-artwork-day\\.horizon-artwork-${direction}`, "i"),
+    `${direction}: helles Theme verwendet das richtungsgenaue Tagpanorama`,
   );
 }
+requireMatch("app.js", /data-panorama[\s\S]*?biome[^\n]*state\.horizonDirection/i, "Laufzeit protokolliert Biom und Blickrichtung als Panorama-ID");
 requireMatch(
   "styles.css",
   /:root\[data-theme=["']light["']\]\s+\.horizon-stars-artwork\s*\{[^}]*display\s*:\s*none[^}]*opacity\s*:\s*0/is,
@@ -371,9 +427,18 @@ requireMatch(
 requireMatch("styles.css", /\.horizon-atmosphere\s*\{[^}]*mix-blend-mode\s*:\s*screen\b/i, "Atmosphärenebenen blenden den schwarzen Bildgrund ohne Blur aus");
 requireMatch("styles.css", /\.horizon-clouds-artwork\s*\{[^}]*opacity\s*:\s*0\.12\b/i, "Wolken bleiben stark transparent");
 requireMatch("index.html", /id=["']horizon-irradiance["'][\s\S]*horizon-irradiance-warm[\s\S]*horizon-irradiance-cool[\s\S]*horizon-shimmer-a[\s\S]*horizon-shimmer-b/i, "Einstrahlung besitzt warme, kühle und zweifache Schimmerebenen");
+requireMatch("index.html", /id=["']horizon-warm-field["'][\s\S]*id=["']horizon-cool-field["'][\s\S]*id=["']horizon-shimmer-spectrum["']/i, "Einstrahlung verwendet hochauflösende kontinuierliche Farbfelder");
+requireMatch("index.html", /id=["']horizon-shimmer-noise["'][^>]*filterRes=["']3360 1120["'][\s\S]*<feTurbulence\b[^>]*numOctaves=["']3["']/i, "Schimmerrauschen wird mit hoher Filterauflösung erzeugt");
+requireMatch("index.html", /<rect\b[^>]*class=["'][^"']*horizon-shimmer-a[^"']*["'][^>]*filter=["']url\(#horizon-shimmer-noise\)["']/i, "erste Schimmerebene ist ein glattes Vektorfeld statt Pixelkreuzen");
+requireMatch("index.html", /<rect\b[^>]*class=["'][^"']*horizon-shimmer-b[^"']*["'][^>]*filter=["']url\(#horizon-shimmer-noise\)["']/i, "zweite Schimmerebene ist ein glattes Vektorfeld statt Pixelkreuzen");
+requireMatch("styles.css", /\.horizon-irradiance\s*\{[^}]*image-rendering\s*:\s*auto[^}]*shape-rendering\s*:\s*geometricPrecision/is, "Einstrahlung wird nicht pixelig skaliert");
+requireMatch("styles.css", /\.horizon-shimmer-a\s*\{[^}]*animation\s*:\s*horizon-shimmer-a\s+8\.4s\s+ease-in-out/is, "Schimmer bewegt sich kontinuierlich statt in Rasterstufen");
+requireMatch("styles.css", /\.horizon-shimmer-b\s*\{[^}]*animation\s*:\s*horizon-shimmer-b\s+11\.6s\s+ease-in-out/is, "zweite Schimmerlage bewegt sich kontinuierlich");
+reject("styles.css", /\.horizon-shimmer-(?:a|b)\s*\{[^}]*animation\s*:[^;]*steps\s*\(/is, "Einstrahlung verwendet keine pixeligen Animationsschritte");
 requireMatch("styles.css", /--irradiance-warm\s*:\s*0[\s\S]*--irradiance-cool\s*:\s*0[\s\S]*--irradiance-shimmer\s*:\s*0/i, "Einstrahlung startet visuell vollständig deaktiviert");
 requireMatch("app.js", /latitudeStrength:\s*Object\.freeze\(\{\s*0:\s*0,\s*30:\s*0\.64,\s*60:\s*1\s*\}\)/i, "Einstrahlung ist am Pol aus und bei 60 Grad stärker als bei 30 Grad");
-requireMatch("app.js", /delayMs\s*:\s*2200[\s\S]*buildupMs\s*:\s*12000/i, "Einstrahlung baut sich erst nach anhaltender Sichtbarkeit auf");
+requireMatch("app.js", /delayMs\s*:\s*2200[\s\S]*buildupMs\s*:\s*12000[\s\S]*sampleMs\s*:\s*200[\s\S]*continuityThresholdPx\s*:\s*12/i, "Einstrahlung baut sich fein abgetastet nach anhaltender Sichtbarkeit auf");
+requireMatch("app.js", /function\s+buildIrradianceTimeline[\s\S]*?continuous[\s\S]*?previous\[bodyName\]\.dwellMs\s*\+\s*IRRADIANCE_MODEL\.sampleMs/i, "sichtbare Verweildauer wird unabhängig von Phasenlabels fortgeschrieben");
 requireMatch("app.js", /data-irradiance-mode[\s\S]*--irradiance-warm[\s\S]*--irradiance-cool[\s\S]*--irradiance-shimmer/i, "der berechnete Einstrahlungszustand steuert die Live-Grafik");
 requireMatch("index.html", /id=["']convection-field["'][^>]*orbit-convection-hd\.png/i, "Orbit-Konvektion verwendet eine hochauflösende RGBA-Textur");
 requireMatch("index.html", /id=["']horizon-convection-field["'][^>]*horizon-convection-hd\.png/i, "Horizont-Konvektion verwendet eine hochauflösende RGBA-Textur");
@@ -391,6 +456,7 @@ for (const name of [
   "HORIZON_GEOMETRY",
   "HORIZON_DIRECTIONS",
   "HORIZON_LATITUDES",
+  "HORIZON_PROJECTION_SCALE",
   "IRRADIANCE_MODEL",
   "ZEHS_PARAMETERS",
   "normalizeDegrees",
@@ -402,6 +468,7 @@ for (const name of [
   "ensureOrbitClearance",
   "getViewBasis",
   "projectOrbitPointToHorizon",
+  "getIrradianceDwellAt",
   "getHorizonIrradiance",
   "getSnapshot",
   "formatEraTime",
@@ -458,7 +525,7 @@ requireMatch("styles.css", /@media\s*\([^)]*prefers-reduced-motion\s*:\s*reduce[
 
 const animationDeclarations = sources["styles.css"].match(/\banimation(?:-timing-function)?\s*:[^;]+;/gi) || [];
 for (const declaration of animationDeclarations) {
-  assert.match(declaration, /\b(?:none|steps\s*\()/i, `styles.css: Animation verwendet none oder steps(): ${declaration}`);
+  assert.match(declaration, /\b(?:none|steps\s*\(|ease-in-out\b)/i, `styles.css: Animation verwendet Rasterstufen oder den bewusst glatten Einstrahlungsverlauf: ${declaration}`);
 }
 
 console.log(
@@ -467,6 +534,7 @@ console.log(
     directions: directionIds.length,
     forbiddenPatterns: forbiddenPatterns.length,
     artworkAssets: artworkSpecs.length,
+    panoramaLayers: panoramaArtworkTags.length,
     orbitRendering: "geometricPrecision",
     horizonRendering: "crispEdges",
   }),

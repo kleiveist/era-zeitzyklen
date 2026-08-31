@@ -331,7 +331,7 @@ const contract = global.ERA_CYCLE_CONTRACT;
 assert.ok(contract, "app.js veröffentlicht den read-only ERA_CYCLE_CONTRACT");
 assert.ok(Object.isFrozen(contract), "ERA_CYCLE_CONTRACT ist eingefroren");
 
-for (const constantName of ["ORBIT_GEOMETRY", "HORIZON_GEOMETRY", "HORIZON_DIRECTIONS", "HORIZON_LATITUDES", "IRRADIANCE_MODEL", "ZEHS_PARAMETERS"]) {
+for (const constantName of ["ORBIT_GEOMETRY", "HORIZON_GEOMETRY", "HORIZON_DIRECTIONS", "HORIZON_LATITUDES", "HORIZON_PROJECTION_SCALE", "IRRADIANCE_MODEL", "ZEHS_PARAMETERS"]) {
   assert.ok(contract[constantName], `${constantName} ist Teil des Geometrievertrags`);
   assert.ok(Object.isFrozen(contract[constantName]), `${constantName} ist read-only`);
 }
@@ -345,6 +345,7 @@ for (const functionName of [
   "ensureOrbitClearance",
   "getViewBasis",
   "projectOrbitPointToHorizon",
+  "getIrradianceDwellAt",
   "getHorizonIrradiance",
   "getSnapshot",
   "formatEraTime",
@@ -375,6 +376,7 @@ assert.equal(ERA_PHASES.config.totalUm, 46080, "Konvektionszyklus umfasst 46.080
 assert.equal(ERA_PHASES.config.regularUm, 45680, "reguläre Phasen umfassen 45.680 Um");
 assert.equal(ERA_PHASES.config.convectionDurationUm, 400, "Konvektion umfasst 400 Um");
 assert.equal(ERA_PHASES.config.eraRotationDegreesPerSecond, 5.6, "Eras Eigenrotation wurde auf 5,6 Grad pro Sekunde verdoppelt");
+assert.equal(ERA_PHASES.config.schemaVersion, 3, "Szenarioschema enthält den Kontinuitätsvertrag");
 assert.equal(46080 / 4608, 10, "Konvektionszyklus entspricht 10 Mohn");
 assert.equal(46080 / 128, 360, "Konvektionszyklus entspricht 360 Dir");
 assert.equal(46080 / 16, 2880, "Konvektionszyklus entspricht 2.880 Tan");
@@ -388,6 +390,9 @@ assert.deepEqual(
   "Einstrahlung bleibt am Pol aus und ist bei 60 Grad stärker als bei 30 Grad",
 );
 assert.ok(contract.IRRADIANCE_MODEL.delayMs > 0, "Einstrahlung beginnt erst nach einer Verweildauer");
+assert.equal(contract.IRRADIANCE_MODEL.sampleMs, 200, "Einstrahlung wird fein genug für einen glatten Verlauf abgetastet");
+assert.ok(contract.IRRADIANCE_MODEL.continuityThresholdPx > 0, "räumliche Kontinuität besitzt eine positive Toleranz");
+assert.equal(contract.HORIZON_PROJECTION_SCALE.celestial, 0.76, "alle Sol-/Yol-Phasen verwenden dieselbe Horizonthöhe");
 
 const stableIrradianceSnapshot = {
   template: { motion: "orbit", category: "synchron" },
@@ -434,6 +439,41 @@ const buildingIrradiance = contract.getHorizonIrradiance(
 );
 assert.equal(beforeDelayIrradiance.mode, "none", "vor der Mindestdauer bleibt der Effekt aus");
 assert.ok(desertIrradiance.shimmer > buildingIrradiance.shimmer, "Schimmer wächst mit der sichtbaren Verweildauer");
+
+const crossPhaseIrradianceBefore = contract.getHorizonIrradiance(
+  {
+    ...stableIrradianceSnapshot,
+    segment: { index: 7, displayStart: 10000 },
+    ms: 19999,
+    positionMs: 19999,
+  },
+  bothVisibleProjection,
+  60,
+  { solDwellMs: 10000, yolDwellMs: 10000 },
+);
+const crossPhaseIrradianceAfter = contract.getHorizonIrradiance(
+  {
+    ...stableIrradianceSnapshot,
+    segment: { index: 8, displayStart: 20000 },
+    ms: 20001,
+    positionMs: 20001,
+  },
+  bothVisibleProjection,
+  60,
+  { solDwellMs: 10200, yolDwellMs: 10200 },
+);
+assert.ok(
+  crossPhaseIrradianceAfter.solDwellMs > crossPhaseIrradianceBefore.solDwellMs,
+  "ein reiner Phasenwechsel setzt Sols sichtbare Verweildauer nicht zurück",
+);
+assert.ok(
+  crossPhaseIrradianceAfter.yolDwellMs > crossPhaseIrradianceBefore.yolDwellMs,
+  "ein reiner Phasenwechsel setzt Yols sichtbare Verweildauer nicht zurück",
+);
+assert.ok(
+  crossPhaseIrradianceAfter.shimmer >= crossPhaseIrradianceBefore.shimmer,
+  "der Schimmer addiert sich über eine unveränderte Phasengrenze weiter",
+);
 
 const solOnlyIrradiance = contract.getHorizonIrradiance(
   stableIrradianceSnapshot,
@@ -580,6 +620,7 @@ assert.equal(latitudeButtons.length, 3, "exakt drei Breitenstufen");
 assertDirection("north", "Standardrichtung Norden");
 assertLatitude(0, "Standardbreite ist der bisherige Polstand");
 assert.equal(contract.getState().autoCycle, false, "automatisches Neuwürfeln ist standardmäßig aus");
+assert.equal(contract.getState().eraRotationOffsetDegrees, 0, "der erste Zyklus beginnt mit Eras vereinbartem Nullwinkel");
 assert.equal(elementFor("#auto-cycle").getAttribute("aria-pressed"), "false", "Doppelkreis-Schalter meldet den inaktiven Zustand");
 assert.equal(elementFor("#horizon-view").getAttribute("data-irradiance-mode"), "none", "Polstand meldet keinen Einstrahlungseffekt");
 assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-warm"), "0.000", "Polstand besitzt keine warme Tönung");
@@ -592,6 +633,7 @@ const directionStateBefore = contract.getState();
 directionButtons[1].emit("click");
 assertDirection("east", "Klick auf Osten");
 assert.equal(storage.get("era-horizon-direction"), "east", "Osten wird gespeichert");
+assert.equal(elementFor("#horizon-view").getAttribute("data-panorama"), "polar-east", "Osten aktiviert das polare Ostpanorama");
 const directionFrameAfter = contract.getLastRenderFrame();
 const directionStateAfter = contract.getState();
 assert.equal(directionStateAfter.currentMs, directionStateBefore.currentMs, "Richtungswahl verändert die Zeit nicht");
@@ -671,6 +713,7 @@ assert.ok(ringRadius30 > 8, "der ERA-Breitenring wächst bei 30 Grad aus dem Pol
 assert.equal(elementFor("#era-latitude-indicator").getAttribute("data-latitude-degrees"), "30");
 assert.equal(elementFor("#horizon-view").getAttribute("data-latitude-degrees"), "30");
 assert.equal(elementFor("#horizon-view").getAttribute("data-biome"), "temperate", "30 Grad aktivieren die Tannenlandschaft");
+assert.equal(elementFor("#horizon-view").getAttribute("data-panorama"), "temperate-west", "30 Grad und Westen wählen das gemäßigte Westpanorama");
 assert.equal(elementFor("#orbit-view").getAttribute("data-horizon-biome"), "temperate", "Orbitkarte protokolliert das gewählte Tannenbiom");
 assert.equal(elementFor("#horizon-title").textContent, "Horizontverlauf · Westen · 30° Gemäßigtes");
 
@@ -678,6 +721,7 @@ latitudeButtons[2].emit("click");
 assertLatitude(60, "Klick aktiviert die äquatornahe Grenzstufe");
 assert.equal(storage.get("era-horizon-latitude"), "60", "60 Grad werden gespeichert");
 assert.equal(elementFor("#horizon-view").getAttribute("data-biome"), "desert", "60 Grad aktivieren die Wüstenlandschaft");
+assert.equal(elementFor("#horizon-view").getAttribute("data-panorama"), "desert-west", "60 Grad und Westen wählen das Wüsten-Westpanorama");
 assert.equal(elementFor("#horizon-title").textContent, "Horizontverlauf · Westen · 60° Wüste");
 const ringRadius60 = Number(elementFor("#era-latitude-ring").getAttribute("r"));
 assert.ok(ringRadius60 > ringRadius30, "der ERA-Breitenring wächst logisch bis 60 Grad");
@@ -778,6 +822,190 @@ assert.equal(slider.getAttribute("max"), "360000");
 assert.equal(elementFor("#timeline-total").textContent, "6:00");
 assert.equal(contract.getState().presentationMs, 360000, "ausschließlich sechs Minuten sind aktiv");
 
+function angularDistanceDegrees(left, right) {
+  return Math.abs(((Number(left) - Number(right) + 540) % 360) - 180);
+}
+
+const continuityScenario = contract.getState().scenario;
+let checkedPhaseBoundaries = 0;
+let checkedProjectedBoundaries = 0;
+for (let segmentIndex = 1; segmentIndex < continuityScenario.segments.length; segmentIndex += 1) {
+  const nextSegment = continuityScenario.segments[segmentIndex];
+  const boundaryMs = nextSegment.displayStart;
+  const beforeBoundary = contract.getSnapshot(boundaryMs - 0.001, { exact: true });
+  const afterBoundary = contract.getSnapshot(boundaryMs, { exact: true });
+
+  for (const bodyName of ["sol", "yol"]) {
+    assert.ok(
+      angularDistanceDegrees(beforeBoundary[bodyName].angle, afterBoundary[bodyName].angle) < 0.001,
+      `${segmentIndex}/${bodyName}: Winkel bleibt an der Phasengrenze stetig`,
+    );
+    assert.ok(
+      Math.abs(beforeBoundary[bodyName].radialOffset - afterBoundary[bodyName].radialOffset) < 0.001,
+      `${segmentIndex}/${bodyName}: Radialposition bleibt an der Phasengrenze stetig`,
+    );
+    if (beforeBoundary[bodyName].intensity !== null && afterBoundary[bodyName].intensity !== null) {
+      assert.ok(
+        Math.abs(beforeBoundary[bodyName].intensity - afterBoundary[bodyName].intensity) < 0.001,
+        `${segmentIndex}/${bodyName}: Intensität springt nicht an der Phasengrenze`,
+      );
+    }
+
+    if (beforeBoundary[bodyName].visible && afterBoundary[bodyName].visible) {
+      const beforePoint = contract.getOrbitPoint(beforeBoundary, bodyName);
+      const afterPoint = contract.getOrbitPoint(afterBoundary, bodyName);
+      assertPointClose(
+        beforePoint,
+        afterPoint,
+        `${segmentIndex}/${bodyName}: Weltpunkt springt nicht an der Phasengrenze`,
+        0.02,
+      );
+      for (const direction of ["north", "east", "south", "west"]) {
+        for (const latitude of [0, 30, 60]) {
+          const beforeBasis = contract.getViewBasis(
+            direction,
+            contract.getEraRotationDegrees(boundaryMs - 0.001, beforeBoundary.template.motion),
+          );
+          const afterBasis = contract.getViewBasis(
+            direction,
+            contract.getEraRotationDegrees(boundaryMs, afterBoundary.template.motion),
+          );
+          const beforeProjection = contract.projectOrbitPointToHorizon(
+            beforePoint,
+            beforeBasis,
+            "celestial",
+            latitude,
+          );
+          const afterProjection = contract.projectOrbitPointToHorizon(
+            afterPoint,
+            afterBasis,
+            "celestial",
+            latitude,
+          );
+          assertPointClose(
+            beforeProjection,
+            afterProjection,
+            `${segmentIndex}/${bodyName}/${direction}/${latitude}: Horizontpunkt bleibt stetig`,
+            0.02,
+          );
+          checkedProjectedBoundaries += 1;
+        }
+      }
+    }
+  }
+  for (const direction of ["north", "east", "south", "west"]) {
+    for (const latitude of [0, 30, 60]) {
+      const beforeZehs = contract.projectOrbitPointToHorizon(
+        contract.ZEHS_PARAMETERS.worldPoint,
+        contract.getViewBasis(
+          direction,
+          contract.getEraRotationDegrees(boundaryMs - 0.001, beforeBoundary.template.motion),
+        ),
+        "zehs",
+        latitude,
+      );
+      const afterZehs = contract.projectOrbitPointToHorizon(
+        contract.ZEHS_PARAMETERS.worldPoint,
+        contract.getViewBasis(
+          direction,
+          contract.getEraRotationDegrees(boundaryMs, afterBoundary.template.motion),
+        ),
+        "zehs",
+        latitude,
+      );
+      assertPointClose(
+        beforeZehs,
+        afterZehs,
+        `${segmentIndex}/ZEHS/${direction}/${latitude}: Referenzstern springt nicht`,
+        0.02,
+      );
+    }
+  }
+  checkedPhaseBoundaries += 1;
+}
+assert.equal(
+  checkedPhaseBoundaries,
+  continuityScenario.segments.length - 1,
+  "jede erzeugte Phasengrenze besitzt einen Positionsvertrag",
+);
+assert.ok(checkedProjectedBoundaries > 0, "sichtbare Grenzpunkte wurden in allen Richtungen und Breiten geprüft");
+
+function projectedBodySample(ms, direction, latitude, bodyName) {
+  const snapshot = contract.getSnapshot(ms, { exact: true });
+  const point = contract.getOrbitPoint(snapshot, bodyName);
+  const basis = contract.getViewBasis(
+    direction,
+    contract.getEraRotationDegrees(ms, snapshot.template.motion),
+  );
+  const projection = contract.projectOrbitPointToHorizon(
+    point,
+    basis,
+    snapshot.template.motion === "convection" ? "convection" : "celestial",
+    latitude,
+  );
+  return {
+    projection,
+    visible: snapshot[bodyName].visible && projection.visible && snapshot.template.motion !== "convection",
+  };
+}
+
+let carriedIrradianceBoundaries = 0;
+for (const direction of ["north", "east", "south", "west"]) {
+  for (const latitude of [30, 60]) {
+    for (let segmentIndex = 1; segmentIndex < continuityScenario.segments.length; segmentIndex += 1) {
+      const boundaryMs = continuityScenario.segments[segmentIndex].displayStart;
+      const sampleMs = contract.IRRADIANCE_MODEL.sampleMs;
+      const beforeSampleMs = Math.floor((boundaryMs - 0.001) / sampleMs) * sampleMs;
+      const afterSampleMs = beforeSampleMs + sampleMs;
+      const historyBefore = contract.getIrradianceDwellAt(
+        beforeSampleMs,
+        direction,
+        latitude,
+      );
+      const historyAfter = contract.getIrradianceDwellAt(
+        afterSampleMs,
+        direction,
+        latitude,
+      );
+      for (const bodyName of ["sol", "yol"]) {
+        const before = projectedBodySample(
+          beforeSampleMs,
+          direction,
+          latitude,
+          bodyName,
+        );
+        const after = projectedBodySample(
+          afterSampleMs,
+          direction,
+          latitude,
+          bodyName,
+        );
+        const sampleDistance = Math.hypot(
+          before.projection.x - after.projection.x,
+          before.projection.y - after.projection.y,
+        );
+        const dwellProperty = `${bodyName}DwellMs`;
+        if (
+          before.visible &&
+          after.visible &&
+          sampleDistance <= contract.IRRADIANCE_MODEL.continuityThresholdPx &&
+          historyBefore[dwellProperty] >= sampleMs
+        ) {
+          assert.ok(
+            historyAfter[dwellProperty] >= historyBefore[dwellProperty],
+            `${segmentIndex}/${bodyName}/${direction}/${latitude}: Verweildauer addiert sich über die Phasengrenze`,
+          );
+          carriedIrradianceBoundaries += 1;
+        }
+      }
+    }
+  }
+}
+assert.ok(
+  carriedIrradianceBoundaries > 0,
+  "reale Phasengrenzen mit unveränderter Sichtposition führen Einstrahlung weiter",
+);
+
 const autoCycleButton = elementFor("#auto-cycle");
 autoCycleButton.emit("click");
 assert.equal(contract.getState().autoCycle, true, "Doppelkreis-Schalter aktiviert den Endlosmodus");
@@ -786,6 +1014,12 @@ assert.ok(autoCycleButton.classList.contains("is-active"), "aktiver Endlosmodus 
 slider.value = "359950";
 slider.emit("input");
 const completedSeed = contract.getState().seed;
+const completedCelestialState = contract.getState().scenario.finalCelestialState;
+const completedEndSnapshot = contract.getSnapshot(contract.getState().presentationMs, { exact: true });
+const completedEraRotation = contract.getEraRotationDegrees(
+  contract.getState().presentationMs,
+  completedEndSnapshot.template.motion,
+);
 elementFor("#play-toggle").emit("click");
 assert.equal(contract.getState().playing, true, "Wiedergabe startet kurz vor Zyklusende");
 assert.equal(typeof nextAnimationFrame, "function", "laufende Wiedergabe plant ein Animationsbild");
@@ -796,6 +1030,67 @@ assert.notEqual(contract.getState().seed, completedSeed, "nach der Konvektion wi
 assert.equal(contract.getState().currentMs, 0, "der neue Konvektionszyklus beginnt automatisch am Anfang");
 assert.equal(contract.getState().playing, true, "der neue Konvektionszyklus läuft ohne Pause weiter");
 assert.equal(typeof nextAnimationFrame, "function", "Endlosmodus plant den nächsten Zyklus weiter");
+const automaticRestartSnapshot = contract.getSnapshot(0, { exact: true });
+assert.ok(
+  angularDistanceDegrees(contract.getEraRotationDegrees(0, automaticRestartSnapshot.template.motion), completedEraRotation) < 1e-9,
+  "automatisches Neuwürfeln bewahrt auch Eras lokalen Blickwinkel",
+);
+for (const bodyName of ["sol", "yol"]) {
+  assert.ok(
+    angularDistanceDegrees(automaticRestartSnapshot[bodyName].angle, completedCelestialState[bodyName].angle) < 1e-9,
+    `${bodyName}: automatisches Neuwürfeln bewahrt die Sternposition`,
+  );
+  assert.ok(
+    Math.abs(automaticRestartSnapshot[bodyName].radialOffset - completedCelestialState[bodyName].radialOffset) < 1e-9,
+    `${bodyName}: automatisches Neuwürfeln bewahrt den Bahnradius`,
+  );
+  const completedPoint = contract.getOrbitPoint(completedEndSnapshot, bodyName);
+  const restartedPoint = contract.getOrbitPoint(automaticRestartSnapshot, bodyName);
+  for (const direction of ["north", "east", "south", "west"]) {
+    for (const latitude of [0, 30, 60]) {
+      const completedProjection = contract.projectOrbitPointToHorizon(
+        completedPoint,
+        contract.getViewBasis(direction, completedEraRotation),
+        "celestial",
+        latitude,
+      );
+      const restartedProjection = contract.projectOrbitPointToHorizon(
+        restartedPoint,
+        contract.getViewBasis(direction, contract.getEraRotationDegrees(0, automaticRestartSnapshot.template.motion)),
+        "celestial",
+        latitude,
+      );
+      assertPointClose(
+        restartedProjection,
+        completedProjection,
+        `${bodyName}/${direction}/${latitude}: Vollzyklus bewahrt den Horizontpunkt`,
+        0.02,
+      );
+    }
+  }
+}
+for (const direction of ["north", "east", "south", "west"]) {
+  for (const latitude of [0, 30, 60]) {
+    const completedZehsProjection = contract.projectOrbitPointToHorizon(
+      contract.ZEHS_PARAMETERS.worldPoint,
+      contract.getViewBasis(direction, completedEraRotation),
+      "zehs",
+      latitude,
+    );
+    const restartedZehsProjection = contract.projectOrbitPointToHorizon(
+      contract.ZEHS_PARAMETERS.worldPoint,
+      contract.getViewBasis(direction, contract.getEraRotationDegrees(0, automaticRestartSnapshot.template.motion)),
+      "zehs",
+      latitude,
+    );
+    assertPointClose(
+      restartedZehsProjection,
+      completedZehsProjection,
+      `ZEHS/${direction}/${latitude}: Vollzyklus bewahrt den Horizontpunkt`,
+      0.02,
+    );
+  }
+}
 const firstAutomaticSeed = contract.getState().seed;
 slider.value = "359950";
 slider.emit("input");
@@ -918,13 +1213,14 @@ for (const bodyName of ["sol", "yol"]) {
 
 assert.equal(contract.normalizeDegrees(-90), 270, "negative Winkel werden normalisiert");
 assert.equal(contract.normalizeDegrees(450), 90, "Winkel über 360° werden normalisiert");
+const rotationOrigin = contract.getEraRotationDegrees(0, "orbit");
 assert.ok(
-  Math.abs(contract.getEraRotationDegrees(1000, "orbit") - 5.6) < 1e-9,
-  "Era dreht sich nach einer Sekunde um 5,6 Grad",
+  angularDistanceDegrees(contract.getEraRotationDegrees(1000, "orbit"), rotationOrigin + 5.6) < 1e-9,
+  "Era dreht sich relativ zum fortgeführten Zykluswinkel nach einer Sekunde um 5,6 Grad",
 );
 assert.ok(
-  Math.abs(contract.getEraRotationDegrees(2000, "orbit") - 11.2) < 1e-9,
-  "Eras verdoppelte Eigenrotation bleibt linear",
+  angularDistanceDegrees(contract.getEraRotationDegrees(2000, "orbit"), rotationOrigin + 11.2) < 1e-9,
+  "Eras verdoppelte Eigenrotation bleibt über Zyklusgrenzen linear",
 );
 assert.deepEqual(Object.keys(contract.HORIZON_LATITUDES), ["0", "30", "60"], "nur drei äquatorwärtige Breitenstufen sind definiert");
 assert.equal(contract.HORIZON_LATITUDES[0].biome, "polar", "0 Grad sind mit Eis und Schnee verknüpft");
@@ -1022,11 +1318,12 @@ for (const [directionId, [leftExpected, rightExpected]] of Object.entries(compas
   const flatProjection = contract.projectOrbitPointToHorizon(frontPoint, basis, "horizon");
   const reverseFlatProjection = contract.projectOrbitPointToHorizon(frontPoint, basis, "reverse-horizon");
   const parabolaProjection = contract.projectOrbitPointToHorizon(frontPoint, basis, "parabola");
-  const flatHeight = horizonGeometry.horizonY - pointOf(flatProjection).y;
-  const reverseFlatHeight = horizonGeometry.horizonY - pointOf(reverseFlatProjection).y;
-  const parabolaHeight = horizonGeometry.horizonY - pointOf(parabolaProjection).y;
-  assert.ok(parabolaHeight > flatHeight * 1.5, `${directionId}: Parabellauf ist deutlich höher als Horizontlauf`);
-  assert.ok(parabolaHeight > reverseFlatHeight * 1.5, `${directionId}: Parabellauf ist deutlich höher als umgekehrter Horizontlauf`);
+  assertPointClose(flatProjection, frontProjection, `${directionId}: Horizontlauf behält denselben Weltpunkt`);
+  assertPointClose(reverseFlatProjection, frontProjection, `${directionId}: umgekehrter Horizontlauf behält denselben Weltpunkt`);
+  assertPointClose(parabolaProjection, frontProjection, `${directionId}: Parabellauf behält denselben Weltpunkt`);
+  assert.equal(flatProjection.heightScale, contract.HORIZON_PROJECTION_SCALE.celestial, `${directionId}: Horizontlauf nutzt die gemeinsame Projektionshöhe`);
+  assert.equal(reverseFlatProjection.heightScale, contract.HORIZON_PROJECTION_SCALE.celestial, `${directionId}: Umkehrlauf nutzt die gemeinsame Projektionshöhe`);
+  assert.equal(parabolaProjection.heightScale, contract.HORIZON_PROJECTION_SCALE.celestial, `${directionId}: Parabellauf nutzt die gemeinsame Projektionshöhe`);
   assert.equal(
     contract.projectOrbitPointToHorizon(frontPoint, basis, "convection").visible,
     false,
