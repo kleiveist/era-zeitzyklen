@@ -306,6 +306,10 @@
                   <g id="era-view-arrow" class="era-view-arrow">
                     <path d="M416 252V216H408L420 198 432 216H424V252Z" />
                   </g>
+                  <g id="era-latitude-indicator" class="era-latitude-indicator" aria-hidden="true" data-latitude-degrees="0">
+                    <circle id="era-latitude-ring" class="era-latitude-ring" cx="420" cy="260" r="8" />
+                    <path id="era-observer-marker" class="era-observer-marker" d="M416 252H424V256H428V264H424V268H416V264H412V256H416Z" />
+                  </g>
                   <text id="era-view-letter" class="era-view-letter" x="420" y="194" text-anchor="middle">N</text>
                   <path class="era-pole-rune" d="M412 252H428V268H412ZM416 256V264H424V256Z" fill-rule="evenodd" />
                   <text x="420" y="292" text-anchor="middle" class="era-label">ERA</text>
@@ -366,6 +370,24 @@
                 </div>
               </div>
 
+              <div class="horizon-latitude-panel">
+                <div class="latitude-copy">
+                  <span>Beobachterbreite · äquatorwärts</span>
+                  <small id="horizon-latitude-note">Versatz vom Nordpol; der Äquator bei 90° bleibt ausgeschlossen.</small>
+                </div>
+                <div
+                  id="horizon-latitude-group"
+                  class="horizon-latitude-group"
+                  role="radiogroup"
+                  aria-label="Breitenversatz des Beobachters in Richtung Äquator"
+                  aria-describedby="horizon-latitude-note"
+                >
+                  <button id="horizon-latitude-0" class="latitude-button is-active" type="button" role="radio" aria-checked="true" aria-label="0 Grad, Polstand wie bisher" data-latitude="0" tabindex="0"><span>0°</span><small>Polstand</small></button>
+                  <button id="horizon-latitude-30" class="latitude-button" type="button" role="radio" aria-checked="false" aria-label="30 Grad äquatorwärts, Mittelstufe" data-latitude="30" tabindex="-1"><span>30°</span><small>Mittelstufe</small></button>
+                  <button id="horizon-latitude-60" class="latitude-button" type="button" role="radio" aria-checked="false" aria-label="60 Grad äquatorwärts, äquatornahe Grenze" data-latitude="60" tabindex="-1"><span>60°</span><small>Grenzstufe</small></button>
+                </div>
+              </div>
+
               <figure class="horizon-stage">
                 <svg
                   id="horizon-view"
@@ -378,7 +400,7 @@
                 >
                   <title id="horizon-svg-title">Horizontverlauf mit Blick nach Norden</title>
                   <desc id="horizon-description">
-                    Schematische Projektion derselben Sol- und Yol-Positionen aus der gewählten lokalen Blickrichtung auf Era.
+                    Schematische Projektion derselben Sol- und Yol-Positionen aus der gewählten lokalen Blickrichtung am Polstand auf Era.
                   </desc>
 
                   <rect class="horizon-sky-band sky-band-1" width="840" height="44" />

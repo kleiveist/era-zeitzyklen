@@ -361,7 +361,8 @@ h3 {
 
 .theme-toggle,
 .button,
-.direction-button {
+.direction-button,
+.latitude-button {
   min-height: 48px;
   color: var(--ink-strong);
   border: 2px solid var(--engraving-strong);
@@ -373,7 +374,8 @@ h3 {
 
 .theme-toggle:hover,
 .button:hover,
-.direction-button:hover {
+.direction-button:hover,
+.latitude-button:hover {
   color: var(--gold-bright);
   border-color: var(--gold-bright);
   background: var(--paper-soft);
@@ -381,7 +383,8 @@ h3 {
 
 .theme-toggle:active,
 .button:active,
-.direction-button:active {
+.direction-button:active,
+.latitude-button:active {
   box-shadow: 2px 2px 0 var(--shadow);
 }
 
@@ -1012,6 +1015,19 @@ main {
   stroke-dasharray: 12 8;
 }
 
+.era-latitude-ring {
+  fill: none;
+  stroke: var(--convection-ice);
+  stroke-width: 4;
+  stroke-dasharray: 8 4;
+}
+
+.era-observer-marker {
+  fill: var(--gold-bright);
+  stroke: var(--stone-950);
+  stroke-width: 2;
+}
+
 .era-view-arrow {
   fill: var(--gold-bright);
   stroke: var(--ink-dark);
@@ -1229,6 +1245,43 @@ main {
   margin-bottom: 12px;
 }
 
+.horizon-latitude-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 8px;
+  border: 2px solid var(--engraving);
+  background: var(--paper);
+}
+
+.latitude-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.latitude-copy span {
+  color: var(--ink-strong);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.latitude-copy small {
+  color: var(--ink-muted);
+  font-size: 9px;
+  line-height: 13px;
+}
+
+.horizon-latitude-group {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(68px, 1fr));
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
 .horizon-direction-group {
   display: grid;
   grid-template-columns: repeat(4, minmax(52px, 1fr));
@@ -1239,27 +1292,31 @@ main {
   background: var(--paper);
 }
 
-.direction-button {
+.direction-button,
+.latitude-button {
   display: grid;
   min-width: 52px;
   padding: 4px 6px;
   place-items: center;
 }
 
-.direction-button span {
+.direction-button span,
+.latitude-button span {
   color: var(--gold-bright);
   font-size: 18px;
   line-height: 20px;
 }
 
-.direction-button small {
+.direction-button small,
+.latitude-button small {
   color: var(--ink-muted);
   font-size: 8px;
   line-height: 12px;
   text-transform: uppercase;
 }
 
-.direction-button[aria-checked="true"] {
+.direction-button[aria-checked="true"],
+.latitude-button[aria-checked="true"] {
   color: var(--ink-dark);
   border-color: var(--gold-deep);
   background: var(--gold-bright);
@@ -1267,7 +1324,9 @@ main {
 }
 
 .direction-button[aria-checked="true"] span,
-.direction-button[aria-checked="true"] small {
+.direction-button[aria-checked="true"] small,
+.latitude-button[aria-checked="true"] span,
+.latitude-button[aria-checked="true"] small {
   color: var(--ink-dark);
 }
 
@@ -1918,7 +1977,8 @@ h1 {
 
 .theme-toggle,
 .button,
-.direction-button {
+.direction-button,
+.latitude-button {
   color: var(--ink-strong);
   border-color: var(--engraving-strong);
   background: var(--paper-raised);
@@ -2173,7 +2233,18 @@ main {
   background: var(--paper-soft);
 }
 
-.direction-button[aria-checked="true"] {
+.horizon-latitude-panel {
+  border-color: var(--engraving-strong);
+  background: var(--paper-soft);
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+
+.horizon-latitude-group {
+  gap: 6px;
+}
+
+.direction-button[aria-checked="true"],
+.latitude-button[aria-checked="true"] {
   box-shadow: inset -3px -3px 0 var(--gold), 3px 3px 0 var(--shadow);
 }
 
@@ -2513,6 +2584,14 @@ footer {
 
   #horizon-direction-west {
     grid-area: west;
+  }
+
+  .horizon-latitude-panel {
+    display: grid;
+  }
+
+  .horizon-latitude-group {
+    width: 100%;
   }
 
   .phase-sigils {

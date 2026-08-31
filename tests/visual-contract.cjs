@@ -93,10 +93,30 @@ assert.equal(
   "index.html: exakt vier Richtungsbuttons",
 );
 
+const latitudeGroupTag = openingTag("index.html", "horizon-latitude-group");
+assert.match(latitudeGroupTag, /\brole\s*=\s*["']radiogroup["']/i, "Breitenauswahl ist ein Radiogroup");
+assert.match(latitudeGroupTag, /\baria-label(?:ledby)?\s*=/i, "Breitenauswahl besitzt einen zugänglichen Namen");
+for (const latitude of [0, 30, 60]) {
+  const tag = openingTag("index.html", `horizon-latitude-${latitude}`);
+  assert.match(tag, /^<button\b/i, `${latitude} Grad: echte Schaltfläche`);
+  assert.match(tag, new RegExp(`\\bdata-latitude\\s*=\\s*["']${latitude}["']`, "i"), `${latitude} Grad: zentraler Breitenwert`);
+  assert.match(tag, /\baria-label\s*=/i, `${latitude} Grad: eindeutiger zugänglicher Name`);
+  assert.match(tag, /\baria-(?:pressed|checked)\s*=/i, `${latitude} Grad: expliziter Auswahlzustand`);
+}
+assert.equal(
+  [...sources["index.html"].matchAll(/\bid\s*=\s*["']horizon-latitude-(?:0|30|60)["']/gi)].length,
+  3,
+  "index.html: exakt drei Breitenstufen",
+);
+reject("index.html", /\bdata-latitude\s*=\s*["']90["']/i, "der Äquator ist nicht auswählbar");
+requireMatch("index.html", /Äquator bei 90° bleibt ausgeschlossen/i, "die Grenze zum Äquator wird erklärt");
+
 for (const id of [
   "era-surface",
   "era-view-arrow",
   "era-horizon-cut",
+  "era-latitude-ring",
+  "era-observer-marker",
   "horizon-sol-body",
   "horizon-yol-body",
 ]) {
@@ -120,7 +140,10 @@ for (const name of [
   "ORBIT_GEOMETRY",
   "HORIZON_GEOMETRY",
   "HORIZON_DIRECTIONS",
+  "HORIZON_LATITUDES",
   "normalizeDegrees",
+  "normalizeHorizonLatitude",
+  "getLatitudeLift",
   "getEraRotationDegrees",
   "getOrbitPoint",
   "getBodyVisualRadius",
@@ -136,6 +159,8 @@ for (const name of [
 }
 
 requireMatch("app.js", /era-horizon-direction/, "Blickrichtung wird unter dem vereinbarten localStorage-Schlüssel gespeichert");
+requireMatch("app.js", /era-horizon-latitude/, "Breitenstufe wird unter dem vereinbarten localStorage-Schlüssel gespeichert");
+requireMatch("app.js", /Object\.freeze\(\[0,\s*30,\s*60\]\)/, "nur die drei vereinbarten Breitenstufen sind wählbar");
 requireMatch(
   "styles.css",
   /:active[^{}]*\{[^{}]*(?:translateY\(\s*2px\s*\)|translate\(\s*(?:0|2px)\s*,\s*2px\s*\)|translate\s*:\s*(?:0|2px)\s+2px)/is,

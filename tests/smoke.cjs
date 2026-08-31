@@ -304,6 +304,15 @@ const directionButtons = ["north", "east", "south", "west"].map((direction) => {
   directionGroup.append(button);
   return button;
 });
+const latitudeGroup = registerElement("#horizon-latitude-group", new FakeElement("div"));
+latitudeGroup.setAttribute("role", "radiogroup");
+const latitudeButtons = [0, 30, 60].map((latitude) => {
+  const button = registerElement(`#horizon-latitude-${latitude}`, new FakeElement("button"));
+  button.className = "latitude-button";
+  button.setAttribute("data-latitude", String(latitude));
+  latitudeGroup.append(button);
+  return button;
+});
 
 elementFor("#seed-input").value = "ERA-3500";
 elementFor("#playback-rate").value = "1";
@@ -316,12 +325,14 @@ const contract = global.ERA_CYCLE_CONTRACT;
 assert.ok(contract, "app.js veröffentlicht den read-only ERA_CYCLE_CONTRACT");
 assert.ok(Object.isFrozen(contract), "ERA_CYCLE_CONTRACT ist eingefroren");
 
-for (const constantName of ["ORBIT_GEOMETRY", "HORIZON_GEOMETRY", "HORIZON_DIRECTIONS"]) {
+for (const constantName of ["ORBIT_GEOMETRY", "HORIZON_GEOMETRY", "HORIZON_DIRECTIONS", "HORIZON_LATITUDES"]) {
   assert.ok(contract[constantName], `${constantName} ist Teil des Geometrievertrags`);
   assert.ok(Object.isFrozen(contract[constantName]), `${constantName} ist read-only`);
 }
 for (const functionName of [
   "normalizeDegrees",
+  "normalizeHorizonLatitude",
+  "getLatitudeLift",
   "getEraRotationDegrees",
   "getOrbitPoint",
   "getBodyVisualRadius",
@@ -392,6 +403,13 @@ function assertDirection(expected, message) {
   assert.equal(contract.getState().horizonDirection, expected, `${message}: Anwendungszustand`);
 }
 
+function assertLatitude(expected, message) {
+  const active = latitudeButtons.filter(pressed);
+  assert.equal(active.length, 1, `${message}: genau eine aktive Breitenstufe`);
+  assert.equal(Number(active[0].dataset.latitude), expected, `${message}: sichtbarer Zustand`);
+  assert.equal(contract.getState().horizonLatitude, expected, `${message}: Anwendungszustand`);
+}
+
 function simulationSignature(snapshot) {
   const bodySignature = (body) => ({
     angle: body.angle,
@@ -427,7 +445,9 @@ function assertPointClose(actualValue, expectedValue, message, epsilon = 1e-7) {
 }
 
 assert.equal(directionButtons.length, 4, "exakt vier Blickrichtungen");
+assert.equal(latitudeButtons.length, 3, "exakt drei Breitenstufen");
 assertDirection("north", "Standardrichtung Norden");
+assertLatitude(0, "Standardbreite ist der bisherige Polstand");
 
 slider.value = "54000";
 slider.emit("input");
@@ -480,6 +500,53 @@ assertDirection("north", "Pfeil-links wechselt zyklisch zurück");
 keyEvent = directionButtons[0].emit("keydown", { key: "ArrowUp" });
 assert.ok(keyEvent.defaultPrevented, "Pfeil-hoch verhindert Browser-Standardverhalten");
 assertDirection("west", "Pfeil-hoch wechselt zyklisch zurück");
+
+const latitudeFrameBefore = contract.getLastRenderFrame();
+const latitudeStateBefore = contract.getState();
+latitudeButtons[1].emit("click");
+assertLatitude(30, "Klick aktiviert die mittlere Breitenstufe");
+assert.equal(storage.get("era-horizon-latitude"), "30", "30 Grad werden gespeichert");
+const latitudeFrame30 = contract.getLastRenderFrame();
+assert.equal(latitudeFrame30.snapshot, latitudeFrameBefore.snapshot, "Breitenwahl erzeugt keinen neuen Simulationssnapshot");
+assert.equal(contract.getState().currentMs, latitudeStateBefore.currentMs, "Breitenwahl verändert die Zeit nicht");
+assert.equal(contract.getState().seed, latitudeStateBefore.seed, "Breitenwahl verändert den Seed nicht");
+assert.equal(latitudeFrame30.eraRotationDegrees, latitudeFrameBefore.eraRotationDegrees, "Breitenwahl verändert Eras Rotation nicht");
+for (const bodyName of ["sol", "yol"]) {
+  assertPointClose(
+    latitudeFrame30.worldPoints[bodyName],
+    latitudeFrameBefore.worldPoints[bodyName],
+    `${bodyName}: Breitenwahl verändert den Weltpunkt nicht`,
+  );
+  assert.equal(latitudeFrame30.horizonProjection[bodyName].latitudeDegrees, 30, `${bodyName}: 30 Grad fließen in die Projektion ein`);
+}
+const ringRadius30 = Number(elementFor("#era-latitude-ring").getAttribute("r"));
+assert.ok(ringRadius30 > 8, "der ERA-Breitenring wächst bei 30 Grad aus dem Polpunkt heraus");
+assert.equal(elementFor("#era-latitude-indicator").getAttribute("data-latitude-degrees"), "30");
+assert.equal(elementFor("#horizon-view").getAttribute("data-latitude-degrees"), "30");
+assert.match(elementFor("#horizon-title").textContent, /30° äquatorwärts/);
+
+latitudeButtons[2].emit("click");
+assertLatitude(60, "Klick aktiviert die äquatornahe Grenzstufe");
+assert.equal(storage.get("era-horizon-latitude"), "60", "60 Grad werden gespeichert");
+const ringRadius60 = Number(elementFor("#era-latitude-ring").getAttribute("r"));
+assert.ok(ringRadius60 > ringRadius30, "der ERA-Breitenring wächst logisch bis 60 Grad");
+
+latitudeButtons[2].focus();
+keyEvent = latitudeButtons[2].emit("keydown", { key: "ArrowRight" });
+assert.ok(keyEvent.defaultPrevented, "Breitenwahl verhindert Pfeil-rechts-Standardverhalten");
+assertLatitude(0, "Breitenwahl läuft nach der Grenzstufe zum Polstand zurück");
+assert.equal(document.activeElement, latitudeButtons[0], "Fokus folgt zum Polstand");
+keyEvent = latitudeButtons[0].emit("keydown", { key: "ArrowLeft" });
+assert.ok(keyEvent.defaultPrevented, "Breitenwahl verhindert Pfeil-links-Standardverhalten");
+assertLatitude(60, "Breitenwahl läuft rückwärts zur Grenzstufe");
+keyEvent = latitudeButtons[2].emit("keydown", { key: "Home" });
+assert.ok(keyEvent.defaultPrevented, "Home wird in der Breitenwahl verarbeitet");
+assertLatitude(0, "Home springt zum Polstand");
+keyEvent = latitudeButtons[0].emit("keydown", { key: "End" });
+assert.ok(keyEvent.defaultPrevented, "Ende wird in der Breitenwahl verarbeitet");
+assertLatitude(60, "Ende springt zur Grenzstufe");
+latitudeButtons[0].emit("click");
+assertLatitude(0, "Test setzt die bisherige Polansicht wieder her");
 
 const preservedDirection = "west";
 slider.value = "68000";
@@ -638,6 +705,14 @@ for (const bodyName of ["sol", "yol"]) {
 
 assert.equal(contract.normalizeDegrees(-90), 270, "negative Winkel werden normalisiert");
 assert.equal(contract.normalizeDegrees(450), 90, "Winkel über 360° werden normalisiert");
+assert.deepEqual(Object.keys(contract.HORIZON_LATITUDES), ["0", "30", "60"], "nur drei äquatorwärtige Breitenstufen sind definiert");
+assert.equal(contract.normalizeHorizonLatitude(0), 0, "Polstand bleibt 0 Grad");
+assert.equal(contract.normalizeHorizonLatitude(30), 30, "Mittelstufe bleibt 30 Grad");
+assert.equal(contract.normalizeHorizonLatitude(60), 60, "Grenzstufe bleibt 60 Grad");
+assert.equal(contract.normalizeHorizonLatitude(90), 0, "der Äquator bei 90 Grad ist keine wählbare Stufe");
+assert.equal(contract.getLatitudeLift(0), 0, "Polstand verändert die bisherige Horizonthöhe nicht");
+assert.ok(contract.getLatitudeLift(30) > 0, "30 Grad heben sichtbare Körper an");
+assert.ok(contract.getLatitudeLift(60) > contract.getLatitudeLift(30), "60 Grad heben sichtbare Körper stärker an");
 
 function directionMetadata(directionId) {
   if (Array.isArray(contract.HORIZON_DIRECTIONS)) {
@@ -690,12 +765,19 @@ for (const [directionId, [leftExpected, rightExpected]] of Object.entries(compas
     y: orbitGeometry.centerY + right.y * 120,
   };
   const frontProjection = contract.projectOrbitPointToHorizon(frontPoint, basis, "orbit");
+  const frontProjection30 = contract.projectOrbitPointToHorizon(frontPoint, basis, "orbit", 30);
+  const frontProjection60 = contract.projectOrbitPointToHorizon(frontPoint, basis, "orbit", 60);
   const rearProjection = contract.projectOrbitPointToHorizon(rearPoint, basis, "orbit");
   const cutProjection = contract.projectOrbitPointToHorizon(cutPoint, basis, "orbit");
   assert.equal(frontProjection.visible, true, `${directionId}: Vorderseite kann sichtbar sein`);
   assert.equal(rearProjection.visible, false, `${directionId}: Rückseite bleibt unsichtbar`);
   assert.equal(cutProjection.visible, true, `${directionId}: Schnittlinie gehört zum Horizont`);
   assert.ok(Math.abs(pointOf(cutProjection).y - horizonGeometry.horizonY) < 1e-7, `${directionId}: Schnittlinie liegt auf Horizonthöhe`);
+  assert.ok(frontProjection30.y < frontProjection.y, `${directionId}: 30 Grad stellen den Himmelskörper höher`);
+  assert.ok(frontProjection60.y < frontProjection30.y, `${directionId}: 60 Grad stellen den Himmelskörper nochmals höher`);
+  assert.equal(frontProjection30.latitudeDegrees, 30, `${directionId}: mittlere Breitenstufe wird protokolliert`);
+  assert.equal(frontProjection60.latitudeDegrees, 60, `${directionId}: Grenzstufe wird protokolliert`);
+  assert.ok(frontProjection60.y >= 0, `${directionId}: Grenzstufe bleibt innerhalb des Horizont-SVG`);
 
   const flatProjection = contract.projectOrbitPointToHorizon(frontPoint, basis, "horizon");
   const reverseFlatProjection = contract.projectOrbitPointToHorizon(frontPoint, basis, "reverse-horizon");
@@ -818,6 +900,7 @@ console.log(
     generatedSegments: track.children.length,
     phaseJumps: ERA_PHASES.templates.length,
     directions: directionButtons.length,
+    latitudes: latitudeButtons.length,
     geometrySnapshots: sampledSnapshots,
     finalEraTime: elementFor("#era-time").textContent,
   }),

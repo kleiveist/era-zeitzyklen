@@ -33,6 +33,8 @@
     horizonY: 176,
     usableHalfWidth: 300,
     maxSkyHeight: 112,
+    maxLatitudeLift: 52,
+    maxLatitudeDegrees: 60,
   });
 
   const HORIZON_DIRECTIONS = Object.freeze({
@@ -75,6 +77,12 @@
   });
 
   const HORIZON_DIRECTION_ORDER = Object.freeze(["north", "east", "south", "west"]);
+  const HORIZON_LATITUDES = Object.freeze({
+    0: Object.freeze({ degrees: 0, name: "Polstand", description: "wie bisher" }),
+    30: Object.freeze({ degrees: 30, name: "Mittelstufe", description: "30 Grad äquatorwärts" }),
+    60: Object.freeze({ degrees: 60, name: "Grenzstufe", description: "60 Grad äquatorwärts" }),
+  });
+  const HORIZON_LATITUDE_ORDER = Object.freeze([0, 30, 60]);
   const HORIZON_HEIGHT_SCALE = Object.freeze({
     hold: 0.46,
     horizon: 0.22,
@@ -116,6 +124,9 @@
     eraSurface: document.querySelector("#era-surface"),
     eraFrontHalf: document.querySelector("#era-front-half"),
     eraHorizonCut: document.querySelector("#era-horizon-cut"),
+    eraLatitudeIndicator: document.querySelector("#era-latitude-indicator"),
+    eraLatitudeRing: document.querySelector("#era-latitude-ring"),
+    eraObserverMarker: document.querySelector("#era-observer-marker"),
     eraViewArrow: document.querySelector("#era-view-arrow"),
     eraViewLetter: document.querySelector("#era-view-letter"),
     directionPathSol: document.querySelector("#direction-path-sol"),
@@ -127,6 +138,12 @@
       east: document.querySelector("#horizon-direction-east"),
       south: document.querySelector("#horizon-direction-south"),
       west: document.querySelector("#horizon-direction-west"),
+    }),
+    horizonLatitudeGroup: document.querySelector("#horizon-latitude-group"),
+    horizonLatitudeButtons: Object.freeze({
+      0: document.querySelector("#horizon-latitude-0"),
+      30: document.querySelector("#horizon-latitude-30"),
+      60: document.querySelector("#horizon-latitude-60"),
     }),
     horizonTitle: document.querySelector("#horizon-title"),
     horizonSvgTitle: document.querySelector("#horizon-svg-title"),
@@ -185,6 +202,7 @@
     reducedMotion: reducedMotionQuery.matches,
     theme: document.documentElement?.dataset?.theme === "light" ? "light" : "dark",
     horizonDirection: readStoredHorizonDirection(),
+    horizonLatitude: readStoredHorizonLatitude(),
   };
 
   let lastRenderFrame = null;
@@ -291,6 +309,29 @@
     }
   }
 
+  function normalizeHorizonLatitude(value) {
+    const numericValue = Number(value);
+    return HORIZON_LATITUDE_ORDER.includes(numericValue) ? numericValue : 0;
+  }
+
+  function readStoredHorizonLatitude() {
+    try {
+      return normalizeHorizonLatitude(localStorage.getItem("era-horizon-latitude"));
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  function getLatitudeLift(latitudeDegrees) {
+    const numericValue = Number(latitudeDegrees);
+    const safeDegrees = clamp(
+      Number.isFinite(numericValue) ? numericValue : 0,
+      0,
+      HORIZON_GEOMETRY.maxLatitudeDegrees,
+    );
+    return Math.sin((safeDegrees * Math.PI) / 180) * HORIZON_GEOMETRY.maxLatitudeLift;
+  }
+
   function getEraRotationDegrees(ms, motion) {
     const safeMs = Number.isFinite(Number(ms)) ? Number(ms) : 0;
     const sampledMs = state.reducedMotion ? Math.round(safeMs / 1000) * 1000 : safeMs;
@@ -395,7 +436,7 @@
     });
   }
 
-  function projectOrbitPointToHorizon(point, viewBasis, motion) {
+  function projectOrbitPointToHorizon(point, viewBasis, motion, latitudeDegrees = 0) {
     const basis = viewBasis || getViewBasis("north", 0);
     const deltaX = Number(point?.x) - ORBIT_GEOMETRY.centerX;
     const deltaY = Number(point?.y) - ORBIT_GEOMETRY.centerY;
@@ -406,8 +447,10 @@
     const rightAmount = clamp(unitX * basis.right.x + unitY * basis.right.y, -1, 1);
     const heightScale = HORIZON_HEIGHT_SCALE[motion] ?? 0.76;
     const visible = motion !== "convection" && forwardAmount >= -0.000001;
-    const height =
+    const baseHeight =
       Math.pow(Math.max(0, forwardAmount), 0.8) * HORIZON_GEOMETRY.maxSkyHeight * heightScale;
+    const latitudeLift = visible ? getLatitudeLift(latitudeDegrees) : 0;
+    const height = baseHeight + latitudeLift;
 
     return Object.freeze({
       x: clamp(
@@ -420,6 +463,13 @@
       forward: forwardAmount,
       right: rightAmount,
       height,
+      baseHeight,
+      latitudeDegrees: clamp(
+        Number.isFinite(Number(latitudeDegrees)) ? Number(latitudeDegrees) : 0,
+        0,
+        HORIZON_GEOMETRY.maxLatitudeDegrees,
+      ),
+      latitudeLift,
       heightScale,
     });
   }
@@ -796,7 +846,12 @@
   }
 
   function createFrameProjection(point, viewBasis, snapshot, bodyName) {
-    const projection = projectOrbitPointToHorizon(point, viewBasis, snapshot.template.motion);
+    const projection = projectOrbitPointToHorizon(
+      point,
+      viewBasis,
+      snapshot.template.motion,
+      state.horizonLatitude,
+    );
     return Object.freeze({
       ...projection,
       visible: projection.visible && snapshot[bodyName].visible,
@@ -819,6 +874,7 @@
       worldPoints,
       eraRotationDegrees,
       viewBasis,
+      horizonLatitude: state.horizonLatitude,
       horizonProjection,
     });
   }
@@ -830,6 +886,7 @@
       worldPoints: frame.worldPoints,
       eraRotationDegrees: frame.eraRotationDegrees,
       viewBasis,
+      horizonLatitude: state.horizonLatitude,
       horizonProjection: Object.freeze({
         sol: createFrameProjection(frame.worldPoints.sol, viewBasis, frame.snapshot, "sol"),
         yol: createFrameProjection(frame.worldPoints.yol, viewBasis, frame.snapshot, "yol"),
@@ -839,6 +896,7 @@
 
   function updateDirectionControls() {
     const activeDirection = HORIZON_DIRECTIONS[state.horizonDirection];
+    const activeLatitude = HORIZON_LATITUDES[state.horizonLatitude];
     if (elements.horizonDirectionGroup) {
       elements.horizonDirectionGroup.setAttribute("role", "radiogroup");
       elements.horizonDirectionGroup.setAttribute(
@@ -859,10 +917,10 @@
       button.classList.toggle("is-active", active);
     }
     if (elements.horizonTitle) {
-      elements.horizonTitle.textContent = `Horizontverlauf · Blick nach ${activeDirection.name}`;
+      elements.horizonTitle.textContent = `Horizontverlauf · ${activeDirection.name} · ${activeLatitude.degrees}° äquatorwärts`;
     }
     if (elements.horizonSvgTitle) {
-      elements.horizonSvgTitle.textContent = `Horizontverlauf mit Blick nach ${activeDirection.name}`;
+      elements.horizonSvgTitle.textContent = `Horizontverlauf mit Blick nach ${activeDirection.name} bei ${activeLatitude.degrees} Grad Polversatz`;
     }
     if (elements.horizonLeftLabel) {
       elements.horizonLeftLabel.textContent = activeDirection.leftLabel;
@@ -875,11 +933,44 @@
     }
   }
 
+  function updateLatitudeControls() {
+    if (elements.horizonLatitudeGroup) {
+      elements.horizonLatitudeGroup.setAttribute("role", "radiogroup");
+      elements.horizonLatitudeGroup.setAttribute(
+        "aria-label",
+        "Breitenversatz des Beobachters in Richtung Äquator",
+      );
+      elements.horizonLatitudeGroup.setAttribute(
+        "data-active-latitude",
+        String(state.horizonLatitude),
+      );
+    }
+    for (const latitudeDegrees of HORIZON_LATITUDE_ORDER) {
+      const button = elements.horizonLatitudeButtons[latitudeDegrees];
+      if (!button) continue;
+      const latitude = HORIZON_LATITUDES[latitudeDegrees];
+      const active = latitudeDegrees === state.horizonLatitude;
+      button.setAttribute("role", "radio");
+      button.setAttribute("aria-checked", String(active));
+      button.setAttribute("aria-pressed", String(active));
+      button.setAttribute(
+        "aria-label",
+        `${latitude.degrees} Grad äquatorwärts, ${latitude.name}${latitude.degrees === 0 ? ", wie bisher" : ""}`,
+      );
+      button.setAttribute("tabindex", active ? "0" : "-1");
+      button.classList.toggle("is-active", active);
+    }
+  }
+
   function updateEraOrientation(frame) {
     const { forward, right } = frame.viewBasis;
     const centerX = ORBIT_GEOMETRY.centerX;
     const centerY = ORBIT_GEOMETRY.centerY;
     const eraRadius = ORBIT_GEOMETRY.eraRadius;
+    const latitudeDegrees = state.horizonLatitude;
+    const latitudeRingRadius = latitudeDegrees === 0
+      ? 8
+      : Math.round(Math.sin((latitudeDegrees * Math.PI) / 180) * (eraRadius - 12));
     if (elements.eraSurface) {
       elements.eraSurface.setAttribute(
         "transform",
@@ -917,6 +1008,31 @@
           cutY2,
         )}`,
       );
+    }
+    if (elements.eraLatitudeIndicator) {
+      elements.eraLatitudeIndicator.setAttribute(
+        "data-latitude-degrees",
+        String(latitudeDegrees),
+      );
+      elements.eraLatitudeIndicator.setAttribute(
+        "data-ring-radius",
+        String(latitudeRingRadius),
+      );
+    }
+    if (elements.eraLatitudeRing) {
+      elements.eraLatitudeRing.setAttribute("cx", String(centerX));
+      elements.eraLatitudeRing.setAttribute("cy", String(centerY));
+      elements.eraLatitudeRing.setAttribute("r", String(latitudeRingRadius));
+    }
+    if (elements.eraObserverMarker) {
+      const observerX = centerX + forward.x * latitudeRingRadius;
+      const observerY = centerY + forward.y * latitudeRingRadius;
+      elements.eraObserverMarker.setAttribute(
+        "transform",
+        `translate(${(observerX - centerX).toFixed(3)} ${(observerY - centerY).toFixed(3)})`,
+      );
+      elements.eraObserverMarker.setAttribute("data-observer-x", observerX.toFixed(3));
+      elements.eraObserverMarker.setAttribute("data-observer-y", observerY.toFixed(3));
     }
     if (elements.eraViewArrow) {
       const arrowPath = elements.eraViewArrow.querySelector?.("path") || elements.eraViewArrow;
@@ -1001,6 +1117,7 @@
       elements.directionPathYol.setAttribute("data-direction-sign", String(snapshot.yol.directionSign));
     }
     elements.orbitView.classList.toggle("is-convection", isConvection);
+    elements.orbitView.setAttribute("data-horizon-latitude", String(state.horizonLatitude));
     elements.convectionMessage.hidden = !isConvection;
     elements.orbitDescription.textContent = isConvection
       ? "Nordpol-Draufsicht während der Konvektion: Sol und Yol sind nicht sichtbar; ferne Splitterwelten treten hervor."
@@ -1030,11 +1147,13 @@
       elements.horizonSolBody.setAttribute("data-world-x", worldPoints.sol.x.toFixed(3));
       elements.horizonSolBody.setAttribute("data-world-y", worldPoints.sol.y.toFixed(3));
       elements.horizonSolBody.setAttribute("data-forward", horizonProjection.sol.forward.toFixed(6));
+      elements.horizonSolBody.setAttribute("data-latitude-lift", horizonProjection.sol.latitudeLift.toFixed(3));
     }
     if (elements.horizonYolBody) {
       elements.horizonYolBody.setAttribute("data-world-x", worldPoints.yol.x.toFixed(3));
       elements.horizonYolBody.setAttribute("data-world-y", worldPoints.yol.y.toFixed(3));
       elements.horizonYolBody.setAttribute("data-forward", horizonProjection.yol.forward.toFixed(6));
+      elements.horizonYolBody.setAttribute("data-latitude-lift", horizonProjection.yol.latitudeLift.toFixed(3));
     }
     if (elements.horizonView) {
       elements.horizonView.classList.toggle("is-convection", isConvection);
@@ -1043,6 +1162,7 @@
         frame.eraRotationDegrees.toFixed(3),
       );
       elements.horizonView.setAttribute("data-direction", state.horizonDirection);
+      elements.horizonView.setAttribute("data-latitude-degrees", String(state.horizonLatitude));
     }
     if (elements.horizonConvectionField) {
       elements.horizonConvectionField.classList.toggle("is-visible", isConvection);
@@ -1050,12 +1170,13 @@
     }
     if (elements.horizonDescription) {
       const direction = HORIZON_DIRECTIONS[state.horizonDirection];
+      const latitude = HORIZON_LATITUDES[state.horizonLatitude];
       const visibilityText = isConvection
         ? "Sol und Yol sind nicht sichtbar."
         : `Sol ist ${solVisible ? "vor" : "hinter"} dem lokalen Horizont, Yol ist ${
             yolVisible ? "vor" : "hinter"
           } dem lokalen Horizont.`;
-      elements.horizonDescription.textContent = `Schematischer Horizont bei Blick nach ${direction.name}. ${visibilityText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht.`;
+      elements.horizonDescription.textContent = `Schematischer Horizont bei Blick nach ${direction.name} und ${latitude.degrees} Grad Versatz vom Nordpol in Richtung Äquator. ${visibilityText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht; der Äquator bei 90 Grad bleibt ausgeschlossen.`;
     }
   }
 
@@ -1129,6 +1250,7 @@
     const yolSpeedText = `${snapshot.yol.speed.toFixed(1).replace(".", ",")}°/s`;
 
     updateDirectionControls();
+    updateLatitudeControls();
     updateEraOrientation(lastRenderFrame);
     updateOrbitGeometry(lastRenderFrame);
     updateHorizonGeometry(lastRenderFrame);
@@ -1336,6 +1458,14 @@
     }
   }
 
+  function persistHorizonLatitude(latitudeDegrees) {
+    try {
+      localStorage.setItem("era-horizon-latitude", String(latitudeDegrees));
+    } catch (_) {
+      // Die Breitenstufe bleibt auch ohne verfügbaren lokalen Speicher bedienbar.
+    }
+  }
+
   function setHorizonDirection(directionId, options = {}) {
     const normalizedDirection = HORIZON_DIRECTIONS[directionId] ? directionId : "north";
     const changed = normalizedDirection !== state.horizonDirection;
@@ -1365,6 +1495,36 @@
     setHorizonDirection(HORIZON_DIRECTION_ORDER[nextIndex], { focus: true });
   }
 
+  function setHorizonLatitude(latitudeDegrees, options = {}) {
+    const normalizedLatitude = normalizeHorizonLatitude(latitudeDegrees);
+    const changed = normalizedLatitude !== state.horizonLatitude;
+    state.horizonLatitude = normalizedLatitude;
+    if (options.persist !== false) persistHorizonLatitude(normalizedLatitude);
+    updateDirectionControls();
+    updateLatitudeControls();
+
+    if (lastRenderFrame) {
+      lastRenderFrame = reprojectRenderFrame(lastRenderFrame);
+      updateEraOrientation(lastRenderFrame);
+      updateHorizonGeometry(lastRenderFrame);
+      elements.orbitView.setAttribute("data-horizon-latitude", String(normalizedLatitude));
+    }
+
+    const activeButton = elements.horizonLatitudeButtons[normalizedLatitude];
+    if (options.focus && typeof activeButton?.focus === "function") activeButton.focus();
+    if (changed && options.announce !== false) {
+      const latitude = HORIZON_LATITUDES[normalizedLatitude];
+      announce(`${latitude.degrees} Grad äquatorwärts, ${latitude.name}. Sol und Yol stehen höher über dem Horizont.`);
+    }
+  }
+
+  function moveHorizonLatitude(latitudeDegrees, offset) {
+    const currentIndex = HORIZON_LATITUDE_ORDER.indexOf(normalizeHorizonLatitude(latitudeDegrees));
+    const nextIndex =
+      (currentIndex + offset + HORIZON_LATITUDE_ORDER.length) % HORIZON_LATITUDE_ORDER.length;
+    setHorizonLatitude(HORIZON_LATITUDE_ORDER[nextIndex], { focus: true });
+  }
+
   function getLastRenderFrame() {
     return lastRenderFrame;
   }
@@ -1375,6 +1535,7 @@
       currentMs: state.currentMs,
       presentationMs: state.presentationMs,
       horizonDirection: state.horizonDirection,
+      horizonLatitude: state.horizonLatitude,
       playing: state.playing,
       playbackRate: state.playbackRate,
       reducedMotion: state.reducedMotion,
@@ -1401,6 +1562,26 @@
         } else if (event.key === "End") {
           event.preventDefault?.();
           setHorizonDirection(HORIZON_DIRECTION_ORDER.at(-1), { focus: true });
+        }
+      });
+    }
+    for (const latitudeDegrees of HORIZON_LATITUDE_ORDER) {
+      const button = elements.horizonLatitudeButtons[latitudeDegrees];
+      if (!button) continue;
+      button.addEventListener("click", () => setHorizonLatitude(latitudeDegrees));
+      button.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+          event.preventDefault?.();
+          moveHorizonLatitude(latitudeDegrees, 1);
+        } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+          event.preventDefault?.();
+          moveHorizonLatitude(latitudeDegrees, -1);
+        } else if (event.key === "Home") {
+          event.preventDefault?.();
+          setHorizonLatitude(HORIZON_LATITUDE_ORDER[0], { focus: true });
+        } else if (event.key === "End") {
+          event.preventDefault?.();
+          setHorizonLatitude(HORIZON_LATITUDE_ORDER.at(-1), { focus: true });
         }
       });
     }
@@ -1454,7 +1635,10 @@
     ORBIT_GEOMETRY,
     HORIZON_GEOMETRY,
     HORIZON_DIRECTIONS,
+    HORIZON_LATITUDES,
     normalizeDegrees,
+    normalizeHorizonLatitude,
+    getLatitudeLift,
     getEraRotationDegrees,
     getOrbitPoint,
     getBodyVisualRadius,

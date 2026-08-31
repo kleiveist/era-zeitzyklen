@@ -37,18 +37,24 @@ Laufzeitabhängigkeiten.
 - 1×, 1,5×, 2× und 4× verändern nur das Wiedergabetempo; das Zeitmodell bleibt gleich.
 - **Helles Pergament / Dunkle Chronik** wechselt das vollständige Pixel-Fantasy-Farbsystem.
 - Der Pixelkompass schaltet den Horizontblick zwischen **N**, **O**, **S** und **W** um.
+- Die Breitensteuerung verschiebt den Beobachter um **0°**, **30°** oder **60°** vom Nordpol in Richtung Äquator.
 
 Die Kompassfelder sind echte Schaltflächen in einer zugänglichen Auswahlgruppe. Rechts und
 Runter wechseln zur nächsten Richtung im Uhrzeigersinn, Links und Hoch zur vorherigen; der
 Tastaturfokus folgt der Auswahl. Standard ist Norden. Die Auswahl wird unter
 `era-horizon-direction` lokal gespeichert und bleibt bei Phasen-, Seed- und Zeitsprüngen
-erhalten. Das Theme wird weiterhin unter `era-theme` gespeichert.
+erhalten. Die Breitenstufe wird unabhängig davon unter `era-horizon-latitude` gespeichert. Das
+Theme wird weiterhin unter `era-theme` gespeichert.
 
 ## Nordpol-Orbitansicht
 
 Era liegt als kreisförmige, pixelig abgestufte Polansicht im Mittelpunkt. Der Mittelpunkt ist
 der Nordpol, der äußere Rand entspricht dem Äquator. Nur die Runen- und Oberflächenstruktur
 rotiert; Era selbst wird weder gekippt noch perspektivisch gestaucht.
+
+Ein cyanfarbener Breitenring zeigt den gewählten Beobachterkreis direkt auf Era. Beim bisherigen
+Polstand bleibt er als kleiner Polring sichtbar; bei 30° und 60° wächst er entsprechend nach
+außen. Eine blockige Beobachtermarke verbindet Ring und gewählte Blickrichtung.
 
 Die Ellipsen von Sol und Yol sind schematische Bahnformen in einer gemeinsamen zweidimensionalen
 Ebene. Sie sind kein perspektivischer Effekt. Eine Horizontphase verändert daher niemals Höhe
@@ -87,6 +93,11 @@ Ein Blickpfeil auf Era kennzeichnet die gewählte lokale Richtung. Eine dazu sen
 Horizontschnittlinie trennt die vordere von der hinteren Hälfte. Beide Markierungen drehen sich
 mit derselben Era-Rotation, die auch für die Projektion verwendet wird.
 
+Die drei äquatorwärtigen Polversätze sind bewusst auf 0°, 30° und 60° begrenzt. 0° entspricht
+der bisherigen Darstellung. Jede weitere Stufe hebt sichtbare Sol- und Yol-Positionen um einen
+festen sphärischen Projektionsanteil an. Der Äquator bei 90° ist weder über Schaltflächen noch
+über Tastatursteuerung erreichbar, damit der illustrative Himmel nicht bis zum Zenit kippt.
+
 Die Daten fließen in einer festen Reihenfolge:
 
 ```text
@@ -94,6 +105,7 @@ getSnapshot(ms)
   → gemeinsame Weltpositionen von Sol und Yol
   → unveränderte Nordpol-Orbitansicht
   → Projektion derselben Punkte in den gewählten Horizontblick
+  → additive Höhenkorrektur der gewählten Breitenstufe
 ```
 
 Der Vorwärtsanteil eines Weltpunkts bestimmt Sichtbarkeit und Höhe, sein Rechtsanteil die
@@ -102,9 +114,9 @@ nicht sichtbar; ein Punkt auf der Schnittlinie liegt am Horizont. Horizontläufe
 der Parabellauf steigt deutlich höher. Diese Höhenfaktoren sind ausschließlich illustrative
 Präsentationswerte und verändern weder `phases.js` noch kanonische Lore-Werte.
 
-Ein Richtungswechsel berechnet keine neue Simulation: Zeitpunkt, Seed, Phase, Sol-/Yol-Winkel,
-Geschwindigkeit, Intensität und Körpergröße bleiben unverändert. Nur Blickbasis, Projektion und
-die zugehörigen Kompassmarkierungen ändern sich.
+Ein Richtungs- oder Breitenwechsel berechnet keine neue Simulation: Zeitpunkt, Seed, Phase,
+Sol-/Yol-Winkel, Geschwindigkeit, Intensität und Körpergröße bleiben unverändert. Nur Blickbasis,
+Projektionshöhe sowie die zugehörigen Kompass- und Breitenmarkierungen ändern sich.
 
 Während der Konvektion sind Sol und Yol in beiden Grafiken unsichtbar. Das Panorama zeigt den
 verdichteten Dunkelzustand mit harten Pixelbändern und fernen Splitterwelten statt weicher
@@ -135,7 +147,7 @@ Beispielsimulation.
 `app.js` normalisiert den Seed und bildet ihn mit FNV-1a auf einen 32-Bit-Wert ab. Ein
 Mulberry32-Generator erzeugt den Ereignisplan. Separate gehashte Zufallsströme bestimmen
 Bewegungsparameter und S-Int, sodass derselbe Seed und dieselbe Darstellungszeit denselben
-Zustand liefern. Die Blickrichtung ist kein Bestandteil dieser Zufallsströme.
+Zustand liefern. Blickrichtung und Breitenstufe sind kein Bestandteil dieser Zufallsströme.
 
 Der Ereignisplan enthält:
 
@@ -187,19 +199,20 @@ node tests/visual-contract.cjs
 ```
 
 Der Smoke-Test prüft unter anderem alle 18 Vorlagen, Seed-Reproduzierbarkeit, die sechsminütige
-Zeitfassung, Theme-Speicherung, Kompassklicks und -tastatursteuerung, Zustandsinvarianz bei
-Richtungswechseln sowie mindestens 200 Geometriesnapshots. Dabei werden endliche
+Zeitfassung, Theme-Speicherung, Kompass- und Breitensteuerung per Maus und Tastatur,
+Zustandsinvarianz bei Projektionswechseln sowie mindestens 200 Geometriesnapshots. Dabei werden endliche
 Koordinaten, S-Int-Grenzen, SVG-Grenzen und der Sicherheitsabstand zu Era kontrolliert.
 
 Der visuelle Vertrag liest HTML, CSS und JavaScript statisch. Er untersagt unter anderem
 `backdrop-filter`, Gauß-Weichzeichnung, Pillenradien, alte SVG-Verläufe und die frühere
 horizontabhängige Skalierung orbitaler Y-Radien. Außerdem prüft er die Pixel-SVG-Einstellungen,
-die vier zugänglichen Richtungsbuttons und den gemeinsamen Geometrievertrag.
+die vier zugänglichen Richtungsbuttons, die drei Breitenstufen und den gemeinsamen Geometrievertrag.
 
 ## Grenzen der Darstellung
 
 - Orbit- und Horizontansicht sind schematisch und keine naturwissenschaftlich exakte Astronomie.
 - Die Horizontprojektion erklärt relative Sichtbarkeit; sie ist kein geografisches Geländemodell.
+- Die Breitenstufen sind illustrative Polversätze; 90° und damit der Äquator bleiben ausgeschlossen.
 - ZEHS bleibt ein visueller Referenzpunkt; eine numerische Era-Rotationsdauer wird nicht erfunden.
 - Während der Konvektion sind Sol und Yol unsichtbar. `S-Int 0` wird nicht verwendet, da die
   dokumentierte Skala bei 1 beginnt.
