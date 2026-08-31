@@ -222,13 +222,6 @@
                   <clipPath id="era-clip">
                     <path d="M396 178H444V182H464V190H480V202H490V218H498V238H502V282H498V302H490V318H480V330H464V338H444V342H396V338H376V330H360V318H350V302H342V282H338V238H342V218H350V202H360V190H376V182H396Z" />
                   </clipPath>
-                  <marker id="sol-direction-arrow" viewBox="0 0 24 16" refX="22" refY="8" markerWidth="24" markerHeight="16" orient="auto" markerUnits="userSpaceOnUse">
-                    <path class="sol-arrow-head" d="M0 4H12V0L24 8 12 16V12H0Z" />
-                  </marker>
-                  <marker id="yol-direction-arrow" viewBox="0 0 24 16" refX="22" refY="8" markerWidth="24" markerHeight="16" orient="auto" markerUnits="userSpaceOnUse">
-                    <path class="yol-arrow-head" d="M0 4H12V0L24 8 12 16V12H0Z" />
-                  </marker>
-
                   <g id="sol-tier-1-shape">
                     <path class="body-pixel-outline" d="M-8-14H8V-12H12V-8H14V8H12V12H8V14H-8V12H-12V8H-14V-8H-12V-12H-8Z" />
                     <path class="sol-core" d="M-8-10H8V-8H10V8H8V10H-8V8H-10V-8H-8Z" />
@@ -333,11 +326,13 @@
                   <text x="796" y="484" text-anchor="end">ASTRALRASTER · ERA</text>
                 </g>
 
-                <g class="orbit-plane" aria-hidden="true">
-                  <ellipse id="orbit-sol-path" class="orbit orbit-sol" cx="420" cy="260" rx="310" ry="172" />
-                  <ellipse id="orbit-yol-path" class="orbit orbit-yol" cx="420" cy="260" rx="240" ry="158" />
-                  <path id="direction-path-sol" class="direction-arc direction-sol" d="M110 260A310 172 0 0 1 730 260" marker-end="url(#sol-direction-arrow)" />
-                  <path id="direction-path-yol" class="direction-arc direction-yol" d="M660 260A240 158 0 0 0 180 260" marker-end="url(#yol-direction-arrow)" />
+                <g class="orbit-plane" aria-hidden="true" shape-rendering="geometricPrecision">
+                  <ellipse class="orbit-track orbit-track-shadow orbit-sol-track" cx="420" cy="260" rx="310" ry="172" />
+                  <ellipse id="orbit-sol-path" class="orbit orbit-core orbit-sol orbit-sol-track" cx="420" cy="260" rx="310" ry="172" pathLength="1000" />
+                  <ellipse class="orbit-track orbit-track-detail orbit-sol-detail orbit-sol-track" cx="420" cy="260" rx="310" ry="172" pathLength="1000" />
+                  <ellipse class="orbit-track orbit-track-shadow orbit-yol-track" cx="420" cy="260" rx="240" ry="158" />
+                  <ellipse id="orbit-yol-path" class="orbit orbit-core orbit-yol orbit-yol-track" cx="420" cy="260" rx="240" ry="158" pathLength="1000" />
+                  <ellipse class="orbit-track orbit-track-detail orbit-yol-detail orbit-yol-track" cx="420" cy="260" rx="240" ry="158" pathLength="1000" />
                 </g>
 
                 <image id="convection-field" class="convection-artwork convection-field" href="assets/images/orbit-convection-hd.png" x="0" y="0" width="840" height="520" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
@@ -462,7 +457,7 @@
               <div class="horizon-latitude-panel">
                 <div class="latitude-copy">
                   <span>Beobachterbreite · äquatorwärts</span>
-                  <small id="horizon-latitude-note">Versatz vom Nordpol; der Äquator bei 90° bleibt ausgeschlossen.</small>
+                  <small id="horizon-latitude-note">0° bleibt ohne Zusatzstrahlung; bei 30° und stärker bei 60° baut sich anhaltendes Sol-/Yol-Licht auf. Der Äquator bei 90° bleibt ausgeschlossen.</small>
                 </div>
                 <div
                   id="horizon-latitude-group"
@@ -495,9 +490,12 @@
                   </desc>
 
                   <rect class="horizon-sky-base" width="840" height="252" />
-                  <image class="horizon-artwork horizon-artwork-back horizon-artwork-polar" href="assets/images/horizon-polar-hd1.png" x="0" y="0" width="840" height="400" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
-                  <image class="horizon-artwork horizon-artwork-back horizon-artwork-temperate" href="assets/images/horizon-temperate-hd1.png" x="0" y="0" width="840" height="460" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
-                  <image class="horizon-artwork horizon-artwork-back horizon-artwork-desert" href="assets/images/horizon-desert-hd1.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-night horizon-artwork-back horizon-artwork-polar" href="assets/images/horizon-polar-hd1.png" x="0" y="0" width="840" height="400" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-night horizon-artwork-back horizon-artwork-temperate" href="assets/images/horizon-temperate-hd1.png" x="0" y="0" width="840" height="460" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-night horizon-artwork-back horizon-artwork-desert" href="assets/images/horizon-desert-hd1.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-day horizon-artwork-back horizon-artwork-polar" href="assets/images/horizon-polar-day-hd1.png" x="0" y="0" width="840" height="400" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-day horizon-artwork-back horizon-artwork-temperate" href="assets/images/horizon-temperate-day-hd1.png" x="0" y="0" width="840" height="460" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-day horizon-artwork-back horizon-artwork-desert" href="assets/images/horizon-desert-day-hd1.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
                   <rect class="horizon-artwork-tone" width="840" height="252" aria-hidden="true" />
                   <image class="horizon-atmosphere horizon-stars-artwork" href="assets/images/horizon-stars-pixel-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
                   <path class="horizon-dither" d="M0 40H840V44H0ZM0 84H840V88H0ZM0 128H840V132H0ZM12 36H16V40H12ZM40 36H44V40H40ZM68 36H72V40H68ZM96 36H100V40H96ZM124 36H128V40H124ZM152 36H156V40H152ZM180 36H184V40H180ZM208 36H212V40H208ZM236 36H240V40H236ZM264 36H268V40H264ZM292 36H296V40H292ZM320 36H324V40H320ZM348 36H352V40H348ZM376 36H380V40H376ZM404 36H408V40H404ZM432 36H436V40H432ZM460 36H464V40H460ZM488 36H492V40H488ZM516 36H520V40H516ZM544 36H548V40H544ZM572 36H576V40H572ZM600 36H604V40H600ZM628 36H632V40H628ZM656 36H660V40H656ZM684 36H688V40H684ZM712 36H716V40H712ZM740 36H744V40H740ZM768 36H772V40H768ZM796 36H800V40H796ZM824 36H828V40H824Z" />
@@ -548,9 +546,23 @@
 
                   <image class="horizon-atmosphere horizon-clouds-artwork" href="assets/images/horizon-clouds-pixel-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
 
-                  <image class="horizon-artwork horizon-artwork-front horizon-artwork-polar" href="assets/images/horizon-polar-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
-                  <image class="horizon-artwork horizon-artwork-front horizon-artwork-temperate" href="assets/images/horizon-temperate-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
-                  <image class="horizon-artwork horizon-artwork-front horizon-artwork-desert" href="assets/images/horizon-desert-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-night horizon-artwork-front horizon-artwork-polar" href="assets/images/horizon-polar-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-night horizon-artwork-front horizon-artwork-temperate" href="assets/images/horizon-temperate-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-night horizon-artwork-front horizon-artwork-desert" href="assets/images/horizon-desert-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-day horizon-artwork-front horizon-artwork-polar" href="assets/images/horizon-polar-day-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-day horizon-artwork-front horizon-artwork-temperate" href="assets/images/horizon-temperate-day-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-day horizon-artwork-front horizon-artwork-desert" href="assets/images/horizon-desert-day-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+
+                  <g id="horizon-irradiance" class="horizon-irradiance" aria-hidden="true">
+                    <rect class="horizon-irradiance-warm" x="0" y="0" width="840" height="252" />
+                    <rect class="horizon-irradiance-cool" x="0" y="0" width="840" height="252" />
+                    <g class="horizon-shimmer horizon-shimmer-a">
+                      <path d="M64 44H68V52H76V56H68V64H64V56H56V52H64ZM174 102H178V110H186V114H178V122H174V114H166V110H174ZM292 54H296V62H304V66H296V74H292V66H284V62H292ZM414 126H418V134H426V138H418V146H414V138H406V134H414ZM548 68H552V76H560V80H552V88H548V80H540V76H548ZM684 118H688V126H696V130H688V138H684V130H676V126H684ZM782 46H786V54H794V58H786V66H782V58H774V54H782Z" />
+                    </g>
+                    <g class="horizon-shimmer horizon-shimmer-b">
+                      <path d="M116 154H120V158H124V162H120V166H116V162H112V158H116ZM236 86H240V90H244V94H240V98H236V94H232V90H236ZM354 164H358V168H362V172H358V176H354V172H350V168H354ZM476 92H480V96H484V100H480V104H476V100H472V96H476ZM612 158H616V162H620V166H616V170H612V166H608V162H612ZM740 88H744V92H748V96H744V100H740V96H736V92H740Z" />
+                    </g>
+                  </g>
 
                   <g id="horizon-biome-polar" class="biome-layer biome-polar" data-biome="polar" aria-hidden="true">
                     <path class="mountain-back polar-mountain-back" d="M0 176V150H44L76 126 96 138 128 108 164 146H204L244 118 280 148H332L372 104 416 148H464L504 120 544 148H596L636 110 680 146H728L768 122 804 148H840V176Z" />

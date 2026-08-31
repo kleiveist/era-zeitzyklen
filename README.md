@@ -37,7 +37,8 @@ Laufzeitabhängigkeiten.
 - Der kleine **Doppelkreis-Schalter** neben Abspielen/Pause würfelt nach jeder vollständig
   beendeten Konvektion automatisch einen neuen Seed und startet den nächsten Zyklus.
 - 1×, 1,5×, 2× und 4× verändern nur das Wiedergabetempo; das Zeitmodell bleibt gleich.
-- **Helles Pergament / Dunkle Chronik** wechselt das vollständige Pixel-Fantasy-Farbsystem.
+- **Helles Pergament / Dunkle Chronik** wechselt das vollständige Pixel-Fantasy-Farbsystem und
+  die eigenen Tag-/Nachtpanoramen aller drei Biome.
 - Der Pixelkompass schaltet den Horizontblick zwischen **N**, **O**, **S** und **W** um.
 - Die Breitensteuerung verschiebt den Beobachter um **0°**, **30°** oder **60°** vom Nordpol in Richtung Äquator.
 
@@ -70,8 +71,10 @@ außen. Eine blockige Beobachtermarke verbindet Ring und gewählte Blickrichtung
 Die Ellipsen von Sol und Yol sind schematische Bahnformen in einer gemeinsamen zweidimensionalen
 Ebene. Sie sind kein perspektivischer Effekt. Eine Horizontphase verändert daher niemals Höhe
 oder Form der Orbits. Phasen beeinflussen Bewegungsrichtung, Geschwindigkeit, Intensität und die
-separate Horizontprojektion. Blockige Bahnpfeile zeigen die aktuelle Laufrichtung, einschließlich
-der Umkehr in asynchronen und wechselnden Phasen.
+separate Horizontprojektion. Jede Bahn besteht aus drei mit `geometricPrecision` gerenderten
+Vektorlagen: dunkle Trennkontur, farbiger Kern und feine Messmarkierungen. Dadurch bleibt sie bei
+jeder Displayauflösung scharf. Die früheren orbitalen Richtungspfeile wurden entfernt, weil sie
+keinen zusätzlichen geometrischen Wert lieferten.
 
 Die orbitale Geometrie liegt zentral in `ORBIT_GEOMETRY`. Für jeden dargestellten Körper gilt:
 
@@ -111,11 +114,14 @@ Era-Rotation ist als 1 Um beziehungsweise 90 irdische Vergleichsminuten definier
 ## Horizontverlauf
 
 Der Horizontverlauf ist eine getrennte, hochauflösende Pixelart-Grafik mit echter Tiefenstaffelung.
-Für jedes Biom liegt `hd1` hinter den Himmelskörpern und `hd2` davor. Sterne werden transparent
-vor `hd1`, Sol, Yol und ZEHS in der Mitte und eine sehr transparente Wolkenebene vor den
-Himmelskörpern gezeichnet. Dadurch verschwinden die bewegten Körper sichtbar hinter Bergen,
-Gebäuden und Gelände von `hd2`, statt nur über einem flachen Panorama zu schweben. Die
-Seitenbezeichnungen lauten:
+Für jedes Biom und jede Tagesfassung liegt `hd1` hinter den Himmelskörpern und `hd2` davor. Das
+dunkle Theme verwendet sechs Nacht-, das helle Theme sechs eigenständige Tag-Ebenen. Alle
+Tag-/Nacht-Paare besitzen pixelgenau dieselben Alphamasken und schließen deshalb an denselben
+Gelände- und Gebirgskanten. In der Nacht werden Sterne transparent vor `hd1`, Sol, Yol und ZEHS
+in der Mitte und eine sehr transparente Wolkenebene vor den Himmelskörpern gezeichnet. Im hellen
+Theme sind sämtliche dekorativen Sterne und Konstellationen vollständig ausgeblendet. Dadurch
+verschwinden die bewegten Körper sichtbar hinter Bergen, Gebäuden und Gelände von `hd2`, statt
+nur über einem flachen Panorama zu schweben. Die Seitenbezeichnungen lauten:
 
 | Blickrichtung | links | rechts |
 | --- | --- | --- |
@@ -143,10 +149,17 @@ Jede Breitenstufe besitzt ein vollständiges, zur Auswahl passendes Pixelpanoram
 | 30° | Gemäßigtes Tannenland | Bergketten, Tannenwald, Fluss und Waldhütte |
 | 60° | Heiße Wüstenlandschaft | Dünen, Mesas, Kakteen und Wüstenruinen |
 
-Die Biome wechseln Gelände, Himmel und Horizontfarben. Die gemeinsamen Stern- und Wolkenebenen
-werden per Screen-Compositing ohne Blur eingeblendet und bleiben in beiden Themes bewusst
-zurückhaltend; die astronomischen Positionen und Messwerte bleiben beim rein visuellen Wechsel
-unverändert.
+Die Biome wechseln Gelände, Himmel und Horizontfarben. Das Nacht-Theme blendet die gemeinsame
+Sternenebene, beide Themes eine sehr zurückhaltende Wolkenebene per Screen-Compositing ohne Blur
+ein. Die astronomischen Positionen und Messwerte bleiben beim Themewechsel unverändert.
+
+Bei 30° und 60° baut sich nach einer kurzen sichtbaren Verweildauer ein zusätzlicher
+Einstrahlungseffekt auf; am Polstand bei 0° bleibt er immer aus. Sol allein hellt das Panorama
+zunehmend warm auf. Yol allein färbt es zunehmend blau und erhält einen magischen Schimmer. Sind
+beide sichtbar, mischen sich warme und kalte Farbe mit einem stärkeren Glitzern. S-Intensität,
+Verweildauer und die relative Bewegung zu Era bestimmen die Stärke: exakt synchrone, scheinbar
+ortsfeste Läufe wirken am stärksten. 60° verwendet eine höhere Breitenverstärkung als 30°. Diese
+Regel gilt unverändert im Tag- und Nacht-Theme und wird bei der Konvektion vollständig deaktiviert.
 
 Die Daten fließen in einer festen Reihenfolge:
 
@@ -156,6 +169,7 @@ getSnapshot(ms)
   → unveränderte Nordpol-Orbitansicht
   → Projektion derselben Punkte in den gewählten Horizontblick
   → additive Höhenkorrektur für Sol/Yol, invertierte Breitenkorrektur für ZEHS
+  → deterministischer Einstrahlungsaufbau aus Sichtbarkeit, S-Int und relativer Bewegung
 ```
 
 Der Vorwärtsanteil eines Weltpunkts bestimmt Sichtbarkeit und Höhe, sein Rechtsanteil die
@@ -263,17 +277,19 @@ node tests/zehs-latitude-contract.cjs
 Der Smoke-Test prüft unter anderem alle 18 Vorlagen, Seed-Reproduzierbarkeit, die sechsminütige
 Zeitfassung, Theme-Speicherung, Auto-Neuwürfeln, Kompass- und Breitensteuerung per Maus und
 Tastatur, Zustandsinvarianz bei Projektionswechseln, die invertierte ZEHS-Breitenhöhe, die
-synchrone 5,6°/s-Kopplung sowie mindestens 200 Geometriesnapshots. Dabei werden endliche
-Koordinaten, S-Int-Grenzen, SVG-Grenzen und der Sicherheitsabstand zu Era kontrolliert.
+synchrone 5,6°/s-Kopplung, die vollständige Sol-/Yol-Einstrahlungsmatrix sowie mindestens 200
+Geometriesnapshots. Dabei werden endliche Koordinaten, S-Int-Grenzen, SVG-Grenzen und der
+Sicherheitsabstand zu Era kontrolliert.
 
 Der eigenständige ZEHS-Vertrag prüft die exakte Gegenkurve zu Sol und Yol sowie die Reihenfolge
 0° am höchsten, 30° mittig und 60° am flachsten in allen vier Horizontblickrichtungen.
 
-Der visuelle Vertrag liest HTML, CSS und JavaScript statisch. Er untersagt unter anderem
-`backdrop-filter`, Gauß-Weichzeichnung, Pillenradien, alte SVG-Verläufe und die frühere
-horizontabhängige Skalierung orbitaler Y-Radien. Außerdem prüft er die Pixel-SVG-Einstellungen,
-die vier zugänglichen Richtungsbuttons, die drei Breitenstufen, den ZEHS-Pixelpunkt, die feste
-Horizontebenen-Reihenfolge, transparente Atmosphärenebenen und den gemeinsamen Geometrievertrag.
+Der visuelle Vertrag liest HTML, CSS und JavaScript statisch und dekodiert die RGBA-PNGs ohne
+Zusatzpaket. Er untersagt unter anderem `backdrop-filter`, Gauß-Weichzeichnung, Pillenradien, alte
+SVG-Verläufe, orbitale Richtungspfeile und die frühere horizontabhängige Skalierung orbitaler
+Y-Radien. Außerdem prüft er die präzisen Vektorbahnen, getrennte Tag-/Nacht-Ebenen, vollständig
+sternfreie Tagespanoramen, pixelidentische Alphamasken, die feste Horizontebenen-Reihenfolge und
+den gemeinsamen Geometrievertrag.
 
 ## Grenzen der Darstellung
 

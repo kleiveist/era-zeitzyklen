@@ -83,6 +83,13 @@
     60: Object.freeze({ degrees: 60, title: "Wüste", name: "heiße Wüstenlandschaft", biome: "desert", description: "Wüstenrand 60 Grad äquatorwärts" }),
   });
   const HORIZON_LATITUDE_ORDER = Object.freeze([0, 30, 60]);
+  const IRRADIANCE_MODEL = Object.freeze({
+    latitudeStrength: Object.freeze({ 0: 0, 30: 0.64, 60: 1 }),
+    delayMs: 2200,
+    buildupMs: 12000,
+    relativeSpeedScale: 4,
+    minimumStability: 0.18,
+  });
   const ZEHS_PARAMETERS = Object.freeze({
     id: "zehs",
     name: "ZEHS",
@@ -127,8 +134,8 @@
     stateCategoryIconUse: document.querySelector("#state-category-icon-use"),
     orbitView: document.querySelector("#orbit-view"),
     orbitDescription: document.querySelector("#orbit-description"),
-    orbitSol: document.querySelector(".orbit-sol"),
-    orbitYol: document.querySelector(".orbit-yol"),
+    orbitSolTracks: document.querySelectorAll(".orbit-sol-track"),
+    orbitYolTracks: document.querySelectorAll(".orbit-yol-track"),
     solBody: document.querySelector("#sol-body"),
     yolBody: document.querySelector("#yol-body"),
     solDisc: document.querySelector("#sol-disc"),
@@ -146,8 +153,6 @@
     eraObserverMarker: document.querySelector("#era-observer-marker"),
     eraViewArrow: document.querySelector("#era-view-arrow"),
     eraViewLetter: document.querySelector("#era-view-letter"),
-    directionPathSol: document.querySelector("#direction-path-sol"),
-    directionPathYol: document.querySelector("#direction-path-yol"),
     convectionMessage: document.querySelector("#convection-message"),
     horizonDirectionGroup: document.querySelector("#horizon-direction-group"),
     horizonDirectionButtons: Object.freeze({
@@ -495,6 +500,85 @@
       ),
       latitudeLift,
       heightScale,
+    });
+  }
+
+  function getHorizonIrradiance(
+    snapshot,
+    horizonProjection,
+    latitudeDegrees = state.horizonLatitude,
+  ) {
+    const latitude = normalizeHorizonLatitude(latitudeDegrees);
+    const latitudeStrength = IRRADIANCE_MODEL.latitudeStrength[latitude] || 0;
+    const isConvection = snapshot?.template?.motion === "convection";
+    const segmentStart = Number(snapshot?.segment?.displayStart) || 0;
+    const sampledMs = Number(snapshot?.positionMs ?? snapshot?.ms);
+    const elapsedMs = Number.isFinite(sampledMs)
+      ? Math.max(0, sampledMs - segmentStart - IRRADIANCE_MODEL.delayMs)
+      : 0;
+    const buildup = elapsedMs > 0
+      ? 1 - Math.exp(-elapsedMs / IRRADIANCE_MODEL.buildupMs)
+      : 0;
+
+    function bodyExposure(bodyName) {
+      const body = snapshot?.[bodyName];
+      const projection = horizonProjection?.[bodyName];
+      const visible = Boolean(
+        latitudeStrength > 0 &&
+          !isConvection &&
+          body?.visible &&
+          projection?.visible,
+      );
+      if (!visible || buildup <= 0) return 0;
+
+      const intensity = clamp((Number(body.intensity) || 1) / 10, 0.1, 1);
+      const angularVelocity = Number(body.angularVelocity);
+      const relativeSpeed = Number.isFinite(angularVelocity)
+        ? Math.abs(angularVelocity - config.eraRotationDegreesPerSecond)
+        : config.eraRotationDegreesPerSecond;
+      const stability = clamp(
+        1 / (1 + relativeSpeed / IRRADIANCE_MODEL.relativeSpeedScale),
+        IRRADIANCE_MODEL.minimumStability,
+        1,
+      );
+      return clamp(
+        latitudeStrength * buildup * stability * (0.35 + intensity * 0.65),
+        0,
+        1,
+      );
+    }
+
+    const sol = bodyExposure("sol");
+    const yol = bodyExposure("yol");
+    const solActive = sol > 0.0001;
+    const yolActive = yol > 0.0001;
+    const mode = solActive && yolActive
+      ? "dual"
+      : solActive
+        ? "sol"
+        : yolActive
+          ? "yol"
+          : "none";
+    const warm = sol * (mode === "dual" ? 0.82 : 1);
+    const cool = yol * (mode === "dual" ? 0.9 : 1);
+    const shimmer = mode === "dual"
+      ? clamp(Math.min(sol, yol) * 0.82 + Math.max(sol, yol) * 0.18, 0, 1)
+      : mode === "yol"
+        ? yol * 0.68
+        : mode === "sol"
+          ? sol * 0.28
+          : 0;
+
+    return Object.freeze({
+      mode,
+      latitude,
+      latitudeStrength,
+      buildup,
+      sol,
+      yol,
+      warm,
+      cool,
+      shimmer,
     });
   }
 
@@ -856,42 +940,6 @@
     );
   }
 
-  function buildBlockArrowPath(bodyName, directionSign) {
-    if (!directionSign) return "";
-    const orbit = ORBIT_GEOMETRY[bodyName];
-    if (!orbit) return "";
-    const arrowAngles = bodyName === "sol" ? [28, 148, 268] : [78, 198, 318];
-
-    return arrowAngles
-      .map((angleDegrees) => {
-        const radians = (angleDegrees * Math.PI) / 180;
-        const centerX = ORBIT_GEOMETRY.centerX + orbit.radiusX * Math.cos(radians);
-        const centerY = ORBIT_GEOMETRY.centerY + orbit.radiusY * Math.sin(radians);
-        const tangentX = -orbit.radiusX * Math.sin(radians) * directionSign;
-        const tangentY = orbit.radiusY * Math.cos(radians) * directionSign;
-        const tangentLength = Math.hypot(tangentX, tangentY) || 1;
-        const unitX = tangentX / tangentLength;
-        const unitY = tangentY / tangentLength;
-        const normalX = -unitY;
-        const normalY = unitX;
-        const pointAt = (along, across) =>
-          `${Math.round(centerX + unitX * along + normalX * across)} ${Math.round(
-            centerY + unitY * along + normalY * across,
-          )}`;
-        return [
-          `M ${pointAt(11, 0)}`,
-          `L ${pointAt(2, 7)}`,
-          `L ${pointAt(2, 3)}`,
-          `L ${pointAt(-10, 3)}`,
-          `L ${pointAt(-10, -3)}`,
-          `L ${pointAt(2, -3)}`,
-          `L ${pointAt(2, -7)}`,
-          "Z",
-        ].join(" ");
-      })
-      .join(" ");
-  }
-
   function createFrameProjection(point, viewBasis, snapshot, bodyName) {
     const projection = projectOrbitPointToHorizon(
       point,
@@ -923,6 +971,11 @@
         state.horizonLatitude,
       ),
     });
+    const horizonIrradiance = getHorizonIrradiance(
+      snapshot,
+      horizonProjection,
+      state.horizonLatitude,
+    );
     return Object.freeze({
       snapshot,
       worldPoints,
@@ -930,27 +983,34 @@
       viewBasis,
       horizonLatitude: state.horizonLatitude,
       horizonProjection,
+      horizonIrradiance,
     });
   }
 
   function reprojectRenderFrame(frame) {
     const viewBasis = getViewBasis(state.horizonDirection, frame.eraRotationDegrees);
+    const horizonProjection = Object.freeze({
+      sol: createFrameProjection(frame.worldPoints.sol, viewBasis, frame.snapshot, "sol"),
+      yol: createFrameProjection(frame.worldPoints.yol, viewBasis, frame.snapshot, "yol"),
+      zehs: projectOrbitPointToHorizon(
+        frame.worldPoints.zehs,
+        viewBasis,
+        "zehs",
+        state.horizonLatitude,
+      ),
+    });
     return Object.freeze({
       snapshot: frame.snapshot,
       worldPoints: frame.worldPoints,
       eraRotationDegrees: frame.eraRotationDegrees,
       viewBasis,
       horizonLatitude: state.horizonLatitude,
-      horizonProjection: Object.freeze({
-        sol: createFrameProjection(frame.worldPoints.sol, viewBasis, frame.snapshot, "sol"),
-        yol: createFrameProjection(frame.worldPoints.yol, viewBasis, frame.snapshot, "yol"),
-        zehs: projectOrbitPointToHorizon(
-          frame.worldPoints.zehs,
-          viewBasis,
-          "zehs",
-          state.horizonLatitude,
-        ),
-      }),
+      horizonProjection,
+      horizonIrradiance: getHorizonIrradiance(
+        frame.snapshot,
+        horizonProjection,
+        state.horizonLatitude,
+      ),
     });
   }
 
@@ -1138,18 +1198,18 @@
   function updateOrbitGeometry(frame) {
     const { snapshot, worldPoints } = frame;
     const isConvection = snapshot.template.motion === "convection";
-    if (elements.orbitSol) {
-      elements.orbitSol.setAttribute("cx", String(ORBIT_GEOMETRY.centerX));
-      elements.orbitSol.setAttribute("cy", String(ORBIT_GEOMETRY.centerY));
-      elements.orbitSol.setAttribute("rx", String(ORBIT_GEOMETRY.sol.radiusX));
-      elements.orbitSol.setAttribute("ry", String(ORBIT_GEOMETRY.sol.radiusY));
-    }
-    if (elements.orbitYol) {
-      elements.orbitYol.setAttribute("cx", String(ORBIT_GEOMETRY.centerX));
-      elements.orbitYol.setAttribute("cy", String(ORBIT_GEOMETRY.centerY));
-      elements.orbitYol.setAttribute("rx", String(ORBIT_GEOMETRY.yol.radiusX));
-      elements.orbitYol.setAttribute("ry", String(ORBIT_GEOMETRY.yol.radiusY));
-    }
+    elements.orbitSolTracks.forEach((track) => {
+      track.setAttribute("cx", String(ORBIT_GEOMETRY.centerX));
+      track.setAttribute("cy", String(ORBIT_GEOMETRY.centerY));
+      track.setAttribute("rx", String(ORBIT_GEOMETRY.sol.radiusX));
+      track.setAttribute("ry", String(ORBIT_GEOMETRY.sol.radiusY));
+    });
+    elements.orbitYolTracks.forEach((track) => {
+      track.setAttribute("cx", String(ORBIT_GEOMETRY.centerX));
+      track.setAttribute("cy", String(ORBIT_GEOMETRY.centerY));
+      track.setAttribute("rx", String(ORBIT_GEOMETRY.yol.radiusX));
+      track.setAttribute("ry", String(ORBIT_GEOMETRY.yol.radiusY));
+    });
     setBodyElementState(
       elements.solBody,
       snapshot.sol,
@@ -1172,20 +1232,6 @@
     }
     positionOrbitLabel(elements.solLabel, worldPoints.sol, snapshot.sol, "sol");
     positionOrbitLabel(elements.yolLabel, worldPoints.yol, snapshot.yol, "yol");
-    if (elements.directionPathSol) {
-      elements.directionPathSol.setAttribute(
-        "d",
-        isConvection ? "" : buildBlockArrowPath("sol", snapshot.sol.directionSign),
-      );
-      elements.directionPathSol.setAttribute("data-direction-sign", String(snapshot.sol.directionSign));
-    }
-    if (elements.directionPathYol) {
-      elements.directionPathYol.setAttribute(
-        "d",
-        isConvection ? "" : buildBlockArrowPath("yol", snapshot.yol.directionSign),
-      );
-      elements.directionPathYol.setAttribute("data-direction-sign", String(snapshot.yol.directionSign));
-    }
     elements.orbitView.classList.toggle("is-convection", isConvection);
     elements.orbitView.setAttribute("data-horizon-latitude", String(state.horizonLatitude));
     elements.orbitView.setAttribute(
@@ -1199,7 +1245,7 @@
   }
 
   function updateHorizonGeometry(frame) {
-    const { snapshot, worldPoints, horizonProjection } = frame;
+    const { snapshot, worldPoints, horizonProjection, horizonIrradiance } = frame;
     const isConvection = snapshot.template.motion === "convection";
     const solVisible = snapshot.sol.visible && horizonProjection.sol.visible && !isConvection;
     const yolVisible = snapshot.yol.visible && horizonProjection.yol.visible && !isConvection;
@@ -1262,6 +1308,25 @@
       elements.horizonView.setAttribute("data-direction", state.horizonDirection);
       elements.horizonView.setAttribute("data-latitude-degrees", String(state.horizonLatitude));
       elements.horizonView.setAttribute("data-biome", HORIZON_LATITUDES[state.horizonLatitude].biome);
+      elements.horizonView.setAttribute("data-irradiance-mode", horizonIrradiance.mode);
+      elements.horizonView.setAttribute("data-sol-exposure", horizonIrradiance.sol.toFixed(3));
+      elements.horizonView.setAttribute("data-yol-exposure", horizonIrradiance.yol.toFixed(3));
+      elements.horizonView.style.setProperty(
+        "--irradiance-warm",
+        (horizonIrradiance.warm * 0.34).toFixed(3),
+      );
+      elements.horizonView.style.setProperty(
+        "--irradiance-cool",
+        (horizonIrradiance.cool * 0.4).toFixed(3),
+      );
+      elements.horizonView.style.setProperty(
+        "--irradiance-shimmer",
+        horizonIrradiance.shimmer.toFixed(3),
+      );
+      elements.horizonView.style.setProperty(
+        "--irradiance-shimmer-low",
+        (horizonIrradiance.shimmer * 0.48).toFixed(3),
+      );
     }
     if (elements.horizonConvectionField) {
       elements.horizonConvectionField.classList.toggle("is-visible", isConvection);
@@ -1276,7 +1341,16 @@
             yolVisible ? "vor" : "hinter"
           } dem lokalen Horizont.`;
       const zehsText = `ZEHS liegt ${zehsVisible ? "als heller Punkt über" : "unter"} dem lokalen Horizont und sinkt als nordsternartiger Referenzpunkt von 0° nach 60° flacher.`;
-      elements.horizonDescription.textContent = `Schematischer Horizont durch die ${latitude.name} bei Blick nach ${direction.name} und ${latitude.degrees} Grad Versatz vom Nordpol in Richtung Äquator. ${visibilityText} ${zehsText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht; der Äquator bei 90 Grad bleibt ausgeschlossen.`;
+      const irradianceText = horizonIrradiance.mode === "dual"
+        ? "Die länger anhaltende gemeinsame Einstrahlung mischt warmes Sol- und kühles Yol-Licht mit starkem Schimmer."
+        : horizonIrradiance.mode === "sol"
+          ? "Die länger anhaltende Sol-Einstrahlung hellt die Landschaft warm auf."
+          : horizonIrradiance.mode === "yol"
+            ? "Die länger anhaltende Yol-Einstrahlung färbt die Landschaft kühler und verstärkt den magischen Schimmer."
+            : latitude.degrees === 0
+              ? "Am Polstand entsteht kein zusätzlicher Einstrahlungseffekt."
+              : "Noch hat sich keine anhaltende Einstrahlung aufgebaut.";
+      elements.horizonDescription.textContent = `Schematischer Horizont durch die ${latitude.name} bei Blick nach ${direction.name} und ${latitude.degrees} Grad Versatz vom Nordpol in Richtung Äquator. ${visibilityText} ${zehsText} ${irradianceText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht; der Äquator bei 90 Grad bleibt ausgeschlossen.`;
     }
   }
 
@@ -1771,6 +1845,7 @@
     HORIZON_GEOMETRY,
     HORIZON_DIRECTIONS,
     HORIZON_LATITUDES,
+    IRRADIANCE_MODEL,
     ZEHS_PARAMETERS,
     normalizeDegrees,
     normalizeHorizonLatitude,
@@ -1781,6 +1856,7 @@
     ensureOrbitClearance,
     getViewBasis,
     projectOrbitPointToHorizon,
+    getHorizonIrradiance,
     getSnapshot,
     formatEraTime,
     getLastRenderFrame,

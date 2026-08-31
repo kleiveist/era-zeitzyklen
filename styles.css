@@ -1106,37 +1106,48 @@ main {
   stroke-width: 3px;
 }
 
-.orbit {
-  fill: none;
-  stroke-width: 4;
-  stroke-dasharray: 12 8;
+.orbit-plane {
+  shape-rendering: geometricPrecision;
 }
 
-.orbit-sol {
+.orbit,
+.orbit-track {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.orbit-track-shadow {
+  stroke: var(--stone-950);
+  stroke-width: 9;
+  opacity: 0.72;
+}
+
+.orbit {
+  stroke-width: 3;
+  opacity: 0.96;
+}
+
+.orbit-sol,
+.orbit-sol-detail {
   stroke: var(--sol-orange);
 }
 
-.orbit-yol {
+.orbit-yol,
+.orbit-yol-detail {
   stroke: var(--yol-blue);
-  stroke-dasharray: 4 8 16 8;
 }
 
-.direction-arc {
-  fill: none;
-  stroke-width: 6;
-  stroke-dasharray: 20 16;
+.orbit-track-detail {
+  stroke-width: 1.5;
+  opacity: 0.86;
 }
 
-.direction-sol,
-.sol-arrow-head {
-  stroke: var(--sol-yellow);
-  fill: var(--sol-yellow);
+.orbit-sol-detail {
+  stroke-dasharray: 18 7;
 }
 
-.direction-yol,
-.yol-arrow-head {
-  stroke: var(--yol-lavender);
-  fill: var(--yol-lavender);
+.orbit-yol-detail {
+  stroke-dasharray: 7 7 20 7;
 }
 
 .era-aura-outer {
@@ -1903,8 +1914,13 @@ main {
 }
 
 :root[data-theme="light"] .star-field,
-:root[data-theme="light"] .horizon-stars {
-  opacity: 0.62;
+:root[data-theme="light"] .star-cross-field,
+:root[data-theme="light"] .constellation-lines,
+:root[data-theme="light"] .horizon-stars,
+:root[data-theme="light"] .horizon-star-crosses,
+:root[data-theme="light"] .horizon-constellations {
+  display: none;
+  opacity: 0;
 }
 
 :root[data-theme="light"] .orbit-grid {
@@ -2809,14 +2825,6 @@ main {
   opacity: 0.92;
 }
 
-.orbit {
-  stroke-width: 3;
-}
-
-.direction-arc {
-  stroke-width: 5;
-}
-
 .era-rim {
   stroke: var(--gold-bright);
 }
@@ -3612,18 +3620,21 @@ footer {
   opacity: 0.12;
 }
 
-#horizon-view[data-biome="polar"] .horizon-artwork-polar,
-#horizon-view[data-biome="temperate"] .horizon-artwork-temperate,
-#horizon-view[data-biome="desert"] .horizon-artwork-desert {
+:root[data-theme="dark"] #horizon-view[data-biome="polar"] .horizon-artwork-night.horizon-artwork-polar,
+:root[data-theme="dark"] #horizon-view[data-biome="temperate"] .horizon-artwork-night.horizon-artwork-temperate,
+:root[data-theme="dark"] #horizon-view[data-biome="desert"] .horizon-artwork-night.horizon-artwork-desert,
+:root[data-theme="light"] #horizon-view[data-biome="polar"] .horizon-artwork-day.horizon-artwork-polar,
+:root[data-theme="light"] #horizon-view[data-biome="temperate"] .horizon-artwork-day.horizon-artwork-temperate,
+:root[data-theme="light"] #horizon-view[data-biome="desert"] .horizon-artwork-day.horizon-artwork-desert {
   display: inline;
 }
 
-:root[data-theme="dark"] .horizon-artwork {
+:root[data-theme="dark"] .horizon-artwork-night {
   filter: brightness(0.84) saturate(1.14) contrast(1.06);
 }
 
-:root[data-theme="light"] .horizon-artwork {
-  filter: brightness(1.1) saturate(0.92) contrast(0.96);
+:root[data-theme="light"] .horizon-artwork-day {
+  filter: saturate(1.02) contrast(1.01);
 }
 
 .horizon-artwork-tone {
@@ -3649,11 +3660,83 @@ footer {
 }
 
 :root[data-theme="light"] .horizon-stars-artwork {
-  opacity: 0.18;
+  display: none;
+  opacity: 0;
 }
 
 :root[data-theme="light"] .horizon-clouds-artwork {
   opacity: 0.08;
+}
+
+#horizon-view {
+  --irradiance-warm: 0;
+  --irradiance-cool: 0;
+  --irradiance-shimmer: 0;
+  --irradiance-shimmer-low: 0;
+}
+
+.horizon-irradiance {
+  pointer-events: none;
+}
+
+.horizon-irradiance-warm {
+  fill: #ff7a32;
+  opacity: var(--irradiance-warm);
+  mix-blend-mode: screen;
+}
+
+.horizon-irradiance-cool {
+  fill: #397dff;
+  opacity: var(--irradiance-cool);
+  mix-blend-mode: screen;
+}
+
+.horizon-shimmer {
+  opacity: var(--irradiance-shimmer);
+  mix-blend-mode: screen;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.horizon-shimmer-a {
+  fill: #8de9ff;
+  animation: horizon-shimmer-a 2.8s steps(4, end) infinite;
+}
+
+.horizon-shimmer-b {
+  fill: #ffd0a0;
+  animation: horizon-shimmer-b 3.6s steps(4, end) infinite;
+}
+
+@keyframes horizon-shimmer-a {
+  0%,
+  100% {
+    opacity: var(--irradiance-shimmer-low);
+    transform: translate(0, 0);
+  }
+  50% {
+    opacity: var(--irradiance-shimmer);
+    transform: translate(4px, -2px);
+  }
+}
+
+@keyframes horizon-shimmer-b {
+  0%,
+  100% {
+    opacity: var(--irradiance-shimmer);
+    transform: translate(0, 0);
+  }
+  50% {
+    opacity: var(--irradiance-shimmer-low);
+    transform: translate(-4px, 2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .horizon-shimmer-a,
+  .horizon-shimmer-b {
+    animation: none;
+  }
 }
 
 .biome-name-label {

@@ -277,6 +277,24 @@ Strahlung wird als kalt empfunden, lässt Wasser aber nicht unmittelbar
 
 gefrieren.
 
+Am Polstand bei 0 Grad entsteht aus einer lang anhaltenden sichtbaren Stellung
+
+kein zusätzlicher lokaler Einstrahlungseffekt. Bei 30 und 60 Grad kann sich die
+
+Wirkung dagegen mit der Verweildauer aufbauen; bei 60 Grad fällt sie stärker
+
+aus. Sol allein hellt die Region warm auf, Yol allein färbt sie zunehmend blau
+
+und lässt sie magisch schimmern. Sind beide Himmelskörper sichtbar, mischen
+
+sich warme und kalte Farben zu einem stärkeren Glitzern. Sichtbare Dauer,
+
+S-Intensität und die relative Bewegung zu Era bestimmen die Stärke. Die
+
+Wirkung gehört zur Einstrahlung und kann daher bei heller wie dunkler
+
+Umgebung auftreten.
+
 Während der Konvektion kann der Himmel an den Polen schimmernd hell und
 
 vielfarbig erscheinen. Der Effekt entsteht durch die Annäherung

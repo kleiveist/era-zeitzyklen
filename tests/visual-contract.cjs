@@ -3,6 +3,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const zlib = require("node:zlib");
 
 const root = path.resolve(__dirname, "..");
 const sources = Object.fromEntries(
@@ -17,10 +18,16 @@ const artworkSpecs = [
   { file: "astral-map-light-hd.png", minWidth: 1400, minHeight: 1000 },
   { file: "horizon-polar-hd1.png", minWidth: 1600, minHeight: 700, alpha: true },
   { file: "horizon-polar-hd2.png", minWidth: 1600, minHeight: 700, alpha: true },
+  { file: "horizon-polar-day-hd1.png", minWidth: 1600, minHeight: 700, alpha: true },
+  { file: "horizon-polar-day-hd2.png", minWidth: 1600, minHeight: 700, alpha: true },
   { file: "horizon-temperate-hd1.png", minWidth: 1600, minHeight: 700, alpha: true },
   { file: "horizon-temperate-hd2.png", minWidth: 1600, minHeight: 700, alpha: true },
+  { file: "horizon-temperate-day-hd1.png", minWidth: 1600, minHeight: 700, alpha: true },
+  { file: "horizon-temperate-day-hd2.png", minWidth: 1600, minHeight: 700, alpha: true },
   { file: "horizon-desert-hd1.png", minWidth: 2100, minHeight: 700, alpha: true },
   { file: "horizon-desert-hd2.png", minWidth: 2100, minHeight: 700, alpha: true },
+  { file: "horizon-desert-day-hd1.png", minWidth: 2100, minHeight: 700, alpha: true },
+  { file: "horizon-desert-day-hd2.png", minWidth: 2100, minHeight: 700, alpha: true },
   { file: "horizon-clouds-pixel-hd.png", minWidth: 2100, minHeight: 700, alpha: true },
   { file: "horizon-stars-pixel-hd.png", minWidth: 2100, minHeight: 700, minBytes: 180_000, alpha: true },
   { file: "horizon-convection-hd.png", minWidth: 2100, minHeight: 700, alpha: true },
@@ -39,6 +46,90 @@ for (const spec of artworkSpecs) {
   assert.ok(data.readUInt32BE(20) >= spec.minHeight, `${spec.file}: ausreichende native Höhe`);
   assert.ok(data.byteLength > (spec.minBytes || 400_000), `${spec.file}: kein niedrig aufgelöster Platzhalter`);
   if (spec.alpha) assert.equal(data[25], 6, `${spec.file}: besitzt einen echten RGBA-Alphakanal`);
+}
+
+function paethPredictor(left, up, upperLeft) {
+  const estimate = left + up - upperLeft;
+  const leftDistance = Math.abs(estimate - left);
+  const upDistance = Math.abs(estimate - up);
+  const upperLeftDistance = Math.abs(estimate - upperLeft);
+  if (leftDistance <= upDistance && leftDistance <= upperLeftDistance) return left;
+  return upDistance <= upperLeftDistance ? up : upperLeft;
+}
+
+function readRgbaPngAlpha(file) {
+  const data = fs.readFileSync(path.join(root, "assets", "images", file));
+  const idatChunks = [];
+  let width = 0;
+  let height = 0;
+  let offset = 8;
+  while (offset < data.length) {
+    const length = data.readUInt32BE(offset);
+    const type = data.toString("ascii", offset + 4, offset + 8);
+    const chunk = data.subarray(offset + 8, offset + 8 + length);
+    if (type === "IHDR") {
+      width = chunk.readUInt32BE(0);
+      height = chunk.readUInt32BE(4);
+      assert.equal(chunk[8], 8, `${file}: Alphavertrag unterstützt 8-Bit-PNG`);
+      assert.equal(chunk[9], 6, `${file}: Alphavertrag erwartet RGBA`);
+      assert.equal(chunk[12], 0, `${file}: Alphavertrag erwartet ein nicht-interlaced PNG`);
+    } else if (type === "IDAT") {
+      idatChunks.push(chunk);
+    } else if (type === "IEND") {
+      break;
+    }
+    offset += length + 12;
+  }
+
+  const bytesPerPixel = 4;
+  const stride = width * bytesPerPixel;
+  const compressedRows = zlib.inflateSync(Buffer.concat(idatChunks));
+  const pixels = Buffer.alloc(stride * height);
+  let sourceOffset = 0;
+  for (let y = 0; y < height; y += 1) {
+    const filter = compressedRows[sourceOffset];
+    sourceOffset += 1;
+    const rowOffset = y * stride;
+    const previousRowOffset = rowOffset - stride;
+    for (let x = 0; x < stride; x += 1) {
+      const raw = compressedRows[sourceOffset];
+      sourceOffset += 1;
+      const left = x >= bytesPerPixel ? pixels[rowOffset + x - bytesPerPixel] : 0;
+      const up = y > 0 ? pixels[previousRowOffset + x] : 0;
+      const upperLeft = y > 0 && x >= bytesPerPixel
+        ? pixels[previousRowOffset + x - bytesPerPixel]
+        : 0;
+      const predictor = filter === 0
+        ? 0
+        : filter === 1
+          ? left
+          : filter === 2
+            ? up
+            : filter === 3
+              ? Math.floor((left + up) / 2)
+              : filter === 4
+                ? paethPredictor(left, up, upperLeft)
+                : NaN;
+      assert.ok(Number.isFinite(predictor), `${file}: unbekannter PNG-Zeilenfilter ${filter}`);
+      pixels[rowOffset + x] = (raw + predictor) & 0xff;
+    }
+  }
+
+  const alpha = Buffer.alloc(width * height);
+  for (let pixel = 0; pixel < width * height; pixel += 1) {
+    alpha[pixel] = pixels[pixel * bytesPerPixel + 3];
+  }
+  return { width, height, alpha };
+}
+
+for (const biome of ["polar", "temperate", "desert"]) {
+  for (const layer of ["hd1", "hd2"]) {
+    const night = readRgbaPngAlpha(`horizon-${biome}-${layer}.png`);
+    const day = readRgbaPngAlpha(`horizon-${biome}-day-${layer}.png`);
+    assert.equal(day.width, night.width, `${biome}/${layer}: Tag und Nacht besitzen dieselbe Breite`);
+    assert.equal(day.height, night.height, `${biome}/${layer}: Tag und Nacht besitzen dieselbe Höhe`);
+    assert.ok(day.alpha.equals(night.alpha), `${biome}/${layer}: Tag und Nacht besitzen exakt dieselbe Alphamaske`);
+  }
 }
 
 function reject(file, pattern, message) {
@@ -110,6 +201,15 @@ assert.match(horizonTag, /\baria-labelledby\s*=/i, "Horizontansicht besitzt zug�
 assert.match(horizonTag, /\bdata-biome\s*=\s*["']polar["']/i, "Horizont startet mit der polaren Eiswelt");
 requireMatch("index.html", /\bstroke-linecap\s*=\s*["']square["']/i, "blockige SVG-Linien verwenden square linecaps");
 requireMatch("index.html", /\bstroke-linejoin\s*=\s*["']miter["']/i, "blockige SVG-Linien verwenden miter joins");
+requireMatch(
+  "index.html",
+  /class=["']orbit-plane["'][^>]*shape-rendering=["']geometricPrecision["'][\s\S]*?orbit-sol-track[\s\S]*?orbit-sol-track[\s\S]*?orbit-sol-track[\s\S]*?orbit-yol-track[\s\S]*?orbit-yol-track[\s\S]*?orbit-yol-track/i,
+  "beide Umlaufbahnen besitzen je drei geometrisch präzise Vektorlagen",
+);
+requireMatch("styles.css", /\.orbit,[\s\S]*?\.orbit-track\s*\{[^}]*vector-effect\s*:\s*non-scaling-stroke/is, "Umlaufbahnen bleiben bei jeder Skalierung scharf");
+reject("index.html", /\b(?:direction-path-(?:sol|yol)|(?:sol|yol)-direction-arrow)\b/i, "sinnlose Umlaufbahnpfeile sind entfernt");
+reject("index.html", /marker-end=["']url\(#(?:sol|yol)-direction-arrow\)["']/i, "Umlaufbahnen besitzen keine Pfeilmarker mehr");
+reject("app.js", /\bbuildBlockArrowPath\b/, "JavaScript erzeugt keine orbitalen Pfeile mehr");
 
 const directionGroupTag = openingTag("index.html", "horizon-direction-group");
 assert.match(directionGroupTag, /\brole\s*=\s*["']radiogroup["']/i, "Richtungsauswahl ist ein Radiogroup");
@@ -179,11 +279,17 @@ for (const className of [
   "orbit-artwork",
   "celestial-artwork",
   "horizon-artwork",
+  "horizon-artwork-night",
+  "horizon-artwork-day",
   "horizon-artwork-back",
   "horizon-artwork-front",
   "horizon-atmosphere",
   "horizon-stars-artwork",
   "horizon-clouds-artwork",
+  "horizon-irradiance",
+  "horizon-irradiance-warm",
+  "horizon-irradiance-cool",
+  "horizon-shimmer",
   "orbit-nebula",
   "orbit-distant-worlds",
   "orbit-axis-lines",
@@ -225,6 +331,38 @@ requireMatch(
   /:root\[data-theme=["']dark["']\][^{]*\.orbit-artwork-dark[\s\S]*:root\[data-theme=["']light["']\][^{]*\.orbit-artwork-light/i,
   "Astralkarte besitzt getrennte hochauflösende Artworks für Hell und Dunkel",
 );
+for (const biome of ["polar", "temperate", "desert"]) {
+  requireMatch(
+    "index.html",
+    new RegExp(`horizon-${biome}-hd1\\.png[\\s\\S]*horizon-${biome}-day-hd1\\.png`, "i"),
+    `${biome}: Nacht- und Taghintergrund sind getrennt`,
+  );
+  requireMatch(
+    "index.html",
+    new RegExp(`horizon-${biome}-hd2\\.png[\\s\\S]*horizon-${biome}-day-hd2\\.png`, "i"),
+    `${biome}: Nacht- und Tagvordergrund sind getrennt`,
+  );
+  requireMatch(
+    "styles.css",
+    new RegExp(`data-theme=["']dark["'][^\\n]*data-biome=["']${biome}["'][^\\n]*horizon-artwork-night`, "i"),
+    `${biome}: dunkles Theme verwendet ausschließlich die Nachtfassung`,
+  );
+  requireMatch(
+    "styles.css",
+    new RegExp(`data-theme=["']light["'][^\\n]*data-biome=["']${biome}["'][^\\n]*horizon-artwork-day`, "i"),
+    `${biome}: helles Theme verwendet ausschließlich die Tagfassung`,
+  );
+}
+requireMatch(
+  "styles.css",
+  /:root\[data-theme=["']light["']\]\s+\.horizon-stars-artwork\s*\{[^}]*display\s*:\s*none[^}]*opacity\s*:\s*0/is,
+  "die hochauflösende Sternenebene verschwindet im hellen Theme vollständig",
+);
+requireMatch(
+  "styles.css",
+  /:root\[data-theme=["']light["']\]\s+\.star-field,[\s\S]*?\.horizon-constellations\s*\{[^}]*display\s*:\s*none[^}]*opacity\s*:\s*0/is,
+  "alle dekorativen SVG-Sterne und Konstellationen verschwinden im hellen Theme",
+);
 requireMatch(
   "index.html",
   /horizon-polar-hd1\.png[\s\S]*horizon-stars-pixel-hd\.png[\s\S]*id=["']horizon-zehs-star["'][\s\S]*id=["']horizon-sol-body["'][\s\S]*id=["']horizon-yol-body["'][\s\S]*horizon-clouds-pixel-hd\.png[\s\S]*horizon-polar-hd2\.png/i,
@@ -232,6 +370,11 @@ requireMatch(
 );
 requireMatch("styles.css", /\.horizon-atmosphere\s*\{[^}]*mix-blend-mode\s*:\s*screen\b/i, "Atmosphärenebenen blenden den schwarzen Bildgrund ohne Blur aus");
 requireMatch("styles.css", /\.horizon-clouds-artwork\s*\{[^}]*opacity\s*:\s*0\.12\b/i, "Wolken bleiben stark transparent");
+requireMatch("index.html", /id=["']horizon-irradiance["'][\s\S]*horizon-irradiance-warm[\s\S]*horizon-irradiance-cool[\s\S]*horizon-shimmer-a[\s\S]*horizon-shimmer-b/i, "Einstrahlung besitzt warme, kühle und zweifache Schimmerebenen");
+requireMatch("styles.css", /--irradiance-warm\s*:\s*0[\s\S]*--irradiance-cool\s*:\s*0[\s\S]*--irradiance-shimmer\s*:\s*0/i, "Einstrahlung startet visuell vollständig deaktiviert");
+requireMatch("app.js", /latitudeStrength:\s*Object\.freeze\(\{\s*0:\s*0,\s*30:\s*0\.64,\s*60:\s*1\s*\}\)/i, "Einstrahlung ist am Pol aus und bei 60 Grad stärker als bei 30 Grad");
+requireMatch("app.js", /delayMs\s*:\s*2200[\s\S]*buildupMs\s*:\s*12000/i, "Einstrahlung baut sich erst nach anhaltender Sichtbarkeit auf");
+requireMatch("app.js", /data-irradiance-mode[\s\S]*--irradiance-warm[\s\S]*--irradiance-cool[\s\S]*--irradiance-shimmer/i, "der berechnete Einstrahlungszustand steuert die Live-Grafik");
 requireMatch("index.html", /id=["']convection-field["'][^>]*orbit-convection-hd\.png/i, "Orbit-Konvektion verwendet eine hochauflösende RGBA-Textur");
 requireMatch("index.html", /id=["']horizon-convection-field["'][^>]*horizon-convection-hd\.png/i, "Horizont-Konvektion verwendet eine hochauflösende RGBA-Textur");
 reject("index.html", /class=["'][^"']*(?:convection-band|convection-shard|horizon-shards)\b/i, "alte niedrig aufgelöste Konvektionsflächen sind entfernt");
@@ -248,6 +391,7 @@ for (const name of [
   "HORIZON_GEOMETRY",
   "HORIZON_DIRECTIONS",
   "HORIZON_LATITUDES",
+  "IRRADIANCE_MODEL",
   "ZEHS_PARAMETERS",
   "normalizeDegrees",
   "normalizeHorizonLatitude",
@@ -258,6 +402,7 @@ for (const name of [
   "ensureOrbitClearance",
   "getViewBasis",
   "projectOrbitPointToHorizon",
+  "getHorizonIrradiance",
   "getSnapshot",
   "formatEraTime",
   "getLastRenderFrame",
@@ -322,7 +467,7 @@ console.log(
     directions: directionIds.length,
     forbiddenPatterns: forbiddenPatterns.length,
     artworkAssets: artworkSpecs.length,
-    orbitRendering: "crispEdges",
+    orbitRendering: "geometricPrecision",
     horizonRendering: "crispEdges",
   }),
 );

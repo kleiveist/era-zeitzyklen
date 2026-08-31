@@ -331,7 +331,7 @@ const contract = global.ERA_CYCLE_CONTRACT;
 assert.ok(contract, "app.js veröffentlicht den read-only ERA_CYCLE_CONTRACT");
 assert.ok(Object.isFrozen(contract), "ERA_CYCLE_CONTRACT ist eingefroren");
 
-for (const constantName of ["ORBIT_GEOMETRY", "HORIZON_GEOMETRY", "HORIZON_DIRECTIONS", "HORIZON_LATITUDES", "ZEHS_PARAMETERS"]) {
+for (const constantName of ["ORBIT_GEOMETRY", "HORIZON_GEOMETRY", "HORIZON_DIRECTIONS", "HORIZON_LATITUDES", "IRRADIANCE_MODEL", "ZEHS_PARAMETERS"]) {
   assert.ok(contract[constantName], `${constantName} ist Teil des Geometrievertrags`);
   assert.ok(Object.isFrozen(contract[constantName]), `${constantName} ist read-only`);
 }
@@ -345,6 +345,7 @@ for (const functionName of [
   "ensureOrbitClearance",
   "getViewBasis",
   "projectOrbitPointToHorizon",
+  "getHorizonIrradiance",
   "getSnapshot",
   "formatEraTime",
   "getLastRenderFrame",
@@ -381,6 +382,86 @@ assert.equal(contract.formatEraTime(16), "Mohn 0 · Dir 0 · Tan 1 · Um 0");
 assert.equal(contract.formatEraTime(128), "Mohn 0 · Dir 1 · Tan 0 · Um 0");
 assert.equal(contract.formatEraTime(4608), "Mohn 1 · Dir 0 · Tan 0 · Um 0");
 assert.equal(contract.formatEraTime(46080), "Mohn 10 · Dir 0 · Tan 0 · Um 0");
+assert.deepEqual(
+  contract.IRRADIANCE_MODEL.latitudeStrength,
+  { 0: 0, 30: 0.64, 60: 1 },
+  "Einstrahlung bleibt am Pol aus und ist bei 60 Grad stärker als bei 30 Grad",
+);
+assert.ok(contract.IRRADIANCE_MODEL.delayMs > 0, "Einstrahlung beginnt erst nach einer Verweildauer");
+
+const stableIrradianceSnapshot = {
+  template: { motion: "orbit", category: "synchron" },
+  segment: { displayStart: 0 },
+  ms: 30000,
+  positionMs: 30000,
+  sol: { visible: true, intensity: 8, angularVelocity: 5.6 },
+  yol: { visible: true, intensity: 8, angularVelocity: 5.6 },
+};
+const bothVisibleProjection = { sol: { visible: true }, yol: { visible: true } };
+const polarIrradiance = contract.getHorizonIrradiance(
+  stableIrradianceSnapshot,
+  bothVisibleProjection,
+  0,
+);
+const temperateIrradiance = contract.getHorizonIrradiance(
+  stableIrradianceSnapshot,
+  bothVisibleProjection,
+  30,
+);
+const desertIrradiance = contract.getHorizonIrradiance(
+  stableIrradianceSnapshot,
+  bothVisibleProjection,
+  60,
+);
+assert.equal(polarIrradiance.mode, "none", "am Pol entsteht kein Einstrahlungseffekt");
+assert.equal(polarIrradiance.warm, 0, "am Pol bleibt die Sol-Tönung aus");
+assert.equal(polarIrradiance.cool, 0, "am Pol bleibt die Yol-Tönung aus");
+assert.equal(temperateIrradiance.mode, "dual", "gemeinsame Sichtbarkeit mischt Sol und Yol");
+assert.ok(temperateIrradiance.warm > 0 && temperateIrradiance.cool > 0, "Dualeinstrahlung enthält warme und kalte Farbe");
+assert.ok(temperateIrradiance.shimmer > 0, "Dualeinstrahlung erzeugt Schimmer");
+assert.ok(desertIrradiance.sol > temperateIrradiance.sol, "Sol-Einstrahlung ist bei 60 Grad stärker als bei 30 Grad");
+assert.ok(desertIrradiance.yol > temperateIrradiance.yol, "Yol-Einstrahlung ist bei 60 Grad stärker als bei 30 Grad");
+
+const beforeDelayIrradiance = contract.getHorizonIrradiance(
+  { ...stableIrradianceSnapshot, ms: 2000, positionMs: 2000 },
+  bothVisibleProjection,
+  60,
+);
+const buildingIrradiance = contract.getHorizonIrradiance(
+  { ...stableIrradianceSnapshot, ms: 7000, positionMs: 7000 },
+  bothVisibleProjection,
+  60,
+);
+assert.equal(beforeDelayIrradiance.mode, "none", "vor der Mindestdauer bleibt der Effekt aus");
+assert.ok(desertIrradiance.shimmer > buildingIrradiance.shimmer, "Schimmer wächst mit der sichtbaren Verweildauer");
+
+const solOnlyIrradiance = contract.getHorizonIrradiance(
+  stableIrradianceSnapshot,
+  { sol: { visible: true }, yol: { visible: false } },
+  60,
+);
+const yolOnlyIrradiance = contract.getHorizonIrradiance(
+  stableIrradianceSnapshot,
+  { sol: { visible: false }, yol: { visible: true } },
+  60,
+);
+assert.equal(solOnlyIrradiance.mode, "sol", "Sol allein erzeugt den warmen Modus");
+assert.ok(solOnlyIrradiance.warm > 0 && solOnlyIrradiance.cool === 0, "Sol allein hellt ausschließlich warm auf");
+assert.ok(solOnlyIrradiance.shimmer > 0, "auch Sol erhält einen zunehmenden Lichtschimmer");
+assert.equal(yolOnlyIrradiance.mode, "yol", "Yol allein erzeugt den kühlen Modus");
+assert.ok(yolOnlyIrradiance.cool > 0 && yolOnlyIrradiance.warm === 0, "Yol allein färbt ausschließlich kühl");
+assert.ok(yolOnlyIrradiance.shimmer > solOnlyIrradiance.shimmer, "Yols magischer Soloschimmer ist ausgeprägter");
+assert.ok(desertIrradiance.shimmer > yolOnlyIrradiance.shimmer, "gemeinsame Sichtbarkeit schimmert stärker als Yol allein");
+
+const movingSolIrradiance = contract.getHorizonIrradiance(
+  {
+    ...stableIrradianceSnapshot,
+    sol: { ...stableIrradianceSnapshot.sol, angularVelocity: 13.6 },
+  },
+  { sol: { visible: true }, yol: { visible: false } },
+  60,
+);
+assert.ok(solOnlyIrradiance.sol > movingSolIrradiance.sol, "ein stationärer synchroner Körper baut mehr Einstrahlung auf");
 assert.equal(contract.ZEHS_PARAMETERS.name, "ZEHS", "Referenzstern besitzt seinen kanonischen Namen");
 assert.equal(contract.ZEHS_PARAMETERS.type, "Referenzstern", "ZEHS ist als Referenzstern klassifiziert");
 assert.equal(contract.ZEHS_PARAMETERS.distanceAu, 40, "ZEHS liegt ungefähr 40 AU entfernt");
@@ -500,6 +581,9 @@ assertDirection("north", "Standardrichtung Norden");
 assertLatitude(0, "Standardbreite ist der bisherige Polstand");
 assert.equal(contract.getState().autoCycle, false, "automatisches Neuwürfeln ist standardmäßig aus");
 assert.equal(elementFor("#auto-cycle").getAttribute("aria-pressed"), "false", "Doppelkreis-Schalter meldet den inaktiven Zustand");
+assert.equal(elementFor("#horizon-view").getAttribute("data-irradiance-mode"), "none", "Polstand meldet keinen Einstrahlungseffekt");
+assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-warm"), "0.000", "Polstand besitzt keine warme Tönung");
+assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-cool"), "0.000", "Polstand besitzt keine kühle Tönung");
 
 slider.value = "54000";
 slider.emit("input");
@@ -626,12 +710,32 @@ elementFor("#phase-select").emit("change");
 assertDirection(preservedDirection, "Phasensprung bewahrt die Blickrichtung");
 assert.equal(elementFor("#active-phase-name").textContent, "Asynchroner Parabellauf", "Phasensprung wurde ausgeführt");
 
+latitudeButtons[2].emit("click");
+const irradianceBeforeThemeChange = {
+  frame: contract.getLastRenderFrame().horizonIrradiance,
+  mode: elementFor("#horizon-view").getAttribute("data-irradiance-mode"),
+  warm: elementFor("#horizon-view").style.getPropertyValue("--irradiance-warm"),
+  cool: elementFor("#horizon-view").style.getPropertyValue("--irradiance-cool"),
+  shimmer: elementFor("#horizon-view").style.getPropertyValue("--irradiance-shimmer"),
+};
 elementFor("#theme-toggle").emit("click");
 assert.equal(documentElement.dataset.theme, "light", "Theme-Schalter aktiviert helles Pergament");
 assert.equal(elementFor("#theme-label").textContent, "Helles Pergament");
 assert.equal(storage.get("era-theme"), "light", "Theme-Präferenz wird gespeichert");
+assert.deepEqual(
+  {
+    frame: contract.getLastRenderFrame().horizonIrradiance,
+    mode: elementFor("#horizon-view").getAttribute("data-irradiance-mode"),
+    warm: elementFor("#horizon-view").style.getPropertyValue("--irradiance-warm"),
+    cool: elementFor("#horizon-view").style.getPropertyValue("--irradiance-cool"),
+    shimmer: elementFor("#horizon-view").style.getPropertyValue("--irradiance-shimmer"),
+  },
+  irradianceBeforeThemeChange,
+  "Tagmodus bewahrt die berechnete Einstrahlung unverändert",
+);
 elementFor("#theme-toggle").emit("click");
 assert.equal(documentElement.dataset.theme, "dark", "Theme-Schalter kehrt zur dunklen Chronik zurück");
+latitudeButtons[0].emit("click");
 
 slider.value = "360000";
 slider.emit("input");
