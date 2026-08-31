@@ -119,6 +119,10 @@ for (const id of [
   "era-observer-marker",
   "horizon-sol-body",
   "horizon-yol-body",
+  "zehs-body",
+  "horizon-zehs-star",
+  "zehs-visibility",
+  "zehs-position",
 ]) {
   openingTag("index.html", id);
 }
@@ -132,6 +136,9 @@ for (const className of [
   "horizon-star-crosses",
   "mountain-back-light",
   "horizon-runes",
+  "zehs-point",
+  "zehs-point-core",
+  "zehs-instrument",
 ]) {
   requireMatch("index.html", new RegExp(`\\bclass\\s*=\\s*["'][^"']*\\b${className}\\b`, "i"), `${className} gehört zur hochauflösenden Pixelkulisse`);
 }
@@ -141,6 +148,7 @@ for (const name of [
   "HORIZON_GEOMETRY",
   "HORIZON_DIRECTIONS",
   "HORIZON_LATITUDES",
+  "ZEHS_PARAMETERS",
   "normalizeDegrees",
   "normalizeHorizonLatitude",
   "getLatitudeLift",
@@ -161,6 +169,15 @@ for (const name of [
 requireMatch("app.js", /era-horizon-direction/, "Blickrichtung wird unter dem vereinbarten localStorage-Schlüssel gespeichert");
 requireMatch("app.js", /era-horizon-latitude/, "Breitenstufe wird unter dem vereinbarten localStorage-Schlüssel gespeichert");
 requireMatch("app.js", /Object\.freeze\(\[0,\s*30,\s*60\]\)/, "nur die drei vereinbarten Breitenstufen sind wählbar");
+requireMatch("index.html", /\bid\s*=\s*["']zehs-star-shape["']/, "ZEHS besitzt ein wiederverwendbares Pixelstern-Symbol");
+requireMatch("index.html", /\bdata-distance-au\s*=\s*["']40["']/, "ZEHS trägt die kanonische Näherungsentfernung");
+requireMatch("index.html", /\bdata-brightness\s*=\s*["']sehr hell["']/, "ZEHS trägt die kanonische Helligkeit");
+requireMatch("index.html", /\bdata-motion\s*=\s*["']annähernd fest["']/, "ZEHS trägt die kanonische Bewegungsangabe");
+requireMatch("index.html", /\bdata-orbiting-body\s*=\s*["']false["']/, "ZEHS wird nicht als lokaler Umlaufkörper ausgegeben");
+requireMatch("index.html", /<dt>S-Int<\/dt><dd>nicht definiert<\/dd>/i, "für ZEHS wird keine S-Int erfunden");
+requireMatch("index.html", /<dt>Namensbezug<\/dt><dd>Zehsen<\/dd>/i, "ZEHS dokumentiert den Namensbezug");
+requireMatch("app.js", /distanceAu\s*:\s*40\b/, "ZEHS-Entfernung gehört zum zentralen Parametervertrag");
+requireMatch("app.js", /rotationReference\s*:\s*["'][^"']*vollständige Rotation Eras/i, "ZEHS dokumentiert den Rotationsbezug");
 requireMatch(
   "styles.css",
   /:active[^{}]*\{[^{}]*(?:translateY\(\s*2px\s*\)|translate\(\s*(?:0|2px)\s*,\s*2px\s*\)|translate\s*:\s*(?:0|2px)\s+2px)/is,

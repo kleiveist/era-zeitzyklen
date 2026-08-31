@@ -198,7 +198,8 @@
                 <title id="orbit-title">Orbitale Nordpol-Draufsicht auf Era, Sol und Yol</title>
                 <desc id="orbit-description">
                   Era liegt im Zentrum. Die vollständigen schematischen Bahnen von Sol und Yol werden
-                  aus dem aktuellen Seed und derselben Zeit wie der Horizontverlauf berechnet.
+                  aus dem aktuellen Seed und derselben Zeit wie der Horizontverlauf berechnet. ZEHS
+                  steht als sehr heller Fernpunkt und annähernd fester Rotationsbezug außerhalb der lokalen Bahnen.
                 </desc>
                 <defs>
                   <pattern id="orbit-grid-pattern" width="16" height="16" patternUnits="userSpaceOnUse">
@@ -253,6 +254,12 @@
                   <g id="yol-tier-3-shape"><path class="yol-magic" d="M-4-28H4V-20H-4ZM-4 20H4V28H-4ZM-28-4H-20V4H-28ZM20-4H28V4H20ZM-24-24H-16V-16H-24ZM16 16H24V24H16ZM16-24H20V-20H16ZM-20 16H-16V20H-20Z" /></g>
                   <g id="yol-tier-4-shape"><path class="yol-magic-outer" d="M-32-12H-28V-20H-20V-28H-12V-32H-4V-28H-12V-20H-20V-12H-28V-4H-32ZM12 12H20V4H28V12H32V20H24V28H16V32H8V28H12Z" /></g>
                   <g id="yol-tier-5-shape"><path class="yol-magic-bright" d="M18-34H26V-30H30V-26H34V-18H30V-22H26V-26H18ZM-34 18H-30V22H-26V26H-18V30H-26V34H-34Z" /></g>
+                  <g id="zehs-star-shape">
+                    <path class="zehs-halo-pixels" d="M-4-24H4V-12H12V-4H24V4H12V12H4V24H-4V12H-12V4H-24V-4H-12V-12H-4ZM-20-20H-12V-12H-20ZM12-20H20V-12H12ZM-20 12H-12V20H-20ZM12 12H20V20H12Z" />
+                    <path class="zehs-point-outline" d="M-8-10H8V-8H10V8H8V10H-8V8H-10V-8H-8Z" />
+                    <path class="zehs-point" d="M-4-6H4V-4H6V4H4V6H-4V4H-6V-4H-4Z" />
+                    <path class="zehs-point-core" d="M-2-2H2V2H-2Z" />
+                  </g>
                 </defs>
 
                 <rect class="orbit-sky" width="840" height="520" />
@@ -337,9 +344,19 @@
                   <text id="yol-label" x="0" y="50" text-anchor="middle">YOL</text>
                 </g>
 
-                <g class="zehs">
-                  <path d="M752 44H760V64H780V72H760V92H752V72H732V64H752ZM744 56H768V80H744Z" fill-rule="evenodd" />
-                  <text x="756" y="112" text-anchor="middle">ZEHS · REFERENZ</text>
+                <g
+                  id="zehs-body"
+                  class="zehs zehs-map-star"
+                  transform="translate(756 68)"
+                  aria-label="ZEHS, sehr heller, annähernd fester Referenzstern in ungefähr 40 AU Entfernung"
+                  data-distance-au="40"
+                  data-brightness="sehr hell"
+                  data-motion="annähernd fest"
+                  data-orbiting-body="false"
+                  data-s-int="nicht definiert"
+                >
+                  <use href="#zehs-star-shape" />
+                  <text x="0" y="46" text-anchor="middle">ZEHS · REFERENZ</text>
                 </g>
               </svg>
 
@@ -400,7 +417,7 @@
                 >
                   <title id="horizon-svg-title">Horizontverlauf mit Blick nach Norden</title>
                   <desc id="horizon-description">
-                    Schematische Projektion derselben Sol- und Yol-Positionen aus der gewählten lokalen Blickrichtung am Polstand auf Era.
+                    Schematische Projektion derselben Sol-, Yol- und ZEHS-Positionen aus der gewählten lokalen Blickrichtung am Polstand auf Era.
                   </desc>
 
                   <rect class="horizon-sky-band sky-band-1" width="840" height="44" />
@@ -421,6 +438,11 @@
                     <path class="horizon-convection-band band-a" d="M0 36H96V24H192V52H288V32H384V60H480V28H576V48H672V20H840V64H744V76H648V52H552V80H456V56H360V88H264V64H168V84H72V68H0Z" />
                     <path class="horizon-convection-band band-b" d="M0 104H120V88H240V116H360V92H480V124H600V96H720V112H840V148H720V132H600V156H480V140H360V160H240V136H120V152H0Z" />
                     <path class="horizon-shards" d="M132 52H148V60H156V76H140V84H124V68H132ZM684 40H704V52H712V68H696V76H676V60H684ZM396 92H412V100H424V116H404V124H388V108H396Z" />
+                  </g>
+
+                  <g id="horizon-zehs-star" class="zehs horizon-zehs-star" transform="translate(680 124)" aria-hidden="false">
+                    <use href="#zehs-star-shape" transform="scale(.72)" />
+                    <text x="0" y="31" text-anchor="middle">ZEHS</text>
                   </g>
 
                   <g id="horizon-sol-body" class="body body-sol horizon-body" data-intensity-tier="3" transform="translate(560 92)">
@@ -457,6 +479,29 @@
                   <text id="horizon-right-label" class="horizon-compass-label" x="800" y="268" text-anchor="end">O · OSTEN</text>
                 </svg>
               </figure>
+
+              <article class="zehs-instrument" aria-labelledby="zehs-instrument-title">
+                <div class="zehs-instrument-heading">
+                  <svg viewBox="-30 -30 60 60" shape-rendering="crispEdges" aria-hidden="true"><use href="#zehs-star-shape" /></svg>
+                  <div>
+                    <p class="panel-index">FERNSTERN-MESSPUNKT</p>
+                    <h4 id="zehs-instrument-title">ZEHS · Rotationsreferenz</h4>
+                    <p>Weltenlogischer Fernpunkt; die Darstellung erhebt keinen Anspruch auf ein physikalisch exaktes Modell.</p>
+                  </div>
+                </div>
+                <dl class="zehs-parameters">
+                  <div><dt>Klasse</dt><dd>Referenzstern</dd></div>
+                  <div><dt>Entfernung</dt><dd>ungefähr 40 AU</dd></div>
+                  <div><dt>Helligkeit</dt><dd>sehr hell</dd></div>
+                  <div><dt>Eigenbewegung</dt><dd>annähernd fest</dd></div>
+                  <div><dt>Rotationsbezug</dt><dd>Untergang → Wiederaufgang</dd></div>
+                  <div><dt>Lokale Umlaufbahn</dt><dd>keine</dd></div>
+                  <div><dt>S-Int</dt><dd>nicht definiert</dd></div>
+                  <div><dt>Namensbezug</dt><dd>Zehsen</dd></div>
+                  <div><dt>Horizontstatus</dt><dd id="zehs-visibility">sichtbar</dd></div>
+                  <div><dt>Schematischer Punkt</dt><dd id="zehs-position">x 680 · y 124</dd></div>
+                </dl>
+              </article>
             </section>
 
             <div class="readout-grid" aria-label="Aktuelle Messwerte">

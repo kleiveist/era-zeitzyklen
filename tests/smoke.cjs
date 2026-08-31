@@ -325,7 +325,7 @@ const contract = global.ERA_CYCLE_CONTRACT;
 assert.ok(contract, "app.js veröffentlicht den read-only ERA_CYCLE_CONTRACT");
 assert.ok(Object.isFrozen(contract), "ERA_CYCLE_CONTRACT ist eingefroren");
 
-for (const constantName of ["ORBIT_GEOMETRY", "HORIZON_GEOMETRY", "HORIZON_DIRECTIONS", "HORIZON_LATITUDES"]) {
+for (const constantName of ["ORBIT_GEOMETRY", "HORIZON_GEOMETRY", "HORIZON_DIRECTIONS", "HORIZON_LATITUDES", "ZEHS_PARAMETERS"]) {
   assert.ok(contract[constantName], `${constantName} ist Teil des Geometrievertrags`);
   assert.ok(Object.isFrozen(contract[constantName]), `${constantName} ist read-only`);
 }
@@ -362,6 +362,17 @@ assert.equal(ERA_PHASES.config.convectionDurationUm, 400, "Konvektion umfasst 40
 assert.equal(70000 / 7000, 10, "Großzyklus entspricht 10 Mohn");
 assert.equal(70000 / 200, 350, "Großzyklus entspricht 350 Dir");
 assert.equal(70000 / 20, 3500, "Großzyklus entspricht 3.500 Tan");
+assert.equal(contract.ZEHS_PARAMETERS.name, "ZEHS", "Referenzstern besitzt seinen kanonischen Namen");
+assert.equal(contract.ZEHS_PARAMETERS.type, "Referenzstern", "ZEHS ist als Referenzstern klassifiziert");
+assert.equal(contract.ZEHS_PARAMETERS.distanceAu, 40, "ZEHS liegt ungefähr 40 AU entfernt");
+assert.equal(contract.ZEHS_PARAMETERS.distanceQualifier, "ungefähr", "die Entfernung bleibt als Näherungswert gekennzeichnet");
+assert.equal(contract.ZEHS_PARAMETERS.brightness, "sehr hell", "kanonische Helligkeitsangabe bleibt erhalten");
+assert.equal(contract.ZEHS_PARAMETERS.motion, "annähernd fest", "kanonische Bewegungsangabe bleibt erhalten");
+assert.match(contract.ZEHS_PARAMETERS.rotationReference, /vollständige Rotation Eras/);
+assert.equal(contract.ZEHS_PARAMETERS.nameRelation, "Zehsen", "Namensbezug ist dokumentiert");
+assert.equal(contract.ZEHS_PARAMETERS.orbitingBody, false, "ZEHS ist kein lokaler Umlaufkörper");
+assert.equal(contract.ZEHS_PARAMETERS.sIntensity, null, "für ZEHS wird keine S-Int erfunden");
+assert.ok(Object.isFrozen(contract.ZEHS_PARAMETERS.worldPoint), "ZEHS-Weltpunkt ist unveränderlich");
 assert.ok(track.children.length >= ERA_PHASES.templates.length, "alle Vorlagen plus Wiederholungen");
 assert.equal(sigils.children.length, 18, "jede Vorlage besitzt ein anwählbares Siegel");
 assert.ok(ERA_PHASES.templates.every((template) => /^icon-/.test(template.icon)), "jede Vorlage besitzt eine Icon-ID");
@@ -472,6 +483,11 @@ for (const bodyName of ["sol", "yol"]) {
     `${bodyName}: Richtungswahl verändert den Weltpunkt nicht`,
   );
 }
+assertPointClose(
+  directionFrameAfter.worldPoints.zehs,
+  directionFrameBefore.worldPoints.zehs,
+  "ZEHS: Richtungswahl verändert den festen Weltpunkt nicht",
+);
 assert.equal(
   directionFrameAfter.eraRotationDegrees,
   directionFrameBefore.eraRotationDegrees,
@@ -519,6 +535,12 @@ for (const bodyName of ["sol", "yol"]) {
   );
   assert.equal(latitudeFrame30.horizonProjection[bodyName].latitudeDegrees, 30, `${bodyName}: 30 Grad fließen in die Projektion ein`);
 }
+assertPointClose(
+  latitudeFrame30.worldPoints.zehs,
+  latitudeFrameBefore.worldPoints.zehs,
+  "ZEHS: Breitenwahl verändert den festen Weltpunkt nicht",
+);
+assert.equal(latitudeFrame30.horizonProjection.zehs.latitudeDegrees, 30, "ZEHS wird aus derselben Breitenstufe projiziert");
 const ringRadius30 = Number(elementFor("#era-latitude-ring").getAttribute("r"));
 assert.ok(ringRadius30 > 8, "der ERA-Breitenring wächst bei 30 Grad aus dem Polpunkt heraus");
 assert.equal(elementFor("#era-latitude-indicator").getAttribute("data-latitude-degrees"), "30");
@@ -714,6 +736,19 @@ assert.equal(contract.getLatitudeLift(0), 0, "Polstand verändert die bisherige 
 assert.ok(contract.getLatitudeLift(30) > 0, "30 Grad heben sichtbare Körper an");
 assert.ok(contract.getLatitudeLift(60) > contract.getLatitudeLift(30), "60 Grad heben sichtbare Körper stärker an");
 
+const zehsWorldPoint = contract.ZEHS_PARAMETERS.worldPoint;
+assert.ok(Number.isFinite(zehsWorldPoint.x) && Number.isFinite(zehsWorldPoint.y), "ZEHS besitzt einen endlichen Kartenpunkt");
+const zehsNorthBasis = contract.getViewBasis("north", 0);
+const zehsSouthBasis = contract.getViewBasis("south", 0);
+const zehsNorth0 = contract.projectOrbitPointToHorizon(zehsWorldPoint, zehsNorthBasis, "zehs", 0);
+const zehsNorth30 = contract.projectOrbitPointToHorizon(zehsWorldPoint, zehsNorthBasis, "zehs", 30);
+const zehsNorth60 = contract.projectOrbitPointToHorizon(zehsWorldPoint, zehsNorthBasis, "zehs", 60);
+const zehsSouth0 = contract.projectOrbitPointToHorizon(zehsWorldPoint, zehsSouthBasis, "zehs", 0);
+assert.equal(zehsNorth0.visible, true, "ZEHS kann über dem nördlichen Horizont als Punkt erscheinen");
+assert.equal(zehsSouth0.visible, false, "ZEHS kann durch Eras Horizont verdeckt werden");
+assert.ok(zehsNorth30.y < zehsNorth0.y, "ZEHS reagiert auf die mittlere Beobachterbreite");
+assert.ok(zehsNorth60.y < zehsNorth30.y, "ZEHS reagiert auf die äquatornahe Grenzstufe");
+
 function directionMetadata(directionId) {
   if (Array.isArray(contract.HORIZON_DIRECTIONS)) {
     return contract.HORIZON_DIRECTIONS.find((direction) => direction.id === directionId);
@@ -812,6 +847,35 @@ assert.ok(
 const expectedBasis = contract.getViewBasis(contract.getState().horizonDirection, frame.eraRotationDegrees);
 assertPointClose(vectorOf(frame.viewBasis, "forward"), vectorOf(expectedBasis, "forward"), "Frame verwendet die erwartete Vorwärtsbasis");
 assertPointClose(vectorOf(frame.viewBasis, "right"), vectorOf(expectedBasis, "right"), "Frame verwendet die erwartete Rechtsbasis");
+assertPointClose(frame.worldPoints.zehs, contract.ZEHS_PARAMETERS.worldPoint, "Frame verwendet den festen ZEHS-Kartenpunkt");
+const expectedZehsProjection = contract.projectOrbitPointToHorizon(
+  contract.ZEHS_PARAMETERS.worldPoint,
+  frame.viewBasis,
+  "zehs",
+  contract.getState().horizonLatitude,
+);
+assertPointClose(frame.horizonProjection.zehs, expectedZehsProjection, "ZEHS-Horizontpunkt stammt aus derselben Blickprojektion");
+assert.equal(frame.horizonProjection.zehs.visible, expectedZehsProjection.visible, "ZEHS-Sichtbarkeit folgt der lokalen Horizontebene");
+
+const zehsMapElement = elementFor("#zehs-body");
+const zehsHorizonElement = elementFor("#horizon-zehs-star");
+assert.equal(zehsMapElement.getAttribute("aria-hidden"), "false", "ZEHS bleibt in der Nordpolkarte als Punkt sichtbar");
+assert.equal(zehsMapElement.getAttribute("data-distance-au"), "40", "ZEHS-Kartenpunkt trägt die Entfernungsangabe");
+assert.equal(zehsMapElement.getAttribute("data-brightness"), "sehr hell", "ZEHS-Kartenpunkt trägt die Helligkeitsangabe");
+assert.equal(zehsMapElement.getAttribute("data-motion"), "annähernd fest", "ZEHS-Kartenpunkt trägt die Bewegungsangabe");
+assert.equal(zehsMapElement.getAttribute("data-orbiting-body"), "false", "ZEHS-Kartenpunkt ist kein Umlaufkörper");
+assert.equal(zehsMapElement.getAttribute("data-s-int"), "nicht definiert", "ZEHS-Kartenpunkt erfindet keine S-Int");
+assert.equal(
+  zehsHorizonElement.getAttribute("aria-hidden"),
+  String(!frame.horizonProjection.zehs.visible),
+  "ZEHS-Punkt im Horizont spiegelt die berechnete Sichtbarkeit",
+);
+assert.equal(
+  elementFor("#zehs-visibility").getAttribute("data-visible"),
+  String(frame.horizonProjection.zehs.visible),
+  "ZEHS-Messkarte spiegelt den Horizontstatus",
+);
+assert.match(elementFor("#zehs-position").textContent, /^x \d+ · /, "ZEHS-Messkarte meldet die schematische Punktposition");
 for (const bodyName of ["sol", "yol"]) {
   assertPointClose(
     frame.worldPoints[bodyName],
@@ -892,6 +956,12 @@ assert.equal(elementFor("#sol-body").getAttribute("aria-hidden"), "true", "Konve
 assert.equal(elementFor("#yol-body").getAttribute("aria-hidden"), "true", "Konvektion versteckt Yol im Orbit");
 assert.equal(elementFor("#horizon-sol-body").getAttribute("aria-hidden"), "true", "Konvektion versteckt Sol im Panorama");
 assert.equal(elementFor("#horizon-yol-body").getAttribute("aria-hidden"), "true", "Konvektion versteckt Yol im Panorama");
+assert.equal(elementFor("#zehs-body").getAttribute("aria-hidden"), "false", "Konvektion entfernt den ZEHS-Kartenpunkt nicht");
+assert.equal(
+  elementFor("#horizon-zehs-star").getAttribute("aria-hidden"),
+  String(!convectionFrame.horizonProjection.zehs.visible),
+  "ZEHS behält während der Konvektion seine normale Horizontprojektion",
+);
 
 console.log(
   JSON.stringify({
@@ -901,6 +971,7 @@ console.log(
     phaseJumps: ERA_PHASES.templates.length,
     directions: directionButtons.length,
     latitudes: latitudeButtons.length,
+    zehsDistanceAu: contract.ZEHS_PARAMETERS.distanceAu,
     geometrySnapshots: sampledSnapshots,
     finalEraTime: elementFor("#era-time").textContent,
   }),

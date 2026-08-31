@@ -1156,13 +1156,29 @@ main {
   stroke-width: 4px;
 }
 
-.zehs path {
+.zehs-halo-pixels {
+  fill: var(--nebula-bright);
+}
+
+.zehs-point-outline {
+  fill: var(--stone-950);
+}
+
+.zehs-point {
   fill: var(--yol-lavender);
 }
 
+.zehs-point-core {
+  fill: var(--sky-ink);
+}
+
 .zehs text {
-  fill: var(--sky-muted);
+  fill: var(--sky-ink);
   font-size: 16px;
+}
+
+.horizon-zehs-star text {
+  font-size: 13px;
 }
 
 .convection-field,
@@ -1416,6 +1432,85 @@ main {
 
 .horizon-runes {
   fill: var(--brass);
+}
+
+.zehs-instrument {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px;
+  border: 2px solid var(--engraving-strong);
+  background: var(--paper);
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+
+.zehs-instrument-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.zehs-instrument-heading svg {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  border: 2px solid var(--gold-deep);
+  background: var(--sky-1);
+}
+
+.zehs-instrument-heading h4 {
+  margin: 0 0 2px;
+  color: var(--ink-strong);
+  font-family: var(--font-display);
+  font-size: 17px;
+  line-height: 20px;
+}
+
+.zehs-instrument-heading p:last-child {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 9px;
+  line-height: 13px;
+}
+
+.zehs-parameters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 2px;
+  margin: 0;
+  background: var(--engraving);
+}
+
+.zehs-parameters div {
+  min-width: 0;
+  padding: 7px;
+  background: var(--paper-raised);
+}
+
+.zehs-parameters dt {
+  margin-bottom: 2px;
+  color: var(--ink-faint);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.zehs-parameters dd {
+  margin: 0;
+  color: var(--ink-strong);
+  overflow-wrap: anywhere;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 13px;
+}
+
+#zehs-visibility[data-visible="true"] {
+  color: var(--convection-ice);
+}
+
+#zehs-visibility[data-visible="false"] {
+  color: var(--rust);
 }
 
 .horizon-compass-label {
@@ -2594,6 +2689,10 @@ footer {
     width: 100%;
   }
 
+  .zehs-parameters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .phase-sigils {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -2688,6 +2787,18 @@ footer {
   .horizon-compass-label,
   .zehs text {
     font-size: 18px;
+  }
+
+  .horizon-zehs-star text {
+    font-size: 13px;
+  }
+
+  .zehs-parameters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .zehs-instrument-heading {
+    align-items: flex-start;
   }
 }
 

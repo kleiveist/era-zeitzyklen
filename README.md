@@ -74,8 +74,28 @@ Pixelhalo. Auch radiale Phasenabweichungen werden vor dem Rendern abgesichert. D
 SOL und YOL werden entlang des Vektors vom Era-Mittelpunkt nach außen gesetzt und können dadurch
 nicht in Era hineinragen.
 
-ZEHS bleibt ein weit entfernter Referenzstern und ist deutlich als `ZEHS · REFERENZ` markiert.
-Er wird nicht wie Sol oder Yol als umlaufender Körper behandelt.
+## ZEHS-Referenzstern
+
+ZEHS ist in der Nordpolkarte als eigenständiger, mehrlagiger Pixelpunkt und im lokalen Horizont
+als projizierter Fixpunkt sichtbar. Eine Messkarte hält alle freigegebenen Angaben zusammen:
+
+| Parameter | Wert |
+| --- | --- |
+| Klasse | Referenzstern |
+| Entfernung | ungefähr 40 AU |
+| Helligkeit | sehr hell |
+| Eigenbewegung | annähernd fest |
+| Rotationsbezug | Untergang und erneuter Aufgang markieren eine vollständige Rotation Eras |
+| lokale Umlaufbahn | keine |
+| S-Int | nicht definiert; diese Skala gehört hier nur zu Sol und Yol |
+| Namensbezug | Zehsen |
+| Modellstatus | Weltenlogik, schematische und nicht physikalisch exakte Darstellung |
+
+Der Kartenpunkt bleibt außerhalb der lokalen Sol-/Yol-Orbits fest. Für den Horizont wird derselbe
+Punkt durch Blickrichtung, illustrative Era-Rotation und gewählte Breitenstufe projiziert. Deshalb
+kann ZEHS auf- und untergehen, ohne dass der Referenzstern selbst eine lokale Bahn erhält. Die
+Messkarte meldet Sichtbarkeit, schematische Pixelkoordinate und Höhe; eine numerische Dauer der
+vollständigen Era-Rotation wird nicht erfunden.
 
 ## Horizontverlauf
 
@@ -200,13 +220,15 @@ node tests/visual-contract.cjs
 
 Der Smoke-Test prüft unter anderem alle 18 Vorlagen, Seed-Reproduzierbarkeit, die sechsminütige
 Zeitfassung, Theme-Speicherung, Kompass- und Breitensteuerung per Maus und Tastatur,
-Zustandsinvarianz bei Projektionswechseln sowie mindestens 200 Geometriesnapshots. Dabei werden endliche
+Zustandsinvarianz bei Projektionswechseln, den festen ZEHS-Weltpunkt sowie mindestens 200
+Geometriesnapshots. Dabei werden endliche
 Koordinaten, S-Int-Grenzen, SVG-Grenzen und der Sicherheitsabstand zu Era kontrolliert.
 
 Der visuelle Vertrag liest HTML, CSS und JavaScript statisch. Er untersagt unter anderem
 `backdrop-filter`, Gauß-Weichzeichnung, Pillenradien, alte SVG-Verläufe und die frühere
 horizontabhängige Skalierung orbitaler Y-Radien. Außerdem prüft er die Pixel-SVG-Einstellungen,
-die vier zugänglichen Richtungsbuttons, die drei Breitenstufen und den gemeinsamen Geometrievertrag.
+die vier zugänglichen Richtungsbuttons, die drei Breitenstufen, den ZEHS-Pixelpunkt und den
+gemeinsamen Geometrievertrag.
 
 ## Grenzen der Darstellung
 

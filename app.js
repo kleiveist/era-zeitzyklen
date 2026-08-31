@@ -83,12 +83,28 @@
     60: Object.freeze({ degrees: 60, name: "Grenzstufe", description: "60 Grad äquatorwärts" }),
   });
   const HORIZON_LATITUDE_ORDER = Object.freeze([0, 30, 60]);
+  const ZEHS_PARAMETERS = Object.freeze({
+    id: "zehs",
+    name: "ZEHS",
+    type: "Referenzstern",
+    distanceAu: 40,
+    distanceQualifier: "ungefähr",
+    brightness: "sehr hell",
+    motion: "annähernd fest",
+    rotationReference: "Untergang und erneuter Aufgang markieren eine vollständige Rotation Eras",
+    nameRelation: "Zehsen",
+    orbitingBody: false,
+    sIntensity: null,
+    modelStatus: "Weltenlogik · schematische Darstellung",
+    worldPoint: Object.freeze({ x: 756, y: 68 }),
+  });
   const HORIZON_HEIGHT_SCALE = Object.freeze({
     hold: 0.46,
     horizon: 0.22,
     "reverse-horizon": 0.22,
     parabola: 1,
     "fixed-orbit": 0.72,
+    zehs: 0.88,
     convection: 0,
   });
 
@@ -121,6 +137,7 @@
     yolHalo: document.querySelector("#yol-halo"),
     solLabel: document.querySelector("#sol-label"),
     yolLabel: document.querySelector("#yol-label"),
+    zehsBody: document.querySelector("#zehs-body"),
     eraSurface: document.querySelector("#era-surface"),
     eraFrontHalf: document.querySelector("#era-front-half"),
     eraHorizonCut: document.querySelector("#era-horizon-cut"),
@@ -151,10 +168,13 @@
     horizonDescription: document.querySelector("#horizon-description"),
     horizonSolBody: document.querySelector("#horizon-sol-body"),
     horizonYolBody: document.querySelector("#horizon-yol-body"),
+    horizonZehsStar: document.querySelector("#horizon-zehs-star"),
     horizonLeftLabel: document.querySelector("#horizon-left-label"),
     horizonCenterLabel: document.querySelector("#horizon-center-label"),
     horizonRightLabel: document.querySelector("#horizon-right-label"),
     horizonConvectionField: document.querySelector("#horizon-convection-field"),
+    zehsVisibility: document.querySelector("#zehs-visibility"),
+    zehsPosition: document.querySelector("#zehs-position"),
     eraTime: document.querySelector("#era-time"),
     solIntensity: document.querySelector("#sol-intensity"),
     yolIntensity: document.querySelector("#yol-intensity"),
@@ -791,6 +811,24 @@
     element.style.visibility = visible ? "visible" : "hidden";
   }
 
+  function setZehsElementState(element, point, visible) {
+    if (!element) return;
+    element.setAttribute(
+      "transform",
+      `translate(${Math.round(point.x)} ${Math.round(point.y)})`,
+    );
+    element.setAttribute("data-projected-x", Number(point.x).toFixed(3));
+    element.setAttribute("data-projected-y", Number(point.y).toFixed(3));
+    element.setAttribute("data-distance-au", String(ZEHS_PARAMETERS.distanceAu));
+    element.setAttribute("data-brightness", ZEHS_PARAMETERS.brightness);
+    element.setAttribute("data-motion", ZEHS_PARAMETERS.motion);
+    element.setAttribute("data-orbiting-body", String(ZEHS_PARAMETERS.orbitingBody));
+    element.setAttribute("data-s-int", "nicht definiert");
+    element.setAttribute("aria-hidden", String(!visible));
+    element.style.opacity = visible ? "1" : "0";
+    element.style.visibility = visible ? "visible" : "hidden";
+  }
+
   function positionOrbitLabel(label, point, bodySnapshot, bodyName) {
     if (!label) return;
     const deltaX = point.x - ORBIT_GEOMETRY.centerX;
@@ -862,12 +900,19 @@
     const worldPoints = Object.freeze({
       sol: Object.freeze(getOrbitPoint(snapshot, "sol")),
       yol: Object.freeze(getOrbitPoint(snapshot, "yol")),
+      zehs: ZEHS_PARAMETERS.worldPoint,
     });
     const eraRotationDegrees = getEraRotationDegrees(snapshot.ms, snapshot.template.motion);
     const viewBasis = getViewBasis(state.horizonDirection, eraRotationDegrees);
     const horizonProjection = Object.freeze({
       sol: createFrameProjection(worldPoints.sol, viewBasis, snapshot, "sol"),
       yol: createFrameProjection(worldPoints.yol, viewBasis, snapshot, "yol"),
+      zehs: projectOrbitPointToHorizon(
+        worldPoints.zehs,
+        viewBasis,
+        "zehs",
+        state.horizonLatitude,
+      ),
     });
     return Object.freeze({
       snapshot,
@@ -890,6 +935,12 @@
       horizonProjection: Object.freeze({
         sol: createFrameProjection(frame.worldPoints.sol, viewBasis, frame.snapshot, "sol"),
         yol: createFrameProjection(frame.worldPoints.yol, viewBasis, frame.snapshot, "yol"),
+        zehs: projectOrbitPointToHorizon(
+          frame.worldPoints.zehs,
+          viewBasis,
+          "zehs",
+          state.horizonLatitude,
+        ),
       }),
     });
   }
@@ -1100,6 +1151,12 @@
       worldPoints.yol,
       snapshot.yol.visible && !isConvection,
     );
+    setZehsElementState(elements.zehsBody, worldPoints.zehs, true);
+    if (elements.zehsBody) {
+      elements.zehsBody.setAttribute("data-world-x", worldPoints.zehs.x.toFixed(3));
+      elements.zehsBody.setAttribute("data-world-y", worldPoints.zehs.y.toFixed(3));
+      elements.zehsBody.setAttribute("data-reference-role", "vollständige Era-Rotation");
+    }
     positionOrbitLabel(elements.solLabel, worldPoints.sol, snapshot.sol, "sol");
     positionOrbitLabel(elements.yolLabel, worldPoints.yol, snapshot.yol, "yol");
     if (elements.directionPathSol) {
@@ -1120,8 +1177,8 @@
     elements.orbitView.setAttribute("data-horizon-latitude", String(state.horizonLatitude));
     elements.convectionMessage.hidden = !isConvection;
     elements.orbitDescription.textContent = isConvection
-      ? "Nordpol-Draufsicht während der Konvektion: Sol und Yol sind nicht sichtbar; ferne Splitterwelten treten hervor."
-      : `${snapshot.template.label}: vollständige schematische Orbits aus der Nordpol-Draufsicht. Blickpfeil und Schnittlinie markieren die gewählte Horizontprojektion.`;
+      ? "Nordpol-Draufsicht während der Konvektion: Sol und Yol sind nicht sichtbar; ferne Splitterwelten treten hervor. ZEHS bleibt als ungefähr 40 AU entfernter Referenzpunkt kartiert."
+      : `${snapshot.template.label}: vollständige schematische Orbits aus der Nordpol-Draufsicht. ZEHS ist als ungefähr 40 AU entfernter, annähernd fester Referenzpunkt markiert. Blickpfeil und Schnittlinie kennzeichnen die gewählte Horizontprojektion.`;
   }
 
   function updateHorizonGeometry(frame) {
@@ -1129,6 +1186,7 @@
     const isConvection = snapshot.template.motion === "convection";
     const solVisible = snapshot.sol.visible && horizonProjection.sol.visible && !isConvection;
     const yolVisible = snapshot.yol.visible && horizonProjection.yol.visible && !isConvection;
+    const zehsVisible = horizonProjection.zehs.visible;
     setBodyElementState(
       elements.horizonSolBody,
       snapshot.sol,
@@ -1143,6 +1201,7 @@
       horizonProjection.yol,
       yolVisible,
     );
+    setZehsElementState(elements.horizonZehsStar, horizonProjection.zehs, zehsVisible);
     if (elements.horizonSolBody) {
       elements.horizonSolBody.setAttribute("data-world-x", worldPoints.sol.x.toFixed(3));
       elements.horizonSolBody.setAttribute("data-world-y", worldPoints.sol.y.toFixed(3));
@@ -1154,6 +1213,28 @@
       elements.horizonYolBody.setAttribute("data-world-y", worldPoints.yol.y.toFixed(3));
       elements.horizonYolBody.setAttribute("data-forward", horizonProjection.yol.forward.toFixed(6));
       elements.horizonYolBody.setAttribute("data-latitude-lift", horizonProjection.yol.latitudeLift.toFixed(3));
+    }
+    if (elements.horizonZehsStar) {
+      elements.horizonZehsStar.setAttribute("data-world-x", worldPoints.zehs.x.toFixed(3));
+      elements.horizonZehsStar.setAttribute("data-world-y", worldPoints.zehs.y.toFixed(3));
+      elements.horizonZehsStar.setAttribute("data-forward", horizonProjection.zehs.forward.toFixed(6));
+      elements.horizonZehsStar.setAttribute("data-latitude-lift", horizonProjection.zehs.latitudeLift.toFixed(3));
+    }
+    if (elements.zehsVisibility) {
+      elements.zehsVisibility.textContent = zehsVisible
+        ? `sichtbar · ${Math.round(horizonProjection.zehs.height)} px über Horizont`
+        : "unter dem Horizont";
+      elements.zehsVisibility.setAttribute("data-visible", String(zehsVisible));
+    }
+    if (elements.zehsPosition) {
+      const side = horizonProjection.zehs.right < -0.08
+        ? "links"
+        : horizonProjection.zehs.right > 0.08
+          ? "rechts"
+          : "mittig";
+      elements.zehsPosition.textContent = zehsVisible
+        ? `x ${Math.round(horizonProjection.zehs.x)} · y ${Math.round(horizonProjection.zehs.y)} · ${side}`
+        : `x ${Math.round(horizonProjection.zehs.x)} · unter Horizont`;
     }
     if (elements.horizonView) {
       elements.horizonView.classList.toggle("is-convection", isConvection);
@@ -1176,7 +1257,8 @@
         : `Sol ist ${solVisible ? "vor" : "hinter"} dem lokalen Horizont, Yol ist ${
             yolVisible ? "vor" : "hinter"
           } dem lokalen Horizont.`;
-      elements.horizonDescription.textContent = `Schematischer Horizont bei Blick nach ${direction.name} und ${latitude.degrees} Grad Versatz vom Nordpol in Richtung Äquator. ${visibilityText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht; der Äquator bei 90 Grad bleibt ausgeschlossen.`;
+      const zehsText = `ZEHS liegt ${zehsVisible ? "als heller Punkt über" : "unter"} dem lokalen Horizont.`;
+      elements.horizonDescription.textContent = `Schematischer Horizont bei Blick nach ${direction.name} und ${latitude.degrees} Grad Versatz vom Nordpol in Richtung Äquator. ${visibilityText} ${zehsText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht; der Äquator bei 90 Grad bleibt ausgeschlossen.`;
     }
   }
 
@@ -1636,6 +1718,7 @@
     HORIZON_GEOMETRY,
     HORIZON_DIRECTIONS,
     HORIZON_LATITUDES,
+    ZEHS_PARAMETERS,
     normalizeDegrees,
     normalizeHorizonLatitude,
     getLatitudeLift,
