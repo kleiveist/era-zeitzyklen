@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Interaktive, auf drei Minuten komprimierte Darstellung der Zeitzyklen von Sol und Yol auf Era."
+      content="Interaktive, auf sechs Minuten komprimierte Darstellung der Zeitzyklen von Sol und Yol auf Era."
     />
     <meta id="theme-color" name="theme-color" content="#070b1a" />
     <title>Era – Zeitzyklen von Sol und Yol</title>
@@ -97,7 +97,7 @@
             <h1><span class="title-main">Zeitzyklen</span><span class="title-orbit">von Sol und Yol</span></h1>
             <p class="subtitle">
               Betritt das Observatorium von Era und verfolge 70.000 Um als lebendige Astralchronik.
-              Die Bahnen von Sol und Yol verdichten sich auf 3:00 oder 6:00 Minuten.
+              Die Bahnen von Sol und Yol verdichten sich zu einer sechsminütigen Astralchronik.
             </p>
             <div class="hero-runes" aria-label="Merkmale der Astralchronik">
               <span><i aria-hidden="true"></i>Live-Orbit</span>
@@ -114,7 +114,7 @@
           <div class="header-facts" aria-label="Kanonische Eckdaten">
             <div><svg aria-hidden="true"><use href="#icon-grand-cycle"></use></svg><strong>10</strong><span>Mohn pro Großzyklus</span></div>
             <div><svg aria-hidden="true"><use href="#icon-convection-time"></use></svg><strong>400</strong><span>Um Konvektion</span></div>
-            <div><svg aria-hidden="true"><use href="#icon-presentation"></use></svg><strong>3 · 6</strong><span>Minuten Zeitfassung</span></div>
+            <div><svg aria-hidden="true"><use href="#icon-presentation"></use></svg><strong>6:00</strong><span>Minuten Astralchronik</span></div>
           </div>
         </div>
       </header>
@@ -204,6 +204,9 @@
                   <pattern id="orbit-grid-pattern" width="16" height="16" patternUnits="userSpaceOnUse">
                     <path class="orbit-grid-pixel" d="M0 0H4V4H0Z" />
                   </pattern>
+                  <pattern id="orbit-major-pattern" width="64" height="64" patternUnits="userSpaceOnUse">
+                    <path class="orbit-grid-major-pixel" d="M0 0H16V2H2V16H0ZM62 48H64V64H48V62H62Z" />
+                  </pattern>
                   <pattern id="era-surface-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
                     <path class="era-dither-a" d="M0 0H4V4H0ZM4 4H8V8H4Z" />
                   </pattern>
@@ -220,22 +223,51 @@
                     <path class="yol-arrow-head" d="M0 4H12V0L24 8 12 16V12H0Z" />
                   </marker>
 
-                  <g id="sol-tier-1-shape"><path class="sol-core" d="M-8-8H8V-4H12V8H8V12H-8V8H-12V-4H-8Z" /><path class="sol-core-light" d="M-4-4H4V4H-4Z" /></g>
-                  <g id="sol-tier-2-shape"><path class="sol-ring" d="M-16-8H-12V-16H-4V-20H4V-16H12V-8H20V4H16V12H8V16H-8V12H-16V4H-20V-8Z" /></g>
-                  <g id="sol-tier-3-shape"><path class="sol-ray" d="M-4-26H4V-20H-4ZM-4 20H4V26H-4ZM-26-4H-20V4H-26ZM20-4H26V4H20ZM-24-24H-16V-16H-24ZM16-24H24V-16H16ZM-24 16H-16V24H-24ZM16 16H24V24H16Z" /></g>
-                  <g id="sol-tier-4-shape"><path class="sol-ray-outer" d="M-4-30H4V-26H-4ZM-4 26H4V30H-4ZM-30-4H-26V4H-30ZM26-4H30V4H26Z" /></g>
-                  <g id="sol-tier-5-shape"><path class="sol-ray-bright" d="M-26-34H-18V-26H-26ZM18-34H26V-26H18ZM-34 18H-26V26H-34ZM26 18H34V26H26Z" /></g>
-                  <g id="yol-tier-1-shape"><path class="yol-core" d="M-8-12H8V-8H12V8H8V12H-8V8H-12V-8H-8Z" /><path class="yol-core-light" d="M-4-8H4V0H8V4H0V8H-4Z" /></g>
-                  <g id="yol-tier-2-shape"><path class="yol-ring" d="M-16-12H-8V-20H8V-16H16V-8H20V8H16V16H8V20H-8V16H-16V8H-20V-8H-16Z" /></g>
-                  <g id="yol-tier-3-shape"><path class="yol-magic" d="M-4-25H4V-20H-4ZM-4 20H4V25H-4ZM-25-4H-20V4H-25ZM20-4H25V4H20ZM-24-24H-16V-16H-24ZM16 16H24V24H16Z" /></g>
-                  <g id="yol-tier-4-shape"><path class="yol-magic-outer" d="M-28-12H-20V-20H-12V-28H-4V-20H-12V-12H-20V-4H-28ZM12 12H20V4H28V12H24V20H16V28H8V20H12Z" /></g>
-                  <g id="yol-tier-5-shape"><path class="yol-magic-bright" d="M18-33H26V-25H33V-17H26V-21H18ZM-33 17H-26V21H-18V29H-26V33H-33Z" /></g>
+                  <g id="sol-tier-1-shape">
+                    <path class="body-pixel-outline" d="M-8-14H8V-12H12V-8H14V8H12V12H8V14H-8V12H-12V8H-14V-8H-12V-12H-8Z" />
+                    <path class="sol-core" d="M-8-10H8V-8H10V8H8V10H-8V8H-10V-8H-8Z" />
+                    <path class="sol-core-mid" d="M-6-8H6V-6H8V4H4V8H-6V6H-8V-4H-6Z" />
+                    <path class="sol-core-light" d="M-4-6H4V-4H6V2H2V6H-4V4H-6V-2H-4Z" />
+                    <path class="sol-surface-pixel" d="M4-8H8V-4H4ZM-8 2H-4V6H-8ZM2 4H6V8H2Z" />
+                  </g>
+                  <g id="sol-tier-2-shape">
+                    <path class="body-pixel-outline" d="M-8-22H8V-18H16V-12H20V-4H22V8H18V16H10V20H-10V16H-18V8H-22V-8H-18V-16H-8Z" />
+                    <path class="sol-ring" d="M-8-18H8V-16H14V-10H18V6H14V12H8V16H-8V14H-14V8H-18V-8H-14V-14H-8Z" />
+                    <path class="sol-ring-light" d="M-14-10H-10V-14H-4V-16H4V-14H-4V-12H-10V-6H-14ZM10 6H14V10H10V14H4V16H-4V14H4V12H10Z" />
+                  </g>
+                  <g id="sol-tier-3-shape"><path class="sol-ray" d="M-4-28H4V-20H-4ZM-4 20H4V28H-4ZM-28-4H-20V4H-28ZM20-4H28V4H20ZM-24-24H-16V-16H-24ZM16-24H24V-16H16ZM-24 16H-16V24H-24ZM16 16H24V24H16Z" /></g>
+                  <g id="sol-tier-4-shape"><path class="sol-ray-outer" d="M-4-32H4V-28H-4ZM-4 28H4V32H-4ZM-32-4H-28V4H-32ZM28-4H32V4H28ZM-30-18H-26V-14H-30ZM26 14H30V18H26Z" /></g>
+                  <g id="sol-tier-5-shape"><path class="sol-ray-bright" d="M-26-34H-18V-30H-22V-26H-26ZM18-34H26V-26H22V-30H18ZM-34 18H-30V22H-26V26H-34ZM26 18H30V22H34V26H26Z" /></g>
+                  <g id="yol-tier-1-shape">
+                    <path class="body-pixel-outline" d="M-8-14H8V-12H12V-8H14V8H10V12H6V14H-8V12H-12V8H-14V-8H-12V-12H-8Z" />
+                    <path class="yol-core" d="M-8-10H8V-8H10V8H6V10H-8V8H-10V-8H-8Z" />
+                    <path class="yol-core-mid" d="M-6-8H4V-6H8V2H4V6H0V8H-6V6H-8V-6H-6Z" />
+                    <path class="yol-core-light" d="M-4-6H2V-4H6V0H2V4H-2V6H-6V2H-4Z" />
+                    <path class="yol-surface-pixel" d="M4-8H8V-4H4ZM-8 4H-4V8H-8ZM2 2H6V6H2Z" />
+                  </g>
+                  <g id="yol-tier-2-shape">
+                    <path class="body-pixel-outline" d="M-8-22H8V-18H16V-12H20V-4H22V8H18V16H10V20H-10V16H-18V8H-22V-8H-18V-16H-8Z" />
+                    <path class="yol-ring" d="M-8-18H8V-16H14V-10H18V8H14V14H8V18H-8V14H-14V8H-18V-8H-14V-14H-8Z" />
+                    <path class="yol-ring-light" d="M-14-10H-10V-14H-2V-16H6V-14H-2V-12H-10V-6H-14ZM8 8H14V12H8V16H0V18H-8V16H0V14H8Z" />
+                  </g>
+                  <g id="yol-tier-3-shape"><path class="yol-magic" d="M-4-28H4V-20H-4ZM-4 20H4V28H-4ZM-28-4H-20V4H-28ZM20-4H28V4H20ZM-24-24H-16V-16H-24ZM16 16H24V24H16ZM16-24H20V-20H16ZM-20 16H-16V20H-20Z" /></g>
+                  <g id="yol-tier-4-shape"><path class="yol-magic-outer" d="M-32-12H-28V-20H-20V-28H-12V-32H-4V-28H-12V-20H-20V-12H-28V-4H-32ZM12 12H20V4H28V12H32V20H24V28H16V32H8V28H12Z" /></g>
+                  <g id="yol-tier-5-shape"><path class="yol-magic-bright" d="M18-34H26V-30H30V-26H34V-18H30V-22H26V-26H18ZM-34 18H-30V22H-26V26H-18V30H-26V34H-34Z" /></g>
                 </defs>
 
                 <rect class="orbit-sky" width="840" height="520" />
                 <rect class="orbit-grid" x="20" y="20" width="800" height="480" fill="url(#orbit-grid-pattern)" />
+                <rect class="orbit-grid-major" x="20" y="20" width="800" height="480" fill="url(#orbit-major-pattern)" />
+                <path class="orbit-nebula nebula-left" d="M20 96H68V72H116V88H148V116H180V148H152V164H116V148H84V132H44V148H20Z" />
+                <path class="orbit-nebula nebula-right" d="M820 328H788V304H744V320H712V348H684V376H716V396H756V380H788V396H820Z" />
+                <g class="constellation-lines" aria-hidden="true">
+                  <path d="M72 88 132 124 188 82 250 112M604 92 656 128 724 88 782 124M112 402 176 366 232 408M612 408 672 372 736 412" />
+                </g>
                 <g class="star-field" aria-hidden="true">
                   <path d="M80 88H84V92H80ZM140 168H144V172H140ZM224 76H228V80H224ZM312 140H316V144H312ZM416 64H420V68H416ZM528 120H532V124H528ZM636 68H640V72H636ZM752 148H756V152H752ZM108 376H112V380H108ZM216 436H220V440H216ZM328 400H332V404H328ZM520 428H524V432H520ZM692 396H696V400H692ZM784 336H788V340H784Z" />
+                </g>
+                <g class="star-cross-field" aria-hidden="true">
+                  <path d="M92 52H96V60H104V64H96V72H92V64H84V60H92ZM548 54H552V62H560V66H552V74H548V66H540V62H548ZM770 216H774V224H782V228H774V236H770V228H762V224H770ZM286 446H290V454H298V458H290V466H286V458H278V454H286Z" />
                 </g>
 
                 <g class="orbit-plane" aria-hidden="true">
@@ -252,14 +284,20 @@
                 </g>
 
                 <g id="era-group">
+                  <path class="era-aura-outer" d="M392 168H448V172H472V180H488V192H502V208H510V232H514V288H510V312H502V328H488V340H472V348H448V352H392V348H368V340H352V328H338V312H330V288H326V232H330V208H338V192H352V180H368V172H392Z" />
                   <path class="era-shadow" d="M400 186H448V190H468V198H484V210H494V226H502V246H506V290H502V310H494V326H484V338H468V346H448V350H400V346H380V338H364V326H354V310H346V290H342V246H346V226H354V210H364V198H380V190H400Z" />
                   <path class="era-rim" d="M396 178H444V182H464V190H480V202H490V218H498V238H502V282H498V302H490V318H480V330H464V338H444V342H396V338H376V330H360V318H350V302H342V282H338V238H342V218H350V202H360V190H376V182H396Z" />
                   <g id="era-surface" class="era-surface" clip-path="url(#era-clip)">
                     <g id="era-surface-details">
                       <rect class="era-surface-base" x="338" y="178" width="164" height="164" />
                       <rect x="338" y="178" width="164" height="164" fill="url(#era-surface-pattern)" />
+                      <path class="era-ocean-depth" d="M342 230H366V218H390V226H414V214H438V226H462V218H486V238H498V274H482V286H458V278H434V290H406V282H382V294H354V282H342Z" />
                       <path class="era-ring" d="M396 194H444V198H464V206H480V222H488V242H492V278H488V298H480V314H464V322H444V326H396V322H376V314H360V298H352V278H348V242H352V222H360V206H376V198H396Z" />
+                      <path class="era-land-shadow" d="M372 218H396V226H408V242H400V254H380V266H360V250H364V230H372ZM452 202H472V214H484V234H472V246H460V262H444V250H436V230H444V214H452ZM428 278H448V286H468V302H460V318H440V330H420V314H412V298H420ZM372 290H392V302H404V318H388V330H368V318H356V302H364Z" />
                       <path class="era-land" d="M368 214H392V222H404V238H396V250H376V262H356V246H360V226H368ZM448 198H468V210H480V230H468V242H456V258H440V246H432V226H440V210H448ZM424 274H444V282H464V298H456V314H436V326H416V310H408V294H416ZM368 286H388V298H400V314H384V326H364V314H352V298H360Z" />
+                      <path class="era-land-highlight" d="M372 218H388V222H396V230H384V234H368V242H360V230H364V222H372ZM452 202H464V210H472V218H464V222H448V230H440V218H444V210H452ZM428 278H440V282H452V290H444V294H424V302H416V294H420V282H428Z" />
+                      <path class="era-clouds" d="M350 270H374V266H398V270H414V274H398V278H366V274H350ZM430 238H446V234H470V238H486V242H470V246H438V242H430ZM382 306H398V302H418V306H430V310H414V314H390V310H382Z" />
+                      <path class="era-city-lights" d="M376 238H380V242H376ZM388 246H392V250H388ZM452 222H456V226H452ZM464 238H468V242H464ZM432 298H436V302H432ZM380 306H384V310H380Z" />
                       <path class="era-rune-lines" d="M420 182V206M420 314V338M342 260H366M474 260H498M364 204L380 220M460 300L476 316M364 316L380 300M460 220L476 204" />
                     </g>
                   </g>
@@ -349,6 +387,13 @@
                   <rect class="horizon-sky-band sky-band-4" y="132" width="840" height="44" />
                   <path class="horizon-dither" d="M0 40H840V44H0ZM0 84H840V88H0ZM0 128H840V132H0ZM12 36H16V40H12ZM40 36H44V40H40ZM68 36H72V40H68ZM96 36H100V40H96ZM124 36H128V40H124ZM152 36H156V40H152ZM180 36H184V40H180ZM208 36H212V40H208ZM236 36H240V40H236ZM264 36H268V40H264ZM292 36H296V40H292ZM320 36H324V40H320ZM348 36H352V40H348ZM376 36H380V40H376ZM404 36H408V40H404ZM432 36H436V40H432ZM460 36H464V40H460ZM488 36H492V40H488ZM516 36H520V40H516ZM544 36H548V40H544ZM572 36H576V40H572ZM600 36H604V40H600ZM628 36H632V40H628ZM656 36H660V40H656ZM684 36H688V40H684ZM712 36H716V40H712ZM740 36H744V40H740ZM768 36H772V40H768ZM796 36H800V40H796ZM824 36H828V40H824Z" />
                   <g class="horizon-stars" aria-hidden="true"><path d="M72 24H76V28H72ZM160 68H164V72H160ZM260 32H264V36H260ZM364 76H368V80H364ZM472 20H476V24H472ZM576 64H580V68H576ZM676 28H680V32H676ZM764 72H768V76H764Z" /></g>
+                  <path class="horizon-nebula" d="M0 84H52V68H92V76H128V92H160V108H132V116H92V108H52V120H0ZM840 48H796V36H756V52H728V68H696V88H728V96H768V84H808V96H840Z" />
+                  <g class="horizon-constellations" aria-hidden="true">
+                    <path d="M64 36 120 64 180 28 240 60M548 40 608 72 672 32 736 68M300 92 356 58 416 88" />
+                  </g>
+                  <g class="horizon-star-crosses" aria-hidden="true">
+                    <path d="M212 16H216V24H224V28H216V36H212V28H204V24H212ZM508 76H512V84H520V88H512V96H508V88H500V84H508ZM784 12H788V20H796V24H788V32H784V24H776V20H784Z" />
+                  </g>
 
                   <g id="horizon-convection-field" class="horizon-convection-field" aria-hidden="true">
                     <path class="horizon-convection-band band-a" d="M0 36H96V24H192V52H288V32H384V60H480V28H576V48H672V20H840V64H744V76H648V52H552V80H456V56H360V88H264V64H168V84H72V68H0Z" />
@@ -368,15 +413,23 @@
                   </g>
 
                   <path class="mountain-back" d="M0 176V152H52L84 124 116 152H152L196 112 240 152H284L320 132 356 152H400L448 108 496 152H544L580 128 616 152H660L704 116 748 152H792L816 136 840 148V176Z" />
+                  <path class="mountain-back-light" d="M68 140H76V132H84V124H92V136H100V144H116V152H100V148H84V144H68ZM180 128H188V120H196V112H204V124H212V132H220V140H240V152H224V144H208V136H196V132H180ZM432 124H440V116H448V108H456V120H464V128H472V136H480V144H496V152H480V148H464V140H448V132H432ZM688 132H696V124H704V116H712V128H720V136H728V144H748V152H732V148H716V140H704V136H688Z" />
                   <path class="mountain-front" d="M0 176V160H72L104 144 136 160H216L252 136 288 160H360L396 148 432 160H520L560 136 600 160H684L720 140 756 160H840V176Z" />
+                  <path class="mountain-front-light" d="M88 152H96V148H104V144H112V152H120V156H136V160H120V158H104V156H88ZM236 148H244V140H252V136H260V144H268V152H288V160H272V156H256V152H236ZM544 148H552V140H560V136H568V144H576V152H600V160H580V156H564V152H544ZM704 152H712V144H720V140H728V148H736V156H756V160H740V158H724V156H704Z" />
                   <g class="horizon-ruins" aria-hidden="true">
                     <path d="M96 176V144H104V132H112V144H120V176ZM104 148H112V156H104ZM692 176V136H700V120H708V136H716V176ZM700 144H708V152H700Z" fill-rule="evenodd" />
                     <path d="M388 176V152H396V144H404V152H412V176ZM428 176V148H436V140H444V148H452V176ZM404 160H436V168H404Z" />
+                    <path class="ruin-highlight" d="M100 144H104V136H108V144H112V148H100ZM696 136H700V124H704V136H708V140H696ZM392 152H396V148H400V152H404V156H392ZM432 148H436V144H440V148H444V152H432Z" />
+                    <path class="ruin-window" d="M104 160H112V168H104ZM700 156H708V168H700ZM396 160H404V168H396ZM436 156H444V164H436Z" />
                   </g>
                   <path class="forest-line" d="M0 176H840V208H0ZM24 172L36 148 48 172ZM56 176L72 144 88 176ZM752 176L768 144 784 176ZM792 176L808 148 824 176Z" />
                   <path class="horizon-line" d="M0 176H840V180H0Z" />
                   <rect class="horizon-ground" y="208" width="840" height="72" />
                   <path class="horizon-ground-dither" d="M0 216H840V220H0ZM0 232H840V236H0ZM0 248H840V252H0Z" />
+                  <path class="horizon-terrace" d="M0 208H840V216H760V224H640V220H540V228H300V220H200V224H80V216H0Z" />
+                  <g class="horizon-runes" aria-hidden="true">
+                    <path d="M112 232H128V248H112ZM116 236H124V244H116ZM264 236H280V240H274V248H270V240H264ZM560 236H576V252H572V240H564V252H560ZM712 232H728V248H724V240H716V248H712Z" fill-rule="evenodd" />
+                  </g>
                   <text id="horizon-left-label" class="horizon-compass-label" x="40" y="268">W · WESTEN</text>
                   <text id="horizon-center-label" class="horizon-compass-label is-center" x="420" y="268" text-anchor="middle">N · NORDEN</text>
                   <text id="horizon-right-label" class="horizon-compass-label" x="800" y="268" text-anchor="end">O · OSTEN</text>
@@ -399,7 +452,7 @@
               </div>
               <div class="readout">
                 <span>Darstellungszeit</span>
-                <strong id="presentation-time">0:00 / 3:00</strong>
+                <strong id="presentation-time">0:00 / 6:00</strong>
               </div>
             </div>
           </section>
@@ -455,12 +508,12 @@
               <div class="section-seal" aria-hidden="true"><svg><use href="#icon-timeline"></use></svg><span>04</span></div>
               <div>
                 <p class="panel-index">04 · GROSSZYKLUS-CHRONIK</p>
-                <h2 id="timeline-title">Zeitpfad der Gestirne</h2>
+                <h2 id="timeline-title">Sechs-Minuten-Zeitpfad</h2>
               </div>
             </div>
             <p>
               Abschnittsbreiten zeigen die Erklärzeit, nicht das reale Verhältnis der Um. Die
-              Konvektion erhält je nach Zeitfassung 16 oder 32 Sekunden.
+              Konvektion erhält in der sechsminütigen Chronik 32 Sekunden.
             </p>
           </div>
 
@@ -472,7 +525,7 @@
             class="time-slider"
             type="range"
             min="0"
-            max="180000"
+            max="360000"
             step="50"
             value="0"
             aria-valuetext="0 Minuten 0 Sekunden"
@@ -484,24 +537,17 @@
               <span id="play-label">Abspielen</span>
             </button>
             <button id="restart" class="button button-quiet" type="button"><svg class="button-icon" aria-hidden="true"><use href="#icon-restart"></use></svg>Zum Anfang</button>
-            <label class="inline-field" for="duration-mode">
-              Zeitfassung
-              <select id="duration-mode" class="field-control field-compact">
-                <option value="180000">3 Minuten</option>
-                <option value="360000">6 Minuten</option>
-              </select>
-            </label>
             <label class="inline-field" for="playback-rate">
               Tempo
               <select id="playback-rate" class="field-control field-compact">
-                <option value="1">1× · 3:00</option>
-                <option value="1.5">1,5× · 2:00</option>
-                <option value="2">2× · 1:30</option>
-                <option value="4">4× · 0:45</option>
+                <option value="1">1× · 6:00</option>
+                <option value="1.5">1,5× · 4:00</option>
+                <option value="2">2× · 3:00</option>
+                <option value="4">4× · 1:30</option>
               </select>
             </label>
             <div class="timeline-position" aria-hidden="true">
-              <span id="timeline-now">0:00</span><span id="timeline-total">3:00</span>
+              <span id="timeline-now">0:00</span><span id="timeline-total">6:00</span>
             </div>
           </div>
         </section>
@@ -533,7 +579,7 @@
               <h3>Bewusste Zeitverzerrung</h3>
               <p>
                 Die kurzen 400 Um der Konvektion würden linear kaum sichtbar. Für Verständlichkeit
-                erhalten sie 16 Sekunden in der kurzen und 32 Sekunden in der langen Zeitfassung.
+                erhält sie 32 Sekunden in der sechsminütigen Zeitfassung.
               </p>
             </article>
           </div>

@@ -10,7 +10,7 @@ sich auf vollständig sichtbaren, schematisch elliptischen Bahnen. Ein zweites P
 projiziert denselben Zustand als lokalen Horizontverlauf nach Norden, Osten, Süden oder Westen.
 Beide Ansichten stammen aus demselben deterministischen Simulationssnapshot.
 
-Der 70.000-Um-Großzyklus kann auf drei oder sechs Minuten verdichtet werden. Alle 18
+Der 70.000-Um-Großzyklus wird auf sechs Minuten verdichtet. Alle 18
 dokumentierten Phasenvorlagen kommen in jedem erzeugten Szenario mindestens einmal vor;
 weitere Wiederholungen, Reihenfolge, Geschwindigkeiten und S-Int-Verläufe werden aus einem
 reproduzierbaren Seed erzeugt.
@@ -28,7 +28,7 @@ Laufzeitabhängigkeiten.
 
 ## Bedienung
 
-- Mit **Abspielen** läuft der vollständige Erklärzyklus wahlweise in 3:00 oder 6:00 Minuten.
+- Mit **Abspielen** läuft der vollständige Erklärzyklus in 6:00 Minuten.
 - Das **Archiv der Phasen** springt zur nächsten Instanz einer ausgewählten Vorlage.
 - Die 18 **Zyklus-Runen** erlauben denselben Sprung direkt über ein Siegel.
 - Das klickbare Chronikband und der Zeitregler erlauben direkte Zeitsprünge.
@@ -122,11 +122,10 @@ Kanonische Eckwerte:
 1 Konvektion = 400 Um
 ```
 
-Eine lineare Abbildung würde der Konvektion in einem dreiminütigen Film nur rund eine Sekunde
-geben. Die Simulation nutzt deshalb eine semantische, stückweise Zeitabbildung: In der
-3-Minuten-Fassung sind 16 Sekunden, in der 6-Minuten-Fassung 32 Sekunden für die Konvektion
-reserviert. Die aktuelle Era-Zeit wird innerhalb jedes Abschnitts weiterhin korrekt zwischen
-dessen Um-Grenzen interpoliert.
+Eine lineare Abbildung würde der Konvektion selbst in einer sechsminütigen Chronik nur rund zwei
+Sekunden geben. Die Simulation nutzt deshalb eine semantische, stückweise Zeitabbildung und
+reserviert 32 Sekunden für die Konvektion. Die aktuelle Era-Zeit wird innerhalb jedes Abschnitts
+weiterhin korrekt zwischen dessen Um-Grenzen interpoliert.
 
 Die konkrete Phasenfolge ist kein kanonisches historisches Datum. Sie dient als deterministische
 Beispielsimulation.
@@ -187,9 +186,9 @@ node tests/smoke.cjs
 node tests/visual-contract.cjs
 ```
 
-Der Smoke-Test prüft unter anderem alle 18 Vorlagen, Seed-Reproduzierbarkeit, beide
-Zeitfassungen, Theme-Speicherung, Kompassklicks und -tastatursteuerung, Zustandsinvarianz bei
-Richtungswechseln sowie mindestens 200 Geometriesnapshots je Zeitfassung. Dabei werden endliche
+Der Smoke-Test prüft unter anderem alle 18 Vorlagen, Seed-Reproduzierbarkeit, die sechsminütige
+Zeitfassung, Theme-Speicherung, Kompassklicks und -tastatursteuerung, Zustandsinvarianz bei
+Richtungswechseln sowie mindestens 200 Geometriesnapshots. Dabei werden endliche
 Koordinaten, S-Int-Grenzen, SVG-Grenzen und der Sicherheitsabstand zu Era kontrolliert.
 
 Der visuelle Vertrag liest HTML, CSS und JavaScript statisch. Er untersagt unter anderem

@@ -163,7 +163,6 @@
     playLabel: document.querySelector("#play-label"),
     restart: document.querySelector("#restart"),
     playbackRate: document.querySelector("#playback-rate"),
-    durationMode: document.querySelector("#duration-mode"),
     timelineNow: document.querySelector("#timeline-now"),
     timelineTotal: document.querySelector("#timeline-total"),
     themeToggle: document.querySelector("#theme-toggle"),
@@ -1236,10 +1235,7 @@
     elements.phaseCount.textContent = String(state.scenario.segments.length);
     elements.repeatCount.textContent = String(state.scenario.repeatTotal);
     elements.timeSlider.setAttribute("max", String(state.presentationMs));
-    elements.durationMode.value = String(state.presentationMs);
-    elements.timelineTitle.textContent = state.presentationMs === config.longPresentationMs
-      ? "Sechs-Minuten-Zeitlinie"
-      : "Drei-Minuten-Zeitlinie";
+    elements.timelineTitle.textContent = "Sechs-Minuten-Zeitpfad";
     buildTimeline();
     updatePlaybackLabels();
     render(state.currentMs);
@@ -1432,16 +1428,6 @@
       state.playbackRate = Number(elements.playbackRate.value) || 1;
       state.lastFrameAt = performance.now();
       announce(`Wiedergabetempo ${String(state.playbackRate).replace(".", ",")} fach.`);
-    });
-    elements.durationMode.addEventListener("change", () => {
-      const requested = Number(elements.durationMode.value);
-      const nextDuration = requested === config.longPresentationMs ? requested : config.presentationMs;
-      const relativePosition = state.presentationMs > 0 ? state.currentMs / state.presentationMs : 0;
-      state.presentationMs = nextDuration;
-      state.currentMs = relativePosition * nextDuration;
-      state.lastRenderedSegment = -1;
-      loadScenario(state.seed, { announce: false });
-      announce(`${nextDuration / 60000}-Minuten-Zeitfassung aktiviert.`);
     });
     elements.themeToggle.addEventListener("click", () => {
       const nextTheme = state.theme === "dark" ? "light" : "dark";

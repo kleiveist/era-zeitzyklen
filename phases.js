@@ -3,7 +3,7 @@
  *
  * Kanonisch sind: Namen, beobachtbare Richtungen, Einheiten, der 70.000-Um-
  * Großzyklus sowie die 400-Um-Konvektion. Zahlenbereiche für Geschwindigkeit,
- * Intensität und Einzeldauer dienen ausschließlich der dreiminütigen Darstellung.
+ * Intensität und Einzeldauer dienen ausschließlich der sechsminütigen Darstellung.
  */
 (function defineEraPhases(global) {
   "use strict";
@@ -12,9 +12,8 @@
     totalUm: 70000,
     regularUm: 69600,
     convectionDurationUm: 400,
-    presentationMs: 180000,
-    longPresentationMs: 360000,
-    convectionPresentationMs: 16000,
+    presentationMs: 360000,
+    convectionPresentationMs: 32000,
     minRepeatedTemplates: 12,
     maxRepeatedTemplates: 18,
     schemaVersion: 1,

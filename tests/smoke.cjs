@@ -308,7 +308,6 @@ const directionButtons = ["north", "east", "south", "west"].map((direction) => {
 elementFor("#seed-input").value = "ERA-3500";
 elementFor("#playback-rate").value = "1";
 elementFor("#time-slider").value = "0";
-elementFor("#duration-mode").value = "180000";
 
 require("../phases.js");
 require("../app.js");
@@ -339,7 +338,6 @@ for (const functionName of [
 const track = elementFor("#phase-track");
 const sigils = elementFor("#phase-sigils");
 const slider = elementFor("#time-slider");
-const durationMode = elementFor("#duration-mode");
 
 assert.equal(ERA_PHASES.templates.length, 18, "exakt 18 kanonische Phasenvorlagen");
 assert.equal(
@@ -360,13 +358,13 @@ assert.ok(ERA_PHASES.templates.every((template) => /^icon-/.test(template.icon))
 const firstSchedule = track.children.map((button) => button.getAttribute("aria-label"));
 assert.equal(
   track.children.reduce((sum, button) => sum + Number(button.style.getPropertyValue("--segment-grow")), 0),
-  180000,
-  "Zeitlinie umfasst exakt drei Minuten",
+  360000,
+  "Zeitlinie umfasst exakt sechs Minuten",
 );
 assert.equal(
   Number(track.children.at(-1).style.getPropertyValue("--segment-grow")),
-  16000,
-  "Konvektion erhält die didaktisch vergrößerten 16 Sekunden",
+  32000,
+  "Konvektion erhält die didaktisch vergrößerten 32 Sekunden",
 );
 assert.equal(Number(elementFor("#phase-count").textContent), track.children.length, "Phasenzähler entspricht der Zeitlinie");
 assert.match(elementFor("#era-time").textContent, /^Mohn 0 · Dir 0 · Tan 0 · Um 0$/);
@@ -499,7 +497,7 @@ assert.equal(storage.get("era-theme"), "light", "Theme-Präferenz wird gespeiche
 elementFor("#theme-toggle").emit("click");
 assert.equal(documentElement.dataset.theme, "dark", "Theme-Schalter kehrt zur dunklen Chronik zurück");
 
-slider.value = "180000";
+slider.value = "360000";
 slider.emit("input");
 assert.match(elementFor("#era-time").textContent, /^Mohn 10 · Dir 0 · Tan 0 · Um 0$/);
 assert.equal(elementFor("#active-phase-name").textContent, "Konvektion");
@@ -526,12 +524,10 @@ assert.notDeepEqual(
 assert.match(elementFor("#era-time").textContent, /^Mohn 10 · Dir 0 · Tan 0 · Um 0$/);
 assertDirection(preservedDirection, "Seedwechsel bewahrt die Blickrichtung");
 
-durationMode.value = "360000";
-durationMode.emit("change");
 assert.equal(
   track.children.reduce((sum, button) => sum + Number(button.style.getPropertyValue("--segment-grow")), 0),
   360000,
-  "lange Zeitfassung umfasst exakt sechs Minuten",
+  "Zeitfassung umfasst exakt sechs Minuten",
 );
 assert.equal(
   Number(track.children.at(-1).style.getPropertyValue("--segment-grow")),
@@ -540,7 +536,7 @@ assert.equal(
 );
 assert.equal(slider.getAttribute("max"), "360000");
 assert.equal(elementFor("#timeline-total").textContent, "6:00");
-assertDirection(preservedDirection, "Zeitfassungswechsel bewahrt die Blickrichtung");
+assert.equal(contract.getState().presentationMs, 360000, "ausschließlich sechs Minuten sind aktiv");
 
 const orbitGeometry = contract.ORBIT_GEOMETRY;
 const horizonGeometry = contract.HORIZON_GEOMETRY;
@@ -576,20 +572,17 @@ function assertClearance(snapshot, bodyName, context) {
 }
 
 let sampledSnapshots = 0;
-for (const presentationMs of [180000, 360000]) {
-  durationMode.value = String(presentationMs);
-  durationMode.emit("change");
-  assert.equal(contract.getState().presentationMs, presentationMs, `${presentationMs} ms sind im State aktiv`);
-  for (let index = 0; index < 200; index += 1) {
-    const ms = (presentationMs * index) / 199;
-    const snapshot = contract.getSnapshot(ms);
-    assert.equal(snapshot.ms, ms, `${presentationMs} ms, Stichprobe ${index}: Zeitpunkt bleibt exakt`);
-    assertClearance(snapshot, "sol", `${presentationMs} ms, Stichprobe ${index}, Sol`);
-    assertClearance(snapshot, "yol", `${presentationMs} ms, Stichprobe ${index}, Yol`);
-    sampledSnapshots += 1;
-  }
+const presentationMs = 360000;
+assert.equal(contract.getState().presentationMs, presentationMs, "360000 ms sind im State aktiv");
+for (let index = 0; index < 200; index += 1) {
+  const ms = (presentationMs * index) / 199;
+  const snapshot = contract.getSnapshot(ms);
+  assert.equal(snapshot.ms, ms, `${presentationMs} ms, Stichprobe ${index}: Zeitpunkt bleibt exakt`);
+  assertClearance(snapshot, "sol", `${presentationMs} ms, Stichprobe ${index}, Sol`);
+  assertClearance(snapshot, "yol", `${presentationMs} ms, Stichprobe ${index}, Yol`);
+  sampledSnapshots += 1;
 }
-assert.equal(sampledSnapshots, 400, "mindestens 200 Snapshots je Zeitfassung geprüft");
+assert.equal(sampledSnapshots, 200, "mindestens 200 Snapshots der Zeitfassung geprüft");
 
 const maxVisualRadius = orbitGeometry.maxVisualBodyRadius;
 const correctedCenter = pointOf(
@@ -608,8 +601,6 @@ assert.ok(
   "Clearance korrigiert einen maximal großen Körper defensiv",
 );
 
-durationMode.value = "180000";
-durationMode.emit("change");
 const geometrySnapshot = contract.getSnapshot(54000);
 for (const bodyName of ["sol", "yol"]) {
   const referencePoint = contract.getOrbitPoint(geometrySnapshot, bodyName);
@@ -809,7 +800,7 @@ assert.equal(
   "Era-Oberfläche und Horizontprojektion verwenden denselben Rotationswert",
 );
 
-slider.value = "180000";
+slider.value = "360000";
 slider.emit("input");
 const convectionFrame = contract.getLastRenderFrame();
 assert.equal(convectionFrame.snapshot.template.id, "convection", "Endzustand ist die Konvektion");

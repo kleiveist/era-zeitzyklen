@@ -55,6 +55,11 @@ for (const file of ["index.html", "styles.css", "app.js", "phases.js"]) {
   reject(file, /\bTODO\b/i, "keine TODOs oder halbfertigen Produktionspfade");
 }
 
+reject("index.html", /\bid\s*=\s*["']duration-mode["']/i, "keine alternative Drei-Minuten-Zeitfassung");
+reject("phases.js", /\blongPresentationMs\b/, "keine zweite Präsentationsdauer");
+requireMatch("phases.js", /\bpresentationMs\s*:\s*360000\b/, "die Chronik ist fest auf sechs Minuten eingestellt");
+requireMatch("phases.js", /\bconvectionPresentationMs\s*:\s*32000\b/, "die Konvektion erhält 32 Sekunden");
+
 reject(
   "index.html",
   /<(?:script|link)\b[^>]*(?:src|href)\s*=\s*["']https?:\/\//i,
@@ -96,6 +101,19 @@ for (const id of [
   "horizon-yol-body",
 ]) {
   openingTag("index.html", id);
+}
+
+for (const className of [
+  "orbit-nebula",
+  "star-cross-field",
+  "era-aura-outer",
+  "era-ocean-depth",
+  "horizon-nebula",
+  "horizon-star-crosses",
+  "mountain-back-light",
+  "horizon-runes",
+]) {
+  requireMatch("index.html", new RegExp(`\\bclass\\s*=\\s*["'][^"']*\\b${className}\\b`, "i"), `${className} gehört zur hochauflösenden Pixelkulisse`);
 }
 
 for (const name of [
