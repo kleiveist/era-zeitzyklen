@@ -547,12 +547,13 @@ assert.equal(elementFor("#era-latitude-indicator").getAttribute("data-latitude-d
 assert.equal(elementFor("#horizon-view").getAttribute("data-latitude-degrees"), "30");
 assert.equal(elementFor("#horizon-view").getAttribute("data-biome"), "temperate", "30 Grad aktivieren die Tannenlandschaft");
 assert.equal(elementFor("#orbit-view").getAttribute("data-horizon-biome"), "temperate", "Orbitkarte protokolliert das gewählte Tannenbiom");
-assert.match(elementFor("#horizon-title").textContent, /30° Gemäßigtes Tannenland/);
+assert.equal(elementFor("#horizon-title").textContent, "Horizontverlauf · Westen · 30° Gemäßigtes");
 
 latitudeButtons[2].emit("click");
 assertLatitude(60, "Klick aktiviert die äquatornahe Grenzstufe");
 assert.equal(storage.get("era-horizon-latitude"), "60", "60 Grad werden gespeichert");
 assert.equal(elementFor("#horizon-view").getAttribute("data-biome"), "desert", "60 Grad aktivieren die Wüstenlandschaft");
+assert.equal(elementFor("#horizon-title").textContent, "Horizontverlauf · Westen · 60° Wüste");
 const ringRadius60 = Number(elementFor("#era-latitude-ring").getAttribute("r"));
 assert.ok(ringRadius60 > ringRadius30, "der ERA-Breitenring wächst logisch bis 60 Grad");
 
@@ -573,6 +574,7 @@ assertLatitude(60, "Ende springt zur Grenzstufe");
 latitudeButtons[0].emit("click");
 assertLatitude(0, "Test setzt die bisherige Polansicht wieder her");
 assert.equal(elementFor("#horizon-view").getAttribute("data-biome"), "polar", "0 Grad stellen die polare Eiswelt wieder her");
+assert.equal(elementFor("#horizon-title").textContent, "Horizontverlauf · Westen · 0° Polare Eiswelt");
 
 const preservedDirection = "west";
 slider.value = "68000";

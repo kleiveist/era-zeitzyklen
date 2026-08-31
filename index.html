@@ -339,11 +339,7 @@
                   <path id="direction-path-yol" class="direction-arc direction-yol" d="M660 260A240 158 0 0 0 180 260" marker-end="url(#yol-direction-arrow)" />
                 </g>
 
-                <g id="convection-field" class="convection-field" aria-hidden="true">
-                  <path class="convection-band convection-band-a" d="M92 180H180V164H268V188H356V148H444V172H532V136H620V164H748V188H660V204H572V180H484V220H396V196H308V228H220V204H92Z" />
-                  <path class="convection-band convection-band-b" d="M108 324H196V300H284V332H372V292H460V316H548V276H636V304H732V328H644V344H556V324H468V356H380V332H292V364H204V340H108Z" />
-                  <path class="convection-shard" d="M176 108H204V124H220V152H192V140H164V120H176ZM620 88H652V108H668V132H640V124H612V104H620ZM696 364H724V380H740V408H712V396H684V376H696Z" />
-                </g>
+                <image id="convection-field" class="convection-artwork convection-field" href="assets/images/orbit-convection-hd.png" x="0" y="0" width="840" height="520" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
 
                 <g id="era-group">
                   <path class="era-aura-outer" d="M392 168H448V172H472V180H488V192H502V208H510V232H514V288H510V312H502V328H488V340H472V348H448V352H392V348H368V340H352V328H338V312H330V288H326V232H330V208H338V192H352V180H368V172H392Z" />
@@ -446,7 +442,7 @@
               <div class="horizon-heading">
                 <div>
                   <p class="panel-index">LOKALE SICHTLINIE</p>
-                  <h3 id="horizon-title">Horizontverlauf · Blick nach Norden</h3>
+                  <h3 id="horizon-title">Horizontverlauf · Norden · 0° Polare Eiswelt</h3>
                   <p>Dieselben Positionen, aus Eras rotierender Blickrichtung projiziert.</p>
                 </div>
                 <div
@@ -494,17 +490,15 @@
                 >
                   <title id="horizon-svg-title">Horizontverlauf mit Blick nach Norden</title>
                   <desc id="horizon-description">
-                    Schematische Projektion derselben Sol-, Yol- und ZEHS-Positionen aus der gewählten lokalen Blickrichtung am Polstand auf Era.
+                    Gestaffelte Projektion derselben Sol-, Yol- und ZEHS-Positionen zwischen fernem Himmel, transparenten Pixelwolken und dem Vordergrund der gewählten Landschaft.
                   </desc>
 
-                  <rect class="horizon-sky-band sky-band-1" width="840" height="44" />
-                  <rect class="horizon-sky-band sky-band-2" y="44" width="840" height="44" />
-                  <rect class="horizon-sky-band sky-band-3" y="88" width="840" height="44" />
-                  <rect class="horizon-sky-band sky-band-4" y="132" width="840" height="44" />
-                  <image class="horizon-artwork horizon-artwork-polar" href="assets/images/horizon-polar-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
-                  <image class="horizon-artwork horizon-artwork-temperate" href="assets/images/horizon-temperate-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
-                  <image class="horizon-artwork horizon-artwork-desert" href="assets/images/horizon-desert-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <rect class="horizon-sky-base" width="840" height="252" />
+                  <image class="horizon-artwork horizon-artwork-back horizon-artwork-polar" href="assets/images/horizon-polar-hd1.png" x="0" y="0" width="840" height="400" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-back horizon-artwork-temperate" href="assets/images/horizon-temperate-hd1.png" x="0" y="0" width="840" height="460" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-back horizon-artwork-desert" href="assets/images/horizon-desert-hd1.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
                   <rect class="horizon-artwork-tone" width="840" height="252" aria-hidden="true" />
+                  <image class="horizon-atmosphere horizon-stars-artwork" href="assets/images/horizon-stars-pixel-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
                   <path class="horizon-dither" d="M0 40H840V44H0ZM0 84H840V88H0ZM0 128H840V132H0ZM12 36H16V40H12ZM40 36H44V40H40ZM68 36H72V40H68ZM96 36H100V40H96ZM124 36H128V40H124ZM152 36H156V40H152ZM180 36H184V40H180ZM208 36H212V40H208ZM236 36H240V40H236ZM264 36H268V40H264ZM292 36H296V40H292ZM320 36H324V40H320ZM348 36H352V40H348ZM376 36H380V40H376ZM404 36H408V40H404ZM432 36H436V40H432ZM460 36H464V40H460ZM488 36H492V40H488ZM516 36H520V40H516ZM544 36H548V40H544ZM572 36H576V40H572ZM600 36H604V40H600ZM628 36H632V40H628ZM656 36H660V40H656ZM684 36H688V40H684ZM712 36H716V40H712ZM740 36H744V40H740ZM768 36H772V40H768ZM796 36H800V40H796ZM824 36H828V40H824Z" />
                   <g class="horizon-stars" aria-hidden="true"><path d="M72 24H76V28H72ZM160 68H164V72H160ZM260 32H264V36H260ZM364 76H368V80H364ZM472 20H476V24H472ZM576 64H580V68H576ZM676 28H680V32H676ZM764 72H768V76H764Z" /></g>
                   <path class="horizon-nebula" d="M0 84H52V68H92V76H128V92H160V108H132V116H92V108H52V120H0ZM840 48H796V36H756V52H728V68H696V88H728V96H768V84H808V96H840Z" />
@@ -530,11 +524,7 @@
                     <path class="desert-sky-sparks" d="M52 84H60V88H52ZM144 72H152V76H144ZM268 88H276V92H268ZM388 68H396V72H388ZM516 84H524V88H516ZM628 72H636V76H628ZM748 88H756V92H748Z" />
                   </g>
 
-                  <g id="horizon-convection-field" class="horizon-convection-field" aria-hidden="true">
-                    <path class="horizon-convection-band band-a" d="M0 36H96V24H192V52H288V32H384V60H480V28H576V48H672V20H840V64H744V76H648V52H552V80H456V56H360V88H264V64H168V84H72V68H0Z" />
-                    <path class="horizon-convection-band band-b" d="M0 104H120V88H240V116H360V92H480V124H600V96H720V112H840V148H720V132H600V156H480V140H360V160H240V136H120V152H0Z" />
-                    <path class="horizon-shards" d="M132 52H148V60H156V76H140V84H124V68H132ZM684 40H704V52H712V68H696V76H676V60H684ZM396 92H412V100H424V116H404V124H388V108H396Z" />
-                  </g>
+                  <image id="horizon-convection-field" class="convection-artwork horizon-convection-field" href="assets/images/horizon-convection-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
 
                   <g id="horizon-zehs-star" class="zehs horizon-zehs-star" transform="translate(680 124)" aria-hidden="false">
                     <use href="#zehs-star-shape" transform="scale(.72)" />
@@ -554,6 +544,12 @@
                     <image class="celestial-artwork body-artwork horizon-body-artwork" href="assets/images/yol-star-hd.png" x="-32" y="-32" width="64" height="64" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
                     <text class="horizon-body-label" x="0" y="48" text-anchor="middle">YOL</text>
                   </g>
+
+                  <image class="horizon-atmosphere horizon-clouds-artwork" href="assets/images/horizon-clouds-pixel-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+
+                  <image class="horizon-artwork horizon-artwork-front horizon-artwork-polar" href="assets/images/horizon-polar-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-front horizon-artwork-temperate" href="assets/images/horizon-temperate-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-front horizon-artwork-desert" href="assets/images/horizon-desert-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
 
                   <g id="horizon-biome-polar" class="biome-layer biome-polar" data-biome="polar" aria-hidden="true">
                     <path class="mountain-back polar-mountain-back" d="M0 176V150H44L76 126 96 138 128 108 164 146H204L244 118 280 148H332L372 104 416 148H464L504 120 544 148H596L636 110 680 146H728L768 122 804 148H840V176Z" />

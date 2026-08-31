@@ -24,6 +24,10 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
   --wood-950: #03050e;
   --wood-900: #070a18;
   --wood-800: #11172c;
@@ -1412,7 +1416,18 @@ main {
 
 .is-convection .convection-field,
 .is-convection .horizon-convection-field {
-  opacity: 1;
+  opacity: 0.78;
+}
+
+.convection-artwork {
+  pointer-events: none;
+  image-rendering: auto;
+  mix-blend-mode: screen;
+}
+
+:root[data-theme="light"] .is-convection .convection-artwork {
+  opacity: 0.58;
+  mix-blend-mode: multiply;
 }
 
 .convection-band-a,
@@ -1584,6 +1599,10 @@ main {
 
 .sky-band-4 {
   fill: var(--sky-4);
+}
+
+.horizon-sky-base {
+  fill: var(--sky-2);
 }
 
 .horizon-dither,
@@ -3555,6 +3574,20 @@ footer {
   display: none;
 }
 
+.horizon-atmosphere {
+  pointer-events: none;
+  image-rendering: pixelated;
+  mix-blend-mode: screen;
+}
+
+.horizon-stars-artwork {
+  opacity: 0.26;
+}
+
+.horizon-clouds-artwork {
+  opacity: 0.12;
+}
+
 #horizon-view[data-biome="polar"] .horizon-artwork-polar,
 #horizon-view[data-biome="temperate"] .horizon-artwork-temperate,
 #horizon-view[data-biome="desert"] .horizon-artwork-desert {
@@ -3577,20 +3610,26 @@ footer {
   fill: rgb(255 244 214 / 8%);
 }
 
-#horizon-view .biome-sky,
+#horizon-view[data-biome] .biome-sky,
 #horizon-view .biome-layer > :not(.biome-name-label) {
   display: none;
 }
 
 .horizon-dither,
 .horizon-nebula,
-.horizon-constellations {
+.horizon-constellations,
+.horizon-stars,
+.horizon-star-crosses,
+.horizon-line {
   display: none;
 }
 
-.horizon-stars,
-.horizon-star-crosses {
-  opacity: 0.38;
+:root[data-theme="light"] .horizon-stars-artwork {
+  opacity: 0.18;
+}
+
+:root[data-theme="light"] .horizon-clouds-artwork {
+  opacity: 0.08;
 }
 
 .biome-name-label {
@@ -3711,4 +3750,70 @@ footer {
     font-size: 16px;
     line-height: 18px;
   }
+}
+
+/* Softened instrument geometry */
+
+.panel {
+  border-radius: var(--radius-lg);
+}
+
+.header-facts,
+.explanation-grid,
+.phase-track,
+.sky-stage,
+.horizon-stage,
+.horizon-section,
+.horizon-latitude-panel,
+.horizon-direction-group,
+.zehs-parameters {
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+.skip-link,
+.theme-toggle,
+.button,
+.direction-button,
+.latitude-button,
+.field-control,
+.phase-sigil,
+.phase-card,
+.category-label,
+.occurrence-label,
+.state-badge,
+.active-phase-sigil,
+.convection-message,
+.zehs-context-note,
+.phase-segment,
+.explanation article {
+  border-radius: var(--radius-sm);
+}
+
+.brand-sigil,
+.section-seal,
+.theme-toggle-icon,
+.explanation-icon,
+.zehs-instrument-heading img,
+.zehs-instrument-heading svg {
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+.section-seal span,
+.phase-sigil.is-active::after,
+.hero-runes i,
+.meter-track span {
+  border-radius: var(--radius-xs);
+}
+
+.meter-track,
+.time-slider::-webkit-slider-runnable-track,
+.time-slider::-moz-range-track {
+  border-radius: var(--radius-sm);
+}
+
+.time-slider::-webkit-slider-thumb,
+.time-slider::-moz-range-thumb {
+  border-radius: var(--radius-md);
 }

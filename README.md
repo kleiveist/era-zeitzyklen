@@ -104,8 +104,12 @@ vollständigen Era-Rotation wird nicht erfunden.
 
 ## Horizontverlauf
 
-Der Horizontverlauf ist eine getrennte Pixelart-Grafik mit harten Himmelsbändern,
-Dithering, Landschaftssilhouetten und Kompassbeschriftungen. Die Seitenbezeichnungen lauten:
+Der Horizontverlauf ist eine getrennte, hochauflösende Pixelart-Grafik mit echter Tiefenstaffelung.
+Für jedes Biom liegt `hd1` hinter den Himmelskörpern und `hd2` davor. Sterne werden transparent
+vor `hd1`, Sol, Yol und ZEHS in der Mitte und eine sehr transparente Wolkenebene vor den
+Himmelskörpern gezeichnet. Dadurch verschwinden die bewegten Körper sichtbar hinter Bergen,
+Gebäuden und Gelände von `hd2`, statt nur über einem flachen Panorama zu schweben. Die
+Seitenbezeichnungen lauten:
 
 | Blickrichtung | links | rechts |
 | --- | --- | --- |
@@ -131,9 +135,10 @@ Jede Breitenstufe besitzt ein vollständiges, zur Auswahl passendes Pixelpanoram
 | 30° | Gemäßigtes Tannenland | Bergketten, Tannenwald, Fluss und Waldhütte |
 | 60° | Heiße Wüstenlandschaft | Dünen, Mesas, Kakteen und Wüstenruinen |
 
-Die Biome wechseln nicht nur das Gelände, sondern auch Himmel, Wetterpixel und Horizontfarben.
-Alle drei Landschaften besitzen getrennt abgestimmte Paletten für den hellen und dunklen Modus;
-die astronomischen Positionen und Messwerte bleiben beim rein visuellen Wechsel unverändert.
+Die Biome wechseln Gelände, Himmel und Horizontfarben. Die gemeinsamen Stern- und Wolkenebenen
+werden per Screen-Compositing ohne Blur eingeblendet und bleiben in beiden Themes bewusst
+zurückhaltend; die astronomischen Positionen und Messwerte bleiben beim rein visuellen Wechsel
+unverändert.
 
 Die Daten fließen in einer festen Reihenfolge:
 
@@ -155,9 +160,10 @@ Ein Richtungs- oder Breitenwechsel berechnet keine neue Simulation: Zeitpunkt, S
 Sol-/Yol-Winkel, Geschwindigkeit, Intensität und Körpergröße bleiben unverändert. Nur Blickbasis,
 Projektionshöhe sowie die zugehörigen Kompass- und Breitenmarkierungen ändern sich.
 
-Während der Konvektion sind Sol und Yol in beiden Grafiken unsichtbar. Das Panorama zeigt den
-verdichteten Dunkelzustand mit harten Pixelbändern und fernen Splitterwelten statt weicher
-Aurora- oder Glow-Effekte.
+Während der Konvektion sind Sol und Yol in beiden Grafiken unsichtbar. Zwei transparente
+HD-Texturen zeigen den verdichteten Dunkelzustand mit verschlungenen Energieströmen,
+Kristallsplittern und fernen Splitterwelten. Eine eigene 3:1-Panoramaebene liegt über dem Horizont;
+die Orbitkarte verwendet eine zweite, um Era herum freigestellte Fassung.
 
 ## Zeitmodell
 
@@ -201,9 +207,10 @@ nicht von der Bildrate, der Blickrichtung oder dem vorherigen Navigationsweg ab.
 Das Interface verwendet ein konsequentes Pixelraster, harte Rahmen und versetzte Schatten ohne
 Blur. Die lokalen Chronikschriften bleiben großen Überschriften vorbehalten; Bedienelemente und
 Messwerte verwenden blockige Monospace-Fallbacks. Die SVG-Grafiken arbeiten mit `crispEdges`,
-ganzzahligen Strichstärken, quadratischen Linecaps und Miter-Verbindungen. Die Wallpaper liegen
-als 3344 × 1882 Pixel große Nearest-Neighbor-Exporte vor; jede Theme-Fassung referenziert nur ihr
-zugehöriges Motiv.
+ganzzahligen Strichstärken, quadratischen Linecaps und Miter-Verbindungen. Hochauflösende
+Himmelskarten, Landschaftsebenen und Himmelsobjekte werden lokal als Rastergrafiken geladen;
+jede Theme-Fassung referenziert nur ihr zugehöriges Motiv. Sanfte, gemeinsame Radientokens runden
+Instrumente, Icons und Eingabefelder ab, ohne die Pixelästhetik in Pillenformen aufzulösen.
 
 Beide Themes besitzen eine vollständige Materialpalette. Fokuszustände sind deutlich sichtbar,
 Slider und Chronikband bleiben per Tastatur bedienbar und `prefers-reduced-motion` wird
@@ -221,7 +228,7 @@ phases.js                   kanonische Phasenvorlagen plus illustrative Werteber
 app.js                      Seed, Zeitmodell, Geometrie, Projektion, Animation und Interaktion
 Textdatei.txt               kanonische Lore- und Zeitreferenz
 assets/fonts/               lokal eingebettete, offen lizenzierte Chronikschrift
-assets/images/              helle/dunkle Astral-Wallpaper plus hochauflösende 2×-Exporte
+assets/images/              Astral-Wallpaper, Himmelskörper und gestaffelte HD-Horizontebenen
 tests/smoke.cjs             Fake-DOM-, Interaktions-, Zustands- und Geometrievertrag
 tests/visual-contract.cjs   statischer Vertrag gegen moderne/unscharfe Gestaltungseffekte
 ```
@@ -244,8 +251,8 @@ Koordinaten, S-Int-Grenzen, SVG-Grenzen und der Sicherheitsabstand zu Era kontro
 Der visuelle Vertrag liest HTML, CSS und JavaScript statisch. Er untersagt unter anderem
 `backdrop-filter`, Gauß-Weichzeichnung, Pillenradien, alte SVG-Verläufe und die frühere
 horizontabhängige Skalierung orbitaler Y-Radien. Außerdem prüft er die Pixel-SVG-Einstellungen,
-die vier zugänglichen Richtungsbuttons, die drei Breitenstufen, den ZEHS-Pixelpunkt und den
-gemeinsamen Geometrievertrag.
+die vier zugänglichen Richtungsbuttons, die drei Breitenstufen, den ZEHS-Pixelpunkt, die feste
+Horizontebenen-Reihenfolge, transparente Atmosphärenebenen und den gemeinsamen Geometrievertrag.
 
 ## Grenzen der Darstellung
 

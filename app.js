@@ -78,9 +78,9 @@
 
   const HORIZON_DIRECTION_ORDER = Object.freeze(["north", "east", "south", "west"]);
   const HORIZON_LATITUDES = Object.freeze({
-    0: Object.freeze({ degrees: 0, name: "Polare Eiswelt", biome: "polar", description: "Eis- und Schneelandschaft am Polstand" }),
-    30: Object.freeze({ degrees: 30, name: "Gemäßigtes Tannenland", biome: "temperate", description: "gemäßigte Waldlandschaft 30 Grad äquatorwärts" }),
-    60: Object.freeze({ degrees: 60, name: "Heiße Wüstenlandschaft", biome: "desert", description: "Wüstenrand 60 Grad äquatorwärts" }),
+    0: Object.freeze({ degrees: 0, title: "Polare Eiswelt", name: "polare Eiswelt", biome: "polar", description: "Eis- und Schneelandschaft am Polstand" }),
+    30: Object.freeze({ degrees: 30, title: "Gemäßigtes", name: "gemäßigte Tannenlandschaft", biome: "temperate", description: "gemäßigte Waldlandschaft 30 Grad äquatorwärts" }),
+    60: Object.freeze({ degrees: 60, title: "Wüste", name: "heiße Wüstenlandschaft", biome: "desert", description: "Wüstenrand 60 Grad äquatorwärts" }),
   });
   const HORIZON_LATITUDE_ORDER = Object.freeze([0, 30, 60]);
   const ZEHS_PARAMETERS = Object.freeze({
@@ -968,7 +968,7 @@
       button.classList.toggle("is-active", active);
     }
     if (elements.horizonTitle) {
-      elements.horizonTitle.textContent = `Horizontverlauf · ${activeDirection.name} · ${activeLatitude.degrees}° ${activeLatitude.name}`;
+      elements.horizonTitle.textContent = `Horizontverlauf · ${activeDirection.name} · ${activeLatitude.degrees}° ${activeLatitude.title}`;
     }
     if (elements.horizonSvgTitle) {
       elements.horizonSvgTitle.textContent = `Horizontverlauf mit Blick nach ${activeDirection.name} bei ${activeLatitude.degrees} Grad Polversatz`;

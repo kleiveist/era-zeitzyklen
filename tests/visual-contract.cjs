@@ -13,11 +13,18 @@ const sources = Object.fromEntries(
 );
 
 const artworkSpecs = [
-  { file: "astral-map-dark-hd.png", minWidth: 1500, minHeight: 900 },
-  { file: "astral-map-light-hd.png", minWidth: 1500, minHeight: 900 },
-  { file: "horizon-polar-hd.png", minWidth: 2100, minHeight: 700 },
-  { file: "horizon-temperate-hd.png", minWidth: 2100, minHeight: 700 },
-  { file: "horizon-desert-hd.png", minWidth: 2100, minHeight: 700 },
+  { file: "astral-map-dark-hd.png", minWidth: 1400, minHeight: 1000 },
+  { file: "astral-map-light-hd.png", minWidth: 1400, minHeight: 1000 },
+  { file: "horizon-polar-hd1.png", minWidth: 1600, minHeight: 700, alpha: true },
+  { file: "horizon-polar-hd2.png", minWidth: 1600, minHeight: 700, alpha: true },
+  { file: "horizon-temperate-hd1.png", minWidth: 1600, minHeight: 700, alpha: true },
+  { file: "horizon-temperate-hd2.png", minWidth: 1600, minHeight: 700, alpha: true },
+  { file: "horizon-desert-hd1.png", minWidth: 2100, minHeight: 700, alpha: true },
+  { file: "horizon-desert-hd2.png", minWidth: 2100, minHeight: 700, alpha: true },
+  { file: "horizon-clouds-pixel-hd.png", minWidth: 2100, minHeight: 700, alpha: true },
+  { file: "horizon-stars-pixel-hd.png", minWidth: 2100, minHeight: 700, minBytes: 180_000, alpha: true },
+  { file: "horizon-convection-hd.png", minWidth: 2100, minHeight: 700, alpha: true },
+  { file: "orbit-convection-hd.png", minWidth: 1500, minHeight: 900, alpha: true },
   { file: "era-world-hd.png", minWidth: 600, minHeight: 600, alpha: true },
   { file: "sol-star-hd.png", minWidth: 600, minHeight: 600, alpha: true },
   { file: "yol-star-hd.png", minWidth: 600, minHeight: 600, alpha: true },
@@ -30,7 +37,7 @@ for (const spec of artworkSpecs) {
   assert.equal(data.toString("ascii", 1, 4), "PNG", `${spec.file}: gültige PNG-Signatur`);
   assert.ok(data.readUInt32BE(16) >= spec.minWidth, `${spec.file}: ausreichende native Breite`);
   assert.ok(data.readUInt32BE(20) >= spec.minHeight, `${spec.file}: ausreichende native Höhe`);
-  assert.ok(data.byteLength > 400_000, `${spec.file}: kein niedrig aufgelöster Platzhalter`);
+  assert.ok(data.byteLength > (spec.minBytes || 400_000), `${spec.file}: kein niedrig aufgelöster Platzhalter`);
   if (spec.alpha) assert.equal(data[25], 6, `${spec.file}: besitzt einen echten RGBA-Alphakanal`);
 }
 
@@ -157,6 +164,11 @@ for (const className of [
   "orbit-artwork",
   "celestial-artwork",
   "horizon-artwork",
+  "horizon-artwork-back",
+  "horizon-artwork-front",
+  "horizon-atmosphere",
+  "horizon-stars-artwork",
+  "horizon-clouds-artwork",
   "orbit-nebula",
   "orbit-distant-worlds",
   "orbit-axis-lines",
@@ -198,6 +210,23 @@ requireMatch(
   /:root\[data-theme=["']dark["']\][^{]*\.orbit-artwork-dark[\s\S]*:root\[data-theme=["']light["']\][^{]*\.orbit-artwork-light/i,
   "Astralkarte besitzt getrennte hochauflösende Artworks für Hell und Dunkel",
 );
+requireMatch(
+  "index.html",
+  /horizon-polar-hd1\.png[\s\S]*horizon-stars-pixel-hd\.png[\s\S]*id=["']horizon-zehs-star["'][\s\S]*id=["']horizon-sol-body["'][\s\S]*id=["']horizon-yol-body["'][\s\S]*horizon-clouds-pixel-hd\.png[\s\S]*horizon-polar-hd2\.png/i,
+  "Horizontebenen liegen in der Reihenfolge Hintergrund, Sterne, Himmelskörper, Wolken und Vordergrund",
+);
+requireMatch("styles.css", /\.horizon-atmosphere\s*\{[^}]*mix-blend-mode\s*:\s*screen\b/i, "Atmosphärenebenen blenden den schwarzen Bildgrund ohne Blur aus");
+requireMatch("styles.css", /\.horizon-clouds-artwork\s*\{[^}]*opacity\s*:\s*0\.12\b/i, "Wolken bleiben stark transparent");
+requireMatch("index.html", /id=["']convection-field["'][^>]*orbit-convection-hd\.png/i, "Orbit-Konvektion verwendet eine hochauflösende RGBA-Textur");
+requireMatch("index.html", /id=["']horizon-convection-field["'][^>]*horizon-convection-hd\.png/i, "Horizont-Konvektion verwendet eine hochauflösende RGBA-Textur");
+reject("index.html", /class=["'][^"']*(?:convection-band|convection-shard|horizon-shards)\b/i, "alte niedrig aufgelöste Konvektionsflächen sind entfernt");
+requireMatch("styles.css", /\.convection-artwork\s*\{[^}]*image-rendering\s*:\s*auto\b[^}]*mix-blend-mode\s*:\s*screen\b/is, "HD-Konvektion wird detailreich und transparent eingeblendet");
+requireMatch("styles.css", /#horizon-view\[data-biome\]\s+\.biome-sky[\s\S]*?display\s*:\s*none/i, "alte biome-spezifische SVG-Himmel bleiben hinter den HD-Ebenen deaktiviert");
+requireMatch("index.html", /class=["']horizon-sky-base["']\s+width=["']840["']\s+height=["']252["']/, "freigestellte Horizontbereiche besitzen eine ruhige Grundfläche");
+requireMatch("index.html", /horizon-polar-hd1\.png[^>]*height=["']400["']/, "polare Hintergrundkante überlappt den Vordergrund ohne Spalt");
+requireMatch("index.html", /horizon-temperate-hd1\.png[^>]*height=["']460["']/, "gemäßigte Hintergrundkante überlappt den Vordergrund ohne Spalt");
+reject("index.html", /class=["'][^"']*horizon-sky-band\b/i, "alte Farbbänder scheinen nicht durch transparente Pixel hindurch");
+requireMatch("styles.css", /--radius-md\s*:\s*10px\b/i, "grafische Felder verwenden einen konsistenten sanften Radius");
 
 for (const name of [
   "ORBIT_GEOMETRY",
