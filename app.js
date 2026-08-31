@@ -223,7 +223,7 @@
     );
     elements.themeLabel.textContent = normalized === "dark" ? "Dunkle Chronik" : "Helles Pergament";
     setUseHref(elements.themeIconUse, normalized === "dark" ? "icon-theme-moon" : "icon-theme-sun");
-    elements.themeColor.setAttribute("content", normalized === "dark" ? "#120e18" : "#ead9b8");
+    elements.themeColor.setAttribute("content", normalized === "dark" ? "#070b1a" : "#dce8f2");
     if (options.persist !== false) {
       try {
         localStorage.setItem("era-theme", normalized);

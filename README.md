@@ -1,8 +1,9 @@
 # Era – Zeitzyklen von Sol und Yol
 
-Eine eigenständige HTML/CSS/JavaScript-Visualisierung der Zeitzyklen auf Era im Stil eines
-mittelalterlichen Pixel-Fantasy-Kodex. Dunkles Holz, Stein, Eisen, Messing und Pergament bilden
-ein blockiges Sternwarten-Interface ohne moderne Dashboard-, Glas- oder Glow-Effekte.
+Eine eigenständige HTML/CSS/JavaScript-Visualisierung der Zeitzyklen auf Era als modernes
+Pixel-Fantasy-Observatorium. Zwei hochauflösende, motivgleiche Astronomie-Wallpaper zeigen die
+Welt im tiefen Sternenlicht beziehungsweise im hellen Astralmorgen. Harte Pixelrahmen,
+versetzte Schatten, Messingakzente und klare Instrumentenflächen halten beide Fassungen lesbar.
 
 Die kosmologische Hauptansicht zeigt Era exakt von oben auf den Nordpol. Sol und Yol bewegen
 sich auf vollständig sichtbaren, schematisch elliptischen Bahnen. Ein zweites Pixelpanorama
@@ -28,7 +29,7 @@ Laufzeitabhängigkeiten.
 ## Bedienung
 
 - Mit **Abspielen** läuft der vollständige Erklärzyklus wahlweise in 3:00 oder 6:00 Minuten.
-- Die **Phasenbibliothek** springt zur nächsten Instanz einer ausgewählten Vorlage.
+- Das **Archiv der Phasen** springt zur nächsten Instanz einer ausgewählten Vorlage.
 - Die 18 **Zyklus-Runen** erlauben denselben Sprung direkt über ein Siegel.
 - Das klickbare Chronikband und der Zeitregler erlauben direkte Zeitsprünge.
 - Ein **Seed** erzeugt immer wieder dieselbe Phasenfolge und dieselben Bewegungswerte.
@@ -152,7 +153,9 @@ nicht von der Bildrate, der Blickrichtung oder dem vorherigen Navigationsweg ab.
 Das Interface verwendet ein konsequentes Pixelraster, harte Rahmen und versetzte Schatten ohne
 Blur. Die lokalen Chronikschriften bleiben großen Überschriften vorbehalten; Bedienelemente und
 Messwerte verwenden blockige Monospace-Fallbacks. Die SVG-Grafiken arbeiten mit `crispEdges`,
-ganzzahligen Strichstärken, quadratischen Linecaps und Miter-Verbindungen.
+ganzzahligen Strichstärken, quadratischen Linecaps und Miter-Verbindungen. Die Wallpaper liegen
+als 3344 × 1882 Pixel große Nearest-Neighbor-Exporte vor; jede Theme-Fassung referenziert nur ihr
+zugehöriges Motiv.
 
 Beide Themes besitzen eine vollständige Materialpalette. Fokuszustände sind deutlich sichtbar,
 Slider und Chronikband bleiben per Tastatur bedienbar und `prefers-reduced-motion` wird
@@ -170,9 +173,9 @@ phases.js                   kanonische Phasenvorlagen plus illustrative Werteber
 app.js                      Seed, Zeitmodell, Geometrie, Projektion, Animation und Interaktion
 Textdatei.txt               kanonische Lore- und Zeitreferenz
 assets/fonts/               lokal eingebettete, offen lizenzierte Chronikschrift
+assets/images/              helle/dunkle Astral-Wallpaper plus hochauflösende 2×-Exporte
 tests/smoke.cjs             Fake-DOM-, Interaktions-, Zustands- und Geometrievertrag
 tests/visual-contract.cjs   statischer Vertrag gegen moderne/unscharfe Gestaltungseffekte
-.github/                    optionale GitHub-Pages-Veröffentlichung
 ```
 
 ## Tests
@@ -193,12 +196,6 @@ Der visuelle Vertrag liest HTML, CSS und JavaScript statisch. Er untersagt unter
 `backdrop-filter`, Gauß-Weichzeichnung, Pillenradien, alte SVG-Verläufe und die frühere
 horizontabhängige Skalierung orbitaler Y-Radien. Außerdem prüft er die Pixel-SVG-Einstellungen,
 die vier zugänglichen Richtungsbuttons und den gemeinsamen Geometrievertrag.
-
-## GitHub Pages
-
-Das enthaltene Workflow-File veröffentlicht den statischen Ordner bei einem Push auf `main`.
-Im Repository unter **Settings → Pages** als Quelle **GitHub Actions** auswählen. Es gibt keinen
-Build-Schritt und keine externen Laufzeitabhängigkeiten.
 
 ## Grenzen der Darstellung
 

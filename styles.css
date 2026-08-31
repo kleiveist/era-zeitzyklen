@@ -24,65 +24,68 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
-  --wood-950: #0b0706;
-  --wood-900: #140b08;
-  --wood-800: #25130d;
-  --wood-700: #3a2115;
-  --stone-950: #0c0d11;
-  --stone-900: #15161b;
-  --stone-800: #25252b;
-  --stone-700: #3a383e;
-  --parchment-100: #f0dfb2;
-  --parchment-200: #ddc690;
-  --parchment-400: #a98a58;
-  --ink-dark: #21150e;
-  --iron: #55545a;
-  --iron-dark: #2d2e33;
-  --brass: #b98a3d;
-  --brass-light: #e1bd64;
-  --brass-dark: #68471f;
-  --rust: #8c3f2d;
-  --sol-yellow: #f5cf4b;
-  --sol-gold: #d9972d;
-  --sol-orange: #ba5528;
-  --yol-lavender: #c1b9ef;
-  --yol-blue: #6671bd;
-  --yol-violet: #493c80;
-  --magic: #8c4e91;
-  --convection-ice: #70aec1;
-  --convection-deep: #284c64;
-  --canvas: var(--wood-950);
-  --canvas-mark: #17100c;
-  --paper: #211915;
-  --paper-soft: #2b211a;
-  --paper-raised: #38291e;
-  --paper-inset: #121216;
-  --ink: #e7d4a8;
-  --ink-strong: #f5e5bd;
-  --ink-muted: #bba77d;
-  --ink-faint: #8f7d61;
-  --engraving: #66543e;
-  --engraving-strong: #917047;
-  --engraving-soft: #3c3329;
+  --wood-950: #03050e;
+  --wood-900: #070a18;
+  --wood-800: #11172c;
+  --wood-700: #202946;
+  --stone-950: #060815;
+  --stone-900: #0d1122;
+  --stone-800: #1b2340;
+  --stone-700: #333e62;
+  --parchment-100: #fff4d6;
+  --parchment-200: #ead9ae;
+  --parchment-400: #baa16f;
+  --ink-dark: #090b18;
+  --iron: #505b7e;
+  --iron-dark: #202945;
+  --brass: #c99b45;
+  --brass-light: #ffe29a;
+  --brass-dark: #70502a;
+  --rust: #b9544f;
+  --sol-yellow: #ffd85c;
+  --sol-gold: #eaa53b;
+  --sol-orange: #c9613c;
+  --yol-lavender: #d4c0ff;
+  --yol-blue: #7786df;
+  --yol-violet: #504a9b;
+  --magic: #a96fb8;
+  --convection-ice: #76d2dc;
+  --convection-deep: #2c5f7b;
+  --canvas: #050817;
+  --canvas-mark: #151b35;
+  --paper: rgb(12 17 38 / 96%);
+  --paper-soft: rgb(20 27 54 / 97%);
+  --paper-raised: rgb(28 37 70 / 98%);
+  --paper-inset: rgb(6 10 25 / 98%);
+  --ink: #dce5f3;
+  --ink-strong: #fff2cc;
+  --ink-muted: #aebbd2;
+  --ink-faint: #7f8ba9;
+  --engraving: #354164;
+  --engraving-strong: #6876a4;
+  --engraving-soft: #242e50;
   --gold: var(--brass);
   --gold-bright: var(--brass-light);
   --gold-deep: var(--brass-dark);
   --amethyst: var(--yol-lavender);
   --amethyst-deep: var(--yol-violet);
-  --ember: #c66a3d;
-  --focus: #f4d76d;
-  --shadow: #050403;
-  --sky-1: #11101c;
-  --sky-2: #171426;
-  --sky-3: #201a30;
-  --sky-4: #2a2037;
-  --sky-ink: #f1e7c8;
-  --sky-muted: #bcb2c6;
-  --ground: #151318;
-  --ground-light: #262229;
-  --mountain-back: #302b3c;
-  --mountain-front: #211e2b;
-  --forest: #111318;
+  --ember: #ee7652;
+  --focus: #ffe08a;
+  --shadow: #02030a;
+  --sky-1: #070b1c;
+  --sky-2: #101632;
+  --sky-3: #1b2350;
+  --sky-4: #2b2e62;
+  --sky-ink: #fff0c8;
+  --sky-muted: #aeb9df;
+  --ground: #090d1e;
+  --ground-light: #161d3a;
+  --mountain-back: #2b3158;
+  --mountain-front: #171d39;
+  --forest: #0a0e20;
+  --world-wallpaper: url("assets/images/era-celestial-dark-2x.png");
+  --wallpaper-veil: rgb(3 6 18 / 24%);
+  --hero-surface: rgb(6 10 27 / 91%);
   --font-display: "Era Chronicle", Georgia, "Times New Roman", serif;
   --font-ui: ui-monospace, "Cascadia Mono", "Liberation Mono", Menlo, Consolas, monospace;
   font-family: var(--font-ui);
@@ -90,38 +93,41 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --canvas: #b99562;
-  --canvas-mark: #a27d4d;
-  --paper: #e3c995;
-  --paper-soft: #d4b47c;
-  --paper-raised: #c49d61;
-  --paper-inset: #f0dbad;
-  --ink: #2d1d12;
-  --ink-strong: #1f140d;
-  --ink-muted: #5e452e;
-  --ink-faint: #72583b;
-  --engraving: #75532d;
-  --engraving-strong: #51371d;
-  --engraving-soft: #b28b55;
-  --gold: #79531e;
-  --gold-bright: #a56f24;
-  --gold-deep: #4f3418;
-  --amethyst: #59407e;
-  --amethyst-deep: #3f2b62;
-  --ember: #8b3d28;
-  --focus: #392764;
-  --shadow: #72502e;
-  --sky-1: #171725;
-  --sky-2: #202038;
-  --sky-3: #2a2946;
-  --sky-4: #353052;
-  --sky-ink: #fff0c7;
-  --sky-muted: #d7cba9;
-  --ground: #29212a;
-  --ground-light: #3a2d35;
-  --mountain-back: #4b4558;
-  --mountain-front: #373344;
-  --forest: #211f28;
+  --canvas: #dce8f2;
+  --canvas-mark: #c6d5e5;
+  --paper: rgb(248 246 241 / 96%);
+  --paper-soft: rgb(235 235 241 / 97%);
+  --paper-raised: rgb(224 227 240 / 98%);
+  --paper-inset: rgb(255 252 244 / 98%);
+  --ink: #3b405f;
+  --ink-strong: #20253f;
+  --ink-muted: #59617e;
+  --ink-faint: #727a98;
+  --engraving: #9aa6c1;
+  --engraving-strong: #667497;
+  --engraving-soft: #c7cede;
+  --gold: #987029;
+  --gold-bright: #b9862e;
+  --gold-deep: #5f4727;
+  --amethyst: #69549c;
+  --amethyst-deep: #463675;
+  --ember: #a54e42;
+  --focus: #4d3c92;
+  --shadow: #7f8ba8;
+  --sky-1: #11162c;
+  --sky-2: #1c2545;
+  --sky-3: #2c3760;
+  --sky-4: #455078;
+  --sky-ink: #fff1c9;
+  --sky-muted: #dce4ff;
+  --ground: #151a32;
+  --ground-light: #293353;
+  --mountain-back: #596384;
+  --mountain-front: #394361;
+  --forest: #222941;
+  --world-wallpaper: url("assets/images/era-celestial-light-2x.png");
+  --wallpaper-veil: rgb(230 238 246 / 14%);
+  --hero-surface: rgb(248 246 241 / 91%);
 }
 
 * {
@@ -143,9 +149,12 @@ body {
   color: var(--ink);
   background-color: var(--canvas);
   background-image:
-    linear-gradient(90deg, transparent 0 28px, var(--canvas-mark) 28px 32px),
-    linear-gradient(0deg, transparent 0 28px, var(--canvas-mark) 28px 32px);
-  background-size: 32px 32px;
+    linear-gradient(var(--wallpaper-veil), var(--wallpaper-veil)),
+    var(--world-wallpaper);
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: cover;
+  background-attachment: fixed;
   font-family: var(--font-ui);
   font-size: 14px;
   line-height: 1.5;
@@ -158,7 +167,9 @@ body::before {
   pointer-events: none;
   content: "";
   border: 8px solid var(--wood-800);
-  box-shadow: inset 0 0 0 4px var(--brass-dark);
+  box-shadow:
+    inset 0 0 0 2px var(--brass-dark),
+    inset 0 0 0 6px var(--canvas);
 }
 
 button,
@@ -1613,6 +1624,576 @@ footer {
   border: 0 !important;
 }
 
+/* Astral observatory rebrand ------------------------------------------------ */
+
+.site-shell {
+  width: min(1580px, calc(100% - 32px));
+  padding: 28px 0 40px;
+}
+
+.site-header {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 470px);
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 28px;
+  overflow: hidden;
+  border: 4px solid var(--iron-dark);
+  background-color: var(--hero-surface);
+  background-image:
+    linear-gradient(90deg, var(--gold-bright) 0 48px, transparent 48px),
+    linear-gradient(90deg, transparent calc(100% - 48px), var(--gold-bright) calc(100% - 48px));
+  background-repeat: no-repeat;
+  background-position: 16px 12px, calc(100% - 16px) calc(100% - 12px);
+  background-size: 96px 2px, 96px 2px;
+  box-shadow:
+    inset 0 0 0 2px var(--engraving-strong),
+    8px 8px 0 var(--shadow);
+}
+
+.site-header::before,
+.site-header::after {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  content: "";
+  pointer-events: none;
+  background: var(--gold-bright);
+}
+
+.site-header::before {
+  top: 10px;
+  left: 10px;
+  box-shadow: 12px 0 0 var(--gold-deep), 0 12px 0 var(--gold-deep);
+}
+
+.site-header::after {
+  right: 10px;
+  bottom: 10px;
+  box-shadow: -12px 0 0 var(--gold-deep), 0 -12px 0 var(--gold-deep);
+}
+
+.brand-lockup {
+  gap: 24px;
+  align-items: center;
+}
+
+.brand-copy {
+  min-width: 0;
+}
+
+.brand-sigil {
+  position: relative;
+  width: 108px;
+  height: 108px;
+  color: var(--gold-bright);
+  border-color: var(--gold);
+  background-color: var(--paper-inset);
+  background-image:
+    linear-gradient(90deg, transparent 0 10px, var(--engraving-soft) 10px 12px),
+    linear-gradient(0deg, transparent 0 10px, var(--engraving-soft) 10px 12px);
+  background-size: 12px 12px;
+  box-shadow:
+    inset 0 0 0 4px var(--engraving-strong),
+    inset 0 0 0 8px var(--paper-inset),
+    8px 8px 0 var(--shadow);
+}
+
+.brand-sigil::before {
+  position: absolute;
+  inset: 12px;
+  content: "";
+  pointer-events: none;
+  border: 2px solid var(--gold-deep);
+}
+
+.brand-sigil::after {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 6px;
+  height: 6px;
+  content: "";
+  pointer-events: none;
+  background: var(--gold-bright);
+  box-shadow:
+    86px 0 0 var(--gold-bright),
+    0 86px 0 var(--gold-bright),
+    86px 86px 0 var(--gold-bright);
+}
+
+.brand-sigil svg {
+  position: relative;
+  z-index: 1;
+  width: 68px;
+  height: 68px;
+}
+
+.eyebrow,
+.panel-index {
+  color: var(--gold-bright);
+  font-size: 11px;
+  letter-spacing: 2.4px;
+}
+
+h1 {
+  max-width: 15ch;
+  margin-bottom: 12px;
+  font-size: clamp(48px, 5.4vw, 78px);
+  line-height: 0.86;
+  letter-spacing: -1px;
+  text-shadow: 4px 4px 0 var(--shadow);
+}
+
+.title-main,
+.title-orbit {
+  display: block;
+}
+
+.title-main {
+  color: var(--ink-strong);
+}
+
+.title-orbit {
+  margin-top: 8px;
+  color: var(--gold-bright);
+  font-size: 0.55em;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.subtitle {
+  max-width: 66ch;
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 21px;
+}
+
+.hero-runes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 16px;
+  color: var(--ink-muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.hero-runes span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero-runes i {
+  width: 6px;
+  height: 6px;
+  background: var(--gold-bright);
+  box-shadow: 3px 3px 0 var(--gold-deep);
+}
+
+.header-tools {
+  gap: 16px;
+}
+
+.theme-toggle,
+.button,
+.direction-button {
+  color: var(--ink-strong);
+  border-color: var(--engraving-strong);
+  background: var(--paper-raised);
+  box-shadow: 4px 4px 0 var(--shadow);
+  letter-spacing: 0.25px;
+}
+
+.theme-toggle {
+  min-height: 58px;
+  padding: 8px 14px;
+  border-width: 2px 2px 4px 4px;
+}
+
+.theme-toggle-icon {
+  width: 36px;
+  height: 36px;
+  color: var(--gold-bright);
+  border-color: var(--gold-deep);
+}
+
+.header-facts {
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.header-facts div {
+  min-height: 74px;
+  padding: 10px;
+  border: 2px solid var(--engraving-strong);
+  background: var(--paper);
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+
+.header-facts strong {
+  color: var(--gold-bright);
+  font-size: 20px;
+}
+
+main {
+  padding-top: 0;
+}
+
+.workspace {
+  grid-template-columns: minmax(230px, 0.82fr) minmax(520px, 2.35fr) minmax(230px, 0.82fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.panel {
+  overflow: hidden;
+  border-color: var(--iron-dark);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(90deg, var(--gold-deep) 0 24px, transparent 24px),
+    linear-gradient(90deg, transparent calc(100% - 24px), var(--gold-deep) calc(100% - 24px));
+  background-repeat: no-repeat;
+  background-position: 12px 8px, calc(100% - 12px) calc(100% - 8px);
+  background-size: 72px 2px, 72px 2px;
+  box-shadow:
+    inset 0 0 0 2px var(--engraving),
+    8px 8px 0 var(--shadow);
+}
+
+.panel::before {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4px;
+  content: "";
+  pointer-events: none;
+  background-color: var(--gold-deep);
+  background-image: linear-gradient(90deg, var(--gold-bright) 0 8px, transparent 8px 20px);
+  background-size: 20px 4px;
+}
+
+.panel::after {
+  inset: 10px;
+  background:
+    linear-gradient(var(--gold-bright), var(--gold-bright)) left top / 6px 6px no-repeat,
+    linear-gradient(var(--gold-bright), var(--gold-bright)) right top / 6px 6px no-repeat,
+    linear-gradient(var(--gold-bright), var(--gold-bright)) left bottom / 6px 6px no-repeat,
+    linear-gradient(var(--gold-bright), var(--gold-bright)) right bottom / 6px 6px no-repeat;
+}
+
+.phase-panel,
+.algorithm-panel {
+  padding: 20px;
+}
+
+.panel-heading {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--engraving-soft);
+}
+
+.section-seal {
+  width: 52px;
+  height: 52px;
+  color: var(--gold-bright);
+  border-color: var(--gold-deep);
+  background: var(--paper-inset);
+  box-shadow: inset 0 0 0 2px var(--engraving-strong), 4px 4px 0 var(--shadow);
+}
+
+.section-seal span {
+  color: var(--ink-dark);
+  border-color: var(--gold-deep);
+  background: var(--gold-bright);
+}
+
+.panel-heading p:not(.panel-index),
+.timeline-heading > p,
+.algorithm-caption,
+.method-note p,
+.phase-card p,
+.explanation p,
+.horizon-heading p {
+  color: var(--ink-muted);
+}
+
+.field-label {
+  color: var(--ink-muted);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.field-control {
+  border-color: var(--engraving-strong);
+  background: var(--paper-inset);
+  box-shadow: inset 4px 4px 0 var(--engraving-soft);
+}
+
+.button {
+  border-width: 2px 2px 4px 4px;
+  text-transform: uppercase;
+}
+
+.button-primary,
+.button-play {
+  color: var(--ink-dark);
+  border-color: var(--gold-deep);
+  background: var(--gold-bright);
+  box-shadow: 4px 4px 0 var(--shadow), inset -4px -4px 0 var(--gold);
+}
+
+.phase-sigils {
+  gap: 10px;
+}
+
+.phase-sigil {
+  min-height: 68px;
+  border-color: var(--engraving-strong);
+  background: var(--paper-inset);
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+
+.phase-sigil.is-active {
+  background: var(--paper-raised);
+  box-shadow: inset 0 0 0 2px currentColor, 4px 4px 0 var(--shadow);
+}
+
+.phase-card {
+  border: 2px solid var(--engraving-strong);
+  background-color: var(--paper-inset);
+  background-image: linear-gradient(90deg, var(--engraving-soft) 0 4px, transparent 4px 12px);
+  background-size: 12px 2px;
+  background-position: left bottom;
+  background-repeat: repeat-x;
+  box-shadow: inset 0 0 0 2px var(--engraving-soft), 4px 4px 0 var(--shadow);
+}
+
+.category-label,
+.occurrence-label,
+.state-badge {
+  background: var(--paper-raised);
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+
+.active-phase-sigil {
+  background: var(--paper-raised);
+  box-shadow: inset 0 0 0 2px var(--engraving-soft), 3px 3px 0 var(--shadow);
+}
+
+.method-note summary {
+  color: var(--gold-bright);
+}
+
+.visual-heading {
+  padding: 22px 24px 16px;
+  border-bottom: 2px solid var(--engraving-soft);
+  background: var(--paper-soft);
+}
+
+.state-badge {
+  min-height: 34px;
+  padding: 6px 10px;
+}
+
+.sky-stage,
+.horizon-stage {
+  border-color: var(--iron-dark);
+  box-shadow:
+    0 0 0 2px var(--gold-deep),
+    6px 6px 0 var(--shadow),
+    inset 0 0 0 2px var(--engraving-strong);
+}
+
+.sky-stage {
+  margin: 16px 16px 18px;
+}
+
+.orbit-grid {
+  opacity: 0.42;
+}
+
+.star-field {
+  opacity: 0.92;
+}
+
+.orbit {
+  stroke-width: 3;
+}
+
+.direction-arc {
+  stroke-width: 5;
+}
+
+.era-rim {
+  stroke: var(--gold-bright);
+}
+
+.horizon-section {
+  margin: 0 16px 18px;
+  padding: 16px;
+  border: 2px solid var(--engraving-strong);
+  background-color: var(--paper-inset);
+  background-image: linear-gradient(90deg, var(--engraving-soft) 0 4px, transparent 4px 12px);
+  background-size: 12px 2px;
+  background-position: left top;
+  background-repeat: repeat-x;
+  box-shadow: 6px 6px 0 var(--shadow);
+}
+
+.horizon-direction-group {
+  gap: 6px;
+  border-color: var(--engraving-strong);
+  background: var(--paper-soft);
+}
+
+.direction-button[aria-checked="true"] {
+  box-shadow: inset -3px -3px 0 var(--gold), 3px 3px 0 var(--shadow);
+}
+
+.convection-message {
+  border-color: var(--convection-ice);
+  background: var(--stone-950);
+  box-shadow: 6px 6px 0 var(--shadow), inset 0 0 0 2px var(--magic);
+}
+
+.readout-grid {
+  gap: 2px;
+  padding: 2px;
+  border-top-color: var(--iron-dark);
+  background: var(--engraving);
+}
+
+.readout {
+  min-height: 74px;
+  padding: 14px;
+  border: 0;
+  background: var(--paper-raised);
+}
+
+.readout > span:first-child {
+  color: var(--ink-faint);
+  letter-spacing: 1.4px;
+}
+
+.meter-track {
+  height: 16px;
+  border-color: var(--engraving-strong);
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+
+.timeline-panel {
+  margin-top: 20px;
+  padding: 22px;
+}
+
+.phase-track {
+  gap: 6px;
+  min-height: 86px;
+  padding: 6px;
+  border-color: var(--engraving-strong);
+  background: var(--paper-inset);
+  box-shadow: inset 4px 4px 0 var(--engraving-soft);
+}
+
+.phase-segment {
+  min-height: 68px;
+  background: var(--paper-raised);
+  box-shadow: inset -3px -3px 0 var(--paper-soft);
+}
+
+.phase-segment.is-active {
+  color: var(--ink-strong);
+  border-color: var(--gold-bright);
+  background: var(--gold-deep);
+  box-shadow: inset 0 0 0 2px var(--gold-bright), 3px 3px 0 var(--shadow);
+}
+
+.time-slider::-webkit-slider-thumb,
+.time-slider::-moz-range-thumb {
+  background: var(--gold-bright);
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+
+.explanation {
+  position: relative;
+  grid-template-columns: minmax(200px, 0.6fr) minmax(0, 2.4fr);
+  margin-top: 20px;
+  padding: 24px;
+  border: 4px solid var(--iron-dark);
+  background: var(--hero-surface);
+  box-shadow: inset 0 0 0 2px var(--engraving-strong), 8px 8px 0 var(--shadow);
+}
+
+.explanation-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-width: 0;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.explanation article {
+  min-width: 0;
+  min-height: 148px;
+  padding: 18px 18px 18px 66px;
+  border: 2px solid var(--engraving-strong);
+  background: var(--paper);
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+
+.explanation-icon {
+  top: 18px;
+  left: 18px;
+  color: var(--gold-bright);
+  background: var(--paper-inset);
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+
+footer {
+  margin-top: 20px;
+  padding: 16px 18px;
+  border: 2px solid var(--engraving-strong);
+  background: var(--hero-surface);
+  box-shadow: 6px 6px 0 var(--shadow);
+}
+
+.footer-mark {
+  color: var(--ink-muted);
+}
+
+:root[data-theme="dark"] .phase-sigil,
+:root[data-theme="dark"] .active-phase-sigil,
+:root[data-theme="dark"] .category-label,
+:root[data-theme="dark"] .state-badge {
+  color: color-mix(in srgb, var(--category-color, var(--amethyst)) 82%, #fff0ff);
+}
+
+:root[data-theme="dark"] .phase-segment:not(.is-active) {
+  color: color-mix(in srgb, var(--segment-color, var(--amethyst)) 82%, #fff0ff);
+}
+
+:root[data-theme="light"] .phase-sigil,
+:root[data-theme="light"] .active-phase-sigil,
+:root[data-theme="light"] .category-label,
+:root[data-theme="light"] .state-badge {
+  color: color-mix(in srgb, var(--category-color, var(--amethyst)) 72%, #141a36);
+}
+
+:root[data-theme="light"] .phase-segment:not(.is-active) {
+  color: color-mix(in srgb, var(--segment-color, var(--amethyst)) 72%, #141a36);
+}
+
 @media (max-width: 1180px) {
   .site-shell {
     padding-right: 24px;
@@ -1934,5 +2515,149 @@ footer {
   .sky-stage,
   .horizon-stage {
     border-color: CanvasText;
+  }
+}
+
+@media (max-width: 1180px) {
+  .site-shell {
+    width: min(calc(100% - 24px), 1120px);
+  }
+
+  .site-header {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .site-header {
+    align-items: start;
+  }
+
+  .header-tools {
+    grid-template-columns: minmax(180px, 0.45fr) minmax(0, 1fr);
+  }
+
+  .explanation {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 720px) {
+  body {
+    background-position: center top;
+    background-size: auto 100vh;
+  }
+
+  .site-shell {
+    width: calc(100% - 16px);
+    padding: 12px 0 24px;
+  }
+
+  .site-header {
+    margin-bottom: 14px;
+    padding: 18px;
+    box-shadow: inset 0 0 0 2px var(--engraving-strong), 5px 5px 0 var(--shadow);
+  }
+
+  .brand-lockup {
+    align-items: start;
+  }
+
+  .brand-sigil {
+    width: 60px;
+    height: 60px;
+    box-shadow: inset 0 0 0 3px var(--engraving-strong), 4px 4px 0 var(--shadow);
+  }
+
+  .brand-sigil::before {
+    inset: 7px;
+  }
+
+  .brand-sigil::after {
+    top: 5px;
+    left: 5px;
+    width: 4px;
+    height: 4px;
+    box-shadow: 46px 0 0 var(--gold-bright), 0 46px 0 var(--gold-bright), 46px 46px 0 var(--gold-bright);
+  }
+
+  .brand-sigil svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  h1 {
+    font-size: clamp(38px, 12vw, 52px);
+  }
+
+  .hero-runes {
+    gap: 8px 12px;
+  }
+
+  .header-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .theme-toggle {
+    justify-self: stretch;
+    justify-content: flex-start;
+  }
+
+  .panel {
+    box-shadow: inset 0 0 0 2px var(--engraving), 5px 5px 0 var(--shadow);
+  }
+
+  .sky-stage,
+  .horizon-section {
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+
+  .timeline-panel,
+  .explanation {
+    padding: 16px;
+  }
+
+  .explanation article {
+    min-height: 0;
+  }
+
+  footer {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 430px) {
+  .site-header {
+    padding: 16px;
+  }
+
+  .brand-lockup {
+    grid-template-columns: 60px 1fr;
+  }
+
+  .brand-copy {
+    grid-column: 1 / -1;
+  }
+
+  .brand-sigil {
+    grid-column: 1;
+  }
+
+  .hero-runes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .hero-runes span {
+    display: grid;
+    gap: 5px;
+  }
+
+  .phase-panel,
+  .algorithm-panel,
+  .timeline-panel {
+    padding: 14px;
   }
 }
