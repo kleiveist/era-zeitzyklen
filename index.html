@@ -208,6 +208,10 @@
                   <pattern id="orbit-major-pattern" width="64" height="64" patternUnits="userSpaceOnUse">
                     <path class="orbit-grid-major-pixel" d="M0 0H16V2H2V16H0ZM62 48H64V64H48V62H62Z" />
                   </pattern>
+                  <pattern id="orbit-dust-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path class="orbit-dust-pixel-a" d="M4 8H6V10H4ZM28 20H30V22H28ZM16 34H18V36H16Z" />
+                    <path class="orbit-dust-pixel-b" d="M34 4H36V6H34ZM10 24H12V26H10Z" />
+                  </pattern>
                   <pattern id="era-surface-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
                     <path class="era-dither-a" d="M0 0H4V4H0ZM4 4H8V8H4Z" />
                   </pattern>
@@ -263,8 +267,11 @@
                 </defs>
 
                 <rect class="orbit-sky" width="840" height="520" />
+                <rect class="orbit-dust" x="20" y="20" width="800" height="480" fill="url(#orbit-dust-pattern)" />
                 <rect class="orbit-grid" x="20" y="20" width="800" height="480" fill="url(#orbit-grid-pattern)" />
                 <rect class="orbit-grid-major" x="20" y="20" width="800" height="480" fill="url(#orbit-major-pattern)" />
+                <path class="orbit-deep-cloud cloud-north" d="M204 20H332V28H364V36H388V48H356V56H304V52H256V60H216V52H180V40H204Z" />
+                <path class="orbit-deep-cloud cloud-south" d="M476 460H516V452H568V456H620V448H672V456H704V468H732V484H620V480H548V488H492V480H456V468H476Z" />
                 <path class="orbit-nebula nebula-left" d="M20 96H68V72H116V88H148V116H180V148H152V164H116V148H84V132H44V148H20Z" />
                 <path class="orbit-nebula nebula-right" d="M820 328H788V304H744V320H712V348H684V376H716V396H756V380H788V396H820Z" />
                 <g class="constellation-lines" aria-hidden="true">
@@ -275,6 +282,33 @@
                 </g>
                 <g class="star-cross-field" aria-hidden="true">
                   <path d="M92 52H96V60H104V64H96V72H92V64H84V60H92ZM548 54H552V62H560V66H552V74H548V66H540V62H548ZM770 216H774V224H782V228H774V236H770V228H762V224H770ZM286 446H290V454H298V458H290V466H286V458H278V454H286Z" />
+                </g>
+                <g class="orbit-distant-worlds" aria-hidden="true">
+                  <g class="distant-world distant-world-a" transform="translate(282 62)">
+                    <path class="distant-world-shadow" d="M-12-16H12V-12H16V12H12V16H-12V12H-16V-12H-12Z" />
+                    <path class="distant-world-surface" d="M-8-12H8V-8H12V8H8V12H-8V8H-12V-8H-8Z" />
+                    <path class="distant-world-light" d="M-8-8H0V-4H4V4H0V8H-8Z" />
+                    <path class="distant-world-ring" d="M-28-4H-12V0H12V-4H28V4H12V8H-12V4H-28Z" />
+                  </g>
+                  <g class="distant-world distant-world-b" transform="translate(592 446)">
+                    <path class="distant-world-shadow" d="M-10-14H10V-10H14V10H10V14H-10V10H-14V-10H-10Z" />
+                    <path class="distant-world-surface" d="M-6-10H6V-6H10V6H6V10H-6V6H-10V-6H-6Z" />
+                    <path class="distant-world-craters" d="M-6-6H-2V-2H-6ZM2 2H6V6H2ZM2-6H6V-2H2Z" />
+                  </g>
+                </g>
+                <g class="orbit-axis-lines" aria-hidden="true">
+                  <path d="M420 28V164M420 356V492M28 260H306M534 260H812" />
+                  <path class="orbit-axis-ticks" d="M412 40H428M412 72H428M412 104H428M412 136H428M412 384H428M412 416H428M412 448H428M412 480H428M40 252V268M72 252V268M104 252V268M136 252V268M168 252V268M200 252V268M232 252V268M264 252V268M576 252V268M608 252V268M640 252V268M672 252V268M704 252V268M736 252V268M768 252V268M800 252V268" />
+                </g>
+                <g class="orbit-map-frame" aria-hidden="true">
+                  <path d="M20 52V20H52M788 20H820V52M20 468V500H52M788 500H820V468" />
+                  <path class="orbit-scale-ticks" d="M84 20V28M116 20V24M148 20V28M180 20V24M660 20V24M692 20V28M724 20V24M756 20V28M84 492V500M116 496V500M148 492V500M180 496V500M660 496V500M692 492V500M724 496V500M756 492V500" />
+                </g>
+                <g class="orbit-sector-labels" aria-hidden="true">
+                  <text x="44" y="48">NORDWEST-SEKTOR</text>
+                  <text x="796" y="48" text-anchor="end">NORDOST-SEKTOR</text>
+                  <text x="44" y="484">TIEFENKARTE · 7</text>
+                  <text x="796" y="484" text-anchor="end">ASTRALRASTER · ERA</text>
                 </g>
 
                 <g class="orbit-plane" aria-hidden="true">
@@ -303,8 +337,15 @@
                       <path class="era-land-shadow" d="M372 218H396V226H408V242H400V254H380V266H360V250H364V230H372ZM452 202H472V214H484V234H472V246H460V262H444V250H436V230H444V214H452ZM428 278H448V286H468V302H460V318H440V330H420V314H412V298H420ZM372 290H392V302H404V318H388V330H368V318H356V302H364Z" />
                       <path class="era-land" d="M368 214H392V222H404V238H396V250H376V262H356V246H360V226H368ZM448 198H468V210H480V230H468V242H456V258H440V246H432V226H440V210H448ZM424 274H444V282H464V298H456V314H436V326H416V310H408V294H416ZM368 286H388V298H400V314H384V326H364V314H352V298H360Z" />
                       <path class="era-land-highlight" d="M372 218H388V222H396V230H384V234H368V242H360V230H364V222H372ZM452 202H464V210H472V218H464V222H448V230H440V218H444V210H452ZM428 278H440V282H452V290H444V294H424V302H416V294H420V282H428Z" />
+                      <path class="era-ice-fields" d="M404 182H436V186H452V194H460V202H448V198H436V202H424V198H412V206H400V198H388V190H404ZM346 262H358V270H370V278H358V286H346ZM474 266H494V278H486V286H474V278H466V270H474Z" />
+                      <path class="era-rivers" d="M390 220V228H386V236H378V244H374V252M454 212V224H450V236H454V248H462V256M436 286V294H432V302H424V314" />
+                      <path class="era-mountain-chains" d="M366 238H372V232H378V238H384V244H378V248H366ZM438 226H444V218H450V226H456V232H450V236H438ZM382 302H388V294H394V302H400V308H394V312H382ZM446 302H452V294H458V302H464V308H458V312H446Z" />
                       <path class="era-clouds" d="M350 270H374V266H398V270H414V274H398V278H366V274H350ZM430 238H446V234H470V238H486V242H470V246H438V242H430ZM382 306H398V302H418V306H430V310H414V314H390V310H382Z" />
                       <path class="era-city-lights" d="M376 238H380V242H376ZM388 246H392V250H388ZM452 222H456V226H452ZM464 238H468V242H464ZM432 298H436V302H432ZM380 306H384V310H380Z" />
+                      <g class="era-observatories" aria-hidden="true">
+                        <path d="M370 250H378V258H370ZM452 260H460V268H452ZM404 316H412V324H404Z" />
+                        <path class="era-observatory-beacons" d="M372 246H376V250H372ZM454 256H458V260H454ZM406 312H410V316H406Z" />
+                      </g>
                       <path class="era-rune-lines" d="M420 182V206M420 314V338M342 260H366M474 260H498M364 204L380 220M460 300L476 316M364 316L380 300M460 220L476 204" />
                     </g>
                   </g>
@@ -399,9 +440,9 @@
                   aria-label="Breitenversatz des Beobachters in Richtung Äquator"
                   aria-describedby="horizon-latitude-note"
                 >
-                  <button id="horizon-latitude-0" class="latitude-button is-active" type="button" role="radio" aria-checked="true" aria-label="0 Grad, Polstand wie bisher" data-latitude="0" tabindex="0"><span>0°</span><small>Polstand</small></button>
-                  <button id="horizon-latitude-30" class="latitude-button" type="button" role="radio" aria-checked="false" aria-label="30 Grad äquatorwärts, Mittelstufe" data-latitude="30" tabindex="-1"><span>30°</span><small>Mittelstufe</small></button>
-                  <button id="horizon-latitude-60" class="latitude-button" type="button" role="radio" aria-checked="false" aria-label="60 Grad äquatorwärts, äquatornahe Grenze" data-latitude="60" tabindex="-1"><span>60°</span><small>Grenzstufe</small></button>
+                  <button id="horizon-latitude-0" class="latitude-button is-active" type="button" role="radio" aria-checked="true" aria-label="0 Grad, polare Eis- und Schneelandschaft" data-latitude="0" tabindex="0"><span>0°</span><small>Eiswelt</small></button>
+                  <button id="horizon-latitude-30" class="latitude-button" type="button" role="radio" aria-checked="false" aria-label="30 Grad äquatorwärts, gemäßigte Tannenlandschaft" data-latitude="30" tabindex="-1"><span>30°</span><small>Tannenland</small></button>
+                  <button id="horizon-latitude-60" class="latitude-button" type="button" role="radio" aria-checked="false" aria-label="60 Grad äquatorwärts, heiße Wüstenlandschaft" data-latitude="60" tabindex="-1"><span>60°</span><small>Wüstenland</small></button>
                 </div>
               </div>
 
@@ -411,6 +452,8 @@
                   viewBox="0 0 840 280"
                   role="img"
                   aria-labelledby="horizon-svg-title horizon-description"
+                  data-latitude-degrees="0"
+                  data-biome="polar"
                   shape-rendering="crispEdges"
                   stroke-linecap="square"
                   stroke-linejoin="miter"
@@ -432,6 +475,21 @@
                   </g>
                   <g class="horizon-star-crosses" aria-hidden="true">
                     <path d="M212 16H216V24H224V28H216V36H212V28H204V24H212ZM508 76H512V84H520V88H512V96H508V88H500V84H508ZM784 12H788V20H796V24H788V32H784V24H776V20H784Z" />
+                  </g>
+                  <g class="biome-sky biome-polar" data-biome="polar" aria-hidden="true">
+                    <path class="polar-aurora-deep" d="M0 72H72V60H144V76H216V48H288V64H360V40H432V56H504V32H576V52H648V40H720V64H792V48H840V84H768V76H696V88H624V72H552V92H480V76H408V96H336V80H264V96H192V84H120V96H48V88H0Z" />
+                    <path class="polar-aurora-light" d="M72 52H144V60H216V40H288V52H360V32H432V44H504V24H576V40H648V32H720V48H792V40H840V52H768V60H696V48H624V56H552V48H480V60H408V52H336V64H264V56H192V68H120V60H72Z" />
+                    <path class="polar-snow-sky" d="M44 108H48V112H44ZM124 92H128V96H124ZM188 120H192V124H188ZM316 104H320V108H316ZM396 124H400V128H396ZM540 104H544V108H540ZM612 120H616V124H612ZM732 96H736V100H732ZM804 116H808V120H804Z" />
+                  </g>
+                  <g class="biome-sky biome-temperate" data-biome="temperate" aria-hidden="true">
+                    <path class="temperate-cloud-deep" d="M20 100H84V92H116V84H164V92H204V104H236V116H164V112H104V120H52V112H20ZM536 72H592V64H632V72H676V84H720V96H668V92H612V100H568V92H536Z" />
+                    <path class="temperate-cloud-light" d="M44 92H96V84H132V88H176V96H204V104H156V100H112V108H68V104H44ZM560 64H604V56H640V64H684V72H704V80H660V76H616V84H580V76H560Z" />
+                    <path class="temperate-fireflies" d="M92 132H96V136H92ZM156 116H160V120H156ZM248 140H252V144H248ZM332 124H336V128H332ZM488 136H492V140H488ZM584 116H588V120H584ZM680 140H684V144H680ZM760 120H764V124H760Z" />
+                  </g>
+                  <g class="biome-sky biome-desert" data-biome="desert" aria-hidden="true">
+                    <path class="desert-dust-deep" d="M0 108H96V96H192V112H288V92H384V108H480V88H576V104H672V92H768V108H840V132H744V124H648V136H552V120H456V140H360V124H264V136H168V124H72V136H0Z" />
+                    <path class="desert-dust-light" d="M0 120H120V112H240V124H360V108H480V120H600V104H720V116H840V132H720V128H600V136H480V132H360V140H240V132H120V140H0Z" />
+                    <path class="desert-sky-sparks" d="M52 84H60V88H52ZM144 72H152V76H144ZM268 88H276V92H268ZM388 68H396V72H388ZM516 84H524V88H516ZM628 72H636V76H628ZM748 88H756V92H748Z" />
                   </g>
 
                   <g id="horizon-convection-field" class="horizon-convection-field" aria-hidden="true">
@@ -456,21 +514,76 @@
                     <text class="horizon-body-label" x="0" y="48" text-anchor="middle">YOL</text>
                   </g>
 
-                  <path class="mountain-back" d="M0 176V152H52L84 124 116 152H152L196 112 240 152H284L320 132 356 152H400L448 108 496 152H544L580 128 616 152H660L704 116 748 152H792L816 136 840 148V176Z" />
-                  <path class="mountain-back-light" d="M68 140H76V132H84V124H92V136H100V144H116V152H100V148H84V144H68ZM180 128H188V120H196V112H204V124H212V132H220V140H240V152H224V144H208V136H196V132H180ZM432 124H440V116H448V108H456V120H464V128H472V136H480V144H496V152H480V148H464V140H448V132H432ZM688 132H696V124H704V116H712V128H720V136H728V144H748V152H732V148H716V140H704V136H688Z" />
-                  <path class="mountain-front" d="M0 176V160H72L104 144 136 160H216L252 136 288 160H360L396 148 432 160H520L560 136 600 160H684L720 140 756 160H840V176Z" />
-                  <path class="mountain-front-light" d="M88 152H96V148H104V144H112V152H120V156H136V160H120V158H104V156H88ZM236 148H244V140H252V136H260V144H268V152H288V160H272V156H256V152H236ZM544 148H552V140H560V136H568V144H576V152H600V160H580V156H564V152H544ZM704 152H712V144H720V140H728V148H736V156H756V160H740V158H724V156H704Z" />
-                  <g class="horizon-ruins" aria-hidden="true">
-                    <path d="M96 176V144H104V132H112V144H120V176ZM104 148H112V156H104ZM692 176V136H700V120H708V136H716V176ZM700 144H708V152H700Z" fill-rule="evenodd" />
-                    <path d="M388 176V152H396V144H404V152H412V176ZM428 176V148H436V140H444V148H452V176ZM404 160H436V168H404Z" />
-                    <path class="ruin-highlight" d="M100 144H104V136H108V144H112V148H100ZM696 136H700V124H704V136H708V140H696ZM392 152H396V148H400V152H404V156H392ZM432 148H436V144H440V148H444V152H432Z" />
-                    <path class="ruin-window" d="M104 160H112V168H104ZM700 156H708V168H700ZM396 160H404V168H396ZM436 156H444V164H436Z" />
+                  <g id="horizon-biome-polar" class="biome-layer biome-polar" data-biome="polar" aria-hidden="true">
+                    <path class="mountain-back polar-mountain-back" d="M0 176V150H44L76 126 96 138 128 108 164 146H204L244 118 280 148H332L372 104 416 148H464L504 120 544 148H596L636 110 680 146H728L768 122 804 148H840V176Z" />
+                    <path class="mountain-back-light polar-snowcaps" d="M60 138H68V130H76V126H84V132H92V138H100V142H84V140H68V144H60ZM108 126H116V116H128V108H140V120H148V128H156V136H164V146H148V138H136V132H124V138H108ZM352 122H360V112H372V104H384V116H392V126H400V134H416V148H400V140H384V132H372V138H356V146H344V136H352ZM616 126H624V118H636V110H648V120H656V130H664V138H680V146H664V140H648V134H636V140H620V146H608V136H616Z" />
+                    <path class="mountain-front polar-mountain-front" d="M0 176V162H56L92 142 128 160H188L228 132 268 160H324L356 144 392 162H468L508 136 548 160H612L652 138 696 160H756L792 144 840 160V176Z" />
+                    <path class="mountain-front-light polar-ridge-light" d="M76 154H84V148H92V142H100V150H108V154H128V160H112V158H96V156H76ZM212 144H220V136H228V132H236V140H244V148H252V154H268V160H252V156H236V150H224V154H212ZM492 148H500V140H508V136H516V144H524V150H536V156H548V160H532V156H516V152H500V158H488ZM636 150H644V142H652V138H660V146H668V152H680V156H696V160H680V158H664V154H648V158H636Z" />
+                    <rect class="biome-ground polar-ground" y="176" width="840" height="76" />
+                    <path class="polar-glacier-shadow" d="M0 184H96V192H172V184H248V196H328V188H420V200H508V188H600V196H688V184H772V192H840V252H0Z" />
+                    <path class="polar-glacier-light" d="M0 180H88V188H164V180H240V192H320V184H412V196H500V184H592V192H680V180H764V188H840V204H760V200H684V208H604V204H516V212H420V204H332V208H244V200H164V204H84V196H0Z" />
+                    <path class="polar-snowdrifts" d="M0 216H52V208H112V216H176V212H244V220H316V212H388V216H460V208H536V216H612V212H684V220H760V212H840V236H0Z" />
+                    <path class="polar-crevasses" d="M132 204V216H124V228H116M286 212V224H294V236H302M462 204V216H454V228H446M642 208V220H650V232H658M748 200V212H740V224" />
+                    <g class="polar-ice-spires">
+                      <path d="M36 216H52L44 188ZM68 216H92L80 180ZM724 220H748L736 184ZM772 216H788L780 192Z" />
+                      <path class="polar-spire-light" d="M42 208H46L44 188ZM76 208H82L80 180ZM732 210H738L736 184ZM778 210H782L780 192Z" />
+                    </g>
+                    <g class="polar-observatory">
+                      <path d="M380 212V188H388V180H396V188H404V212ZM436 212V184H444V176H452V184H460V212ZM396 196H444V204H396Z" />
+                      <path class="polar-observatory-light" d="M384 188H388V184H392V188H396V192H384ZM440 184H444V180H448V184H452V188H440Z" />
+                      <path class="polar-window" d="M388 196H396V204H388ZM444 192H452V204H444ZM412 196H420V204H412Z" />
+                    </g>
+                    <path class="polar-snow-pixels" d="M20 232H28V236H20ZM156 228H168V232H156ZM224 240H232V244H224ZM344 224H352V228H344ZM488 236H500V240H488ZM576 228H584V232H576ZM696 240H704V244H696ZM804 228H816V232H804Z" />
+                    <text class="biome-name-label" x="16" y="246">0° · POLARE EISWELT</text>
                   </g>
-                  <path class="forest-line" d="M0 176H840V208H0ZM24 172L36 148 48 172ZM56 176L72 144 88 176ZM752 176L768 144 784 176ZM792 176L808 148 824 176Z" />
+
+                  <g id="horizon-biome-temperate" class="biome-layer biome-temperate" data-biome="temperate" aria-hidden="true">
+                    <path class="temperate-mountain-back" d="M0 176V154H48L88 128 128 154H176L220 118 264 154H320L360 136 400 154H452L496 116 544 154H600L640 130 680 154H732L772 124 812 154H840V176Z" />
+                    <path class="temperate-snowcaps" d="M72 140H80V132H88V128H96V136H104V142H112V148H128V154H112V150H96V146H80V150H68ZM204 132H212V124H220V118H228V126H236V134H244V142H264V154H248V148H232V140H220V146H204ZM480 132H488V122H496V116H504V126H512V134H520V142H544V154H524V148H508V140H496V146H480ZM756 136H764V128H772V124H780V132H788V140H796V148H812V154H796V150H780V144H768V150H752Z" />
+                    <rect class="biome-ground temperate-ground" y="176" width="840" height="76" />
+                    <path class="temperate-hills" d="M0 176V164H72L112 146 156 164H228L272 144 320 164H400L448 142 500 164H572L620 146 668 164H744L788 148 840 164V196H0Z" />
+                    <g class="temperate-forest-back">
+                      <path d="M0 190H840V204H0ZM16 190L28 160 40 190ZM44 190L58 152 72 190ZM82 190L96 158 110 190ZM134 190L148 154 162 190ZM178 190L192 160 206 190ZM648 190L662 154 676 190ZM690 190L704 148 718 190ZM728 190L742 158 756 190ZM772 190L788 150 804 190ZM806 190L822 158 838 190Z" />
+                    </g>
+                    <path class="temperate-river-shadow" d="M332 176H420L448 188H516L488 200H420L392 216H308L336 204H392L420 192H360Z" />
+                    <path class="temperate-river-light" d="M350 180H416L438 188H488L470 194H416L390 208H332L350 200H388L420 188H366Z" />
+                    <g class="temperate-forest-front">
+                      <path d="M0 208H276V232H0ZM24 208L40 168 56 208ZM68 208L88 158 108 208ZM118 208L136 166 154 208ZM170 208L192 154 214 208ZM222 208L242 164 262 208ZM548 208H840V232H548ZM566 208L586 160 606 208ZM616 208L636 152 656 208ZM668 208L688 166 708 208ZM716 208L738 156 760 208ZM772 208L796 150 820 208Z" />
+                      <path class="temperate-pine-light" d="M34 190H46L40 168ZM82 182H94L88 158ZM186 178H198L192 154ZM580 184H592L586 160ZM630 178H642L636 152ZM790 176H802L796 150Z" />
+                    </g>
+                    <g class="temperate-lodge">
+                      <path d="M372 224V196H388V184H420V196H436V224ZM384 196L404 180 424 196Z" />
+                      <path class="temperate-roof-light" d="M380 196L404 176 428 196H420L404 184 388 196Z" />
+                      <path class="temperate-window" d="M388 204H396V216H388ZM412 204H420V216H412ZM400 200H408V208H400Z" />
+                    </g>
+                    <path class="temperate-grass-pixels" d="M20 236V228H24V236ZM124 240V232H128V240ZM260 232V224H264V232ZM524 240V228H528V240ZM604 232V224H608V232ZM716 240V228H720V240ZM812 232V224H816V232Z" />
+                    <text class="biome-name-label" x="16" y="246">30° · GEMÄSSIGTES TANNENLAND</text>
+                  </g>
+
+                  <g id="horizon-biome-desert" class="biome-layer biome-desert" data-biome="desert" aria-hidden="true">
+                    <path class="desert-mesa-back" d="M0 176V150H76V142H108V126H148V142H184V154H252V146H292V132H340V148H404V154H476V144H524V120H572V140H612V152H684V146H724V130H768V146H812V154H840V176Z" />
+                    <path class="desert-mesa-light" d="M84 142H108V126H148V134H116V142H100V150H76V146H84ZM268 146H292V132H340V140H304V148H284V154H252V150H268ZM492 144H524V120H572V128H536V140H516V148H476V146H492ZM700 146H724V130H768V138H736V146H720V154H684V150H700Z" />
+                    <rect class="biome-ground desert-ground" y="176" width="840" height="76" />
+                    <path class="desert-dunes-back" d="M0 196H44L84 180 128 196H188L236 176 284 196H348L392 182 440 196H508L556 174 608 196H672L720 180 768 196H840V220H0Z" />
+                    <path class="desert-dunes-light" d="M0 208H72L116 192 164 208H236L280 190 332 208H404L452 194 504 208H572L620 188 676 208H744L788 192 840 204V232H0Z" />
+                    <path class="desert-dune-ridges" d="M24 208H72L116 192H148M196 216H236L280 190H316M380 216H404L452 194H492M548 216H572L620 188H664M720 216H744L788 192H824" />
+                    <g class="desert-cacti">
+                      <path d="M88 228V196H96V208H104V200H112V216H104V220H96V228ZM708 228V188H716V204H724V196H732V216H724V220H716V228ZM780 232V204H788V212H796V208H804V224H796V228H788V232Z" />
+                      <path class="desert-cactus-light" d="M92 200H96V224H92ZM712 192H716V224H712ZM784 208H788V228H784Z" />
+                    </g>
+                    <g class="desert-ruins">
+                      <path d="M356 228V188H368V180H380V188H392V228ZM448 228V196H460V184H472V196H484V228ZM380 204H460V216H380Z" />
+                      <path class="desert-ruin-light" d="M360 188H368V184H376V188H384V196H360ZM452 196H460V188H468V196H476V204H452Z" />
+                      <path class="desert-ruin-window" d="M368 200H380V212H368ZM460 204H472V216H460ZM408 204H420V216H408Z" />
+                    </g>
+                    <path class="desert-cracks" d="M148 228H164V236H176V244M292 220H304V232H316V240H328M536 228H548V236H560V244M656 220H668V232H680V240" />
+                    <path class="desert-sand-pixels" d="M32 236H48V240H32ZM196 228H208V232H196ZM252 244H268V248H252ZM500 240H516V244H500ZM596 232H608V236H596ZM736 240H752V244H736ZM816 228H828V232H816Z" />
+                    <text class="biome-name-label" x="16" y="246">60° · HEISSE WÜSTENLANDSCHAFT</text>
+                  </g>
+
                   <path class="horizon-line" d="M0 176H840V180H0Z" />
-                  <rect class="horizon-ground" y="208" width="840" height="72" />
-                  <path class="horizon-ground-dither" d="M0 216H840V220H0ZM0 232H840V236H0ZM0 248H840V252H0Z" />
-                  <path class="horizon-terrace" d="M0 208H840V216H760V224H640V220H540V228H300V220H200V224H80V216H0Z" />
+                  <rect class="horizon-compass-ground" y="252" width="840" height="28" />
+                  <path class="horizon-compass-divider" d="M0 252H840V256H0Z" />
                   <g class="horizon-runes" aria-hidden="true">
                     <path d="M112 232H128V248H112ZM116 236H124V244H116ZM264 236H280V240H274V248H270V240H264ZM560 236H576V252H572V240H564V252H560ZM712 232H728V248H724V240H716V248H712Z" fill-rule="evenodd" />
                   </g>

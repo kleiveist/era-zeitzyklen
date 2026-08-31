@@ -545,11 +545,14 @@ const ringRadius30 = Number(elementFor("#era-latitude-ring").getAttribute("r"));
 assert.ok(ringRadius30 > 8, "der ERA-Breitenring wächst bei 30 Grad aus dem Polpunkt heraus");
 assert.equal(elementFor("#era-latitude-indicator").getAttribute("data-latitude-degrees"), "30");
 assert.equal(elementFor("#horizon-view").getAttribute("data-latitude-degrees"), "30");
-assert.match(elementFor("#horizon-title").textContent, /30° äquatorwärts/);
+assert.equal(elementFor("#horizon-view").getAttribute("data-biome"), "temperate", "30 Grad aktivieren die Tannenlandschaft");
+assert.equal(elementFor("#orbit-view").getAttribute("data-horizon-biome"), "temperate", "Orbitkarte protokolliert das gewählte Tannenbiom");
+assert.match(elementFor("#horizon-title").textContent, /30° Gemäßigtes Tannenland/);
 
 latitudeButtons[2].emit("click");
 assertLatitude(60, "Klick aktiviert die äquatornahe Grenzstufe");
 assert.equal(storage.get("era-horizon-latitude"), "60", "60 Grad werden gespeichert");
+assert.equal(elementFor("#horizon-view").getAttribute("data-biome"), "desert", "60 Grad aktivieren die Wüstenlandschaft");
 const ringRadius60 = Number(elementFor("#era-latitude-ring").getAttribute("r"));
 assert.ok(ringRadius60 > ringRadius30, "der ERA-Breitenring wächst logisch bis 60 Grad");
 
@@ -569,6 +572,7 @@ assert.ok(keyEvent.defaultPrevented, "Ende wird in der Breitenwahl verarbeitet")
 assertLatitude(60, "Ende springt zur Grenzstufe");
 latitudeButtons[0].emit("click");
 assertLatitude(0, "Test setzt die bisherige Polansicht wieder her");
+assert.equal(elementFor("#horizon-view").getAttribute("data-biome"), "polar", "0 Grad stellen die polare Eiswelt wieder her");
 
 const preservedDirection = "west";
 slider.value = "68000";
@@ -728,6 +732,9 @@ for (const bodyName of ["sol", "yol"]) {
 assert.equal(contract.normalizeDegrees(-90), 270, "negative Winkel werden normalisiert");
 assert.equal(contract.normalizeDegrees(450), 90, "Winkel über 360° werden normalisiert");
 assert.deepEqual(Object.keys(contract.HORIZON_LATITUDES), ["0", "30", "60"], "nur drei äquatorwärtige Breitenstufen sind definiert");
+assert.equal(contract.HORIZON_LATITUDES[0].biome, "polar", "0 Grad sind mit Eis und Schnee verknüpft");
+assert.equal(contract.HORIZON_LATITUDES[30].biome, "temperate", "30 Grad sind mit gemäßigtem Tannenland verknüpft");
+assert.equal(contract.HORIZON_LATITUDES[60].biome, "desert", "60 Grad sind mit der Wüste verknüpft");
 assert.equal(contract.normalizeHorizonLatitude(0), 0, "Polstand bleibt 0 Grad");
 assert.equal(contract.normalizeHorizonLatitude(30), 30, "Mittelstufe bleibt 30 Grad");
 assert.equal(contract.normalizeHorizonLatitude(60), 60, "Grenzstufe bleibt 60 Grad");

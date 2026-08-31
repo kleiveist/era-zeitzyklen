@@ -72,6 +72,7 @@ assert.match(orbitTag, /\bshape-rendering\s*=\s*["']crispEdges["']/i, "Orbitansi
 assert.match(horizonTag, /\bshape-rendering\s*=\s*["']crispEdges["']/i, "Horizontansicht rendert mit crispEdges");
 assert.match(orbitTag, /\baria-labelledby\s*=/i, "Orbitansicht besitzt zugänglichen Titel und Beschreibung");
 assert.match(horizonTag, /\baria-labelledby\s*=/i, "Horizontansicht besitzt zugänglichen Titel und Beschreibung");
+assert.match(horizonTag, /\bdata-biome\s*=\s*["']polar["']/i, "Horizont startet mit der polaren Eiswelt");
 requireMatch("index.html", /\bstroke-linecap\s*=\s*["']square["']/i, "blockige SVG-Linien verwenden square linecaps");
 requireMatch("index.html", /\bstroke-linejoin\s*=\s*["']miter["']/i, "blockige SVG-Linien verwenden miter joins");
 
@@ -121,6 +122,9 @@ for (const id of [
   "horizon-yol-body",
   "zehs-body",
   "horizon-zehs-star",
+  "horizon-biome-polar",
+  "horizon-biome-temperate",
+  "horizon-biome-desert",
   "zehs-visibility",
   "zehs-position",
 ]) {
@@ -129,6 +133,9 @@ for (const id of [
 
 for (const className of [
   "orbit-nebula",
+  "orbit-distant-worlds",
+  "orbit-axis-lines",
+  "orbit-map-frame",
   "star-cross-field",
   "era-aura-outer",
   "era-ocean-depth",
@@ -136,6 +143,10 @@ for (const className of [
   "horizon-star-crosses",
   "mountain-back-light",
   "horizon-runes",
+  "biome-sky",
+  "polar-glacier-light",
+  "temperate-forest-front",
+  "desert-dunes-light",
   "zehs-point",
   "zehs-point-core",
   "zehs-instrument",
@@ -169,6 +180,30 @@ for (const name of [
 requireMatch("app.js", /era-horizon-direction/, "Blickrichtung wird unter dem vereinbarten localStorage-Schlüssel gespeichert");
 requireMatch("app.js", /era-horizon-latitude/, "Breitenstufe wird unter dem vereinbarten localStorage-Schlüssel gespeichert");
 requireMatch("app.js", /Object\.freeze\(\[0,\s*30,\s*60\]\)/, "nur die drei vereinbarten Breitenstufen sind wählbar");
+requireMatch("app.js", /biome\s*:\s*["']polar["']/, "0 Grad wählen die polare Eiswelt");
+requireMatch("app.js", /biome\s*:\s*["']temperate["']/, "30 Grad wählen die gemäßigte Tannenlandschaft");
+requireMatch("app.js", /biome\s*:\s*["']desert["']/, "60 Grad wählen die Wüstenlandschaft");
+for (const biome of ["polar", "temperate", "desert"]) {
+  requireMatch(
+    "styles.css",
+    new RegExp(`#horizon-view\\[data-biome=["']${biome}["']\\]`, "i"),
+    `${biome}: SVG-Biom wird über den zentralen Datenzustand eingeblendet`,
+  );
+}
+for (const variable of [
+  "orbit-dust-a",
+  "era-surface-color",
+  "polar-snow",
+  "temperate-pine",
+  "desert-sand",
+]) {
+  requireMatch("styles.css", new RegExp(`--${variable}\\s*:`, "i"), `${variable}: Theme-Palette ist definiert`);
+}
+requireMatch(
+  "styles.css",
+  /:root\[data-theme=["']light["']\][\s\S]*--polar-snow\s*:[\s\S]*--temperate-pine\s*:[\s\S]*--desert-sand\s*:/i,
+  "das helle Theme besitzt eigene Farben für alle drei Landschaften",
+);
 requireMatch("index.html", /\bid\s*=\s*["']zehs-star-shape["']/, "ZEHS besitzt ein wiederverwendbares Pixelstern-Symbol");
 requireMatch("index.html", /\bdata-distance-au\s*=\s*["']40["']/, "ZEHS trägt die kanonische Näherungsentfernung");
 requireMatch("index.html", /\bdata-brightness\s*=\s*["']sehr hell["']/, "ZEHS trägt die kanonische Helligkeit");

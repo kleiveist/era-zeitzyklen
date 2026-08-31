@@ -52,6 +52,11 @@ Era liegt als kreisförmige, pixelig abgestufte Polansicht im Mittelpunkt. Der M
 der Nordpol, der äußere Rand entspricht dem Äquator. Nur die Runen- und Oberflächenstruktur
 rotiert; Era selbst wird weder gekippt noch perspektivisch gestaucht.
 
+Die hochauflösende Himmelskarte kombiniert Sternenstaub, Tiefenwolken, entfernte Ringwelten,
+Kartengitter und Sektormarkierungen mit Eras Flüssen, Eisfeldern, Gebirgsketten und kleinen
+Observatorien. Dunkle Chronik und Helles Pergament verwenden dafür jeweils eigenständige
+Himmels-, Planeten- und Instrumentenfarben.
+
 Ein cyanfarbener Breitenring zeigt den gewählten Beobachterkreis direkt auf Era. Beim bisherigen
 Polstand bleibt er als kleiner Polring sichtbar; bei 30° und 60° wächst er entsprechend nach
 außen. Eine blockige Beobachtermarke verbindet Ring und gewählte Blickrichtung.
@@ -117,6 +122,18 @@ Die drei äquatorwärtigen Polversätze sind bewusst auf 0°, 30° und 60° begr
 der bisherigen Darstellung. Jede weitere Stufe hebt sichtbare Sol- und Yol-Positionen um einen
 festen sphärischen Projektionsanteil an. Der Äquator bei 90° ist weder über Schaltflächen noch
 über Tastatursteuerung erreichbar, damit der illustrative Himmel nicht bis zum Zenit kippt.
+
+Jede Breitenstufe besitzt ein vollständiges, zur Auswahl passendes Pixelpanorama:
+
+| Breite | Landschaft | sichtbare Details |
+| --- | --- | --- |
+| 0° | Polare Eiswelt | Gletscher, Schneefelder, Eisspitzen und Polarobservatorium |
+| 30° | Gemäßigtes Tannenland | Bergketten, Tannenwald, Fluss und Waldhütte |
+| 60° | Heiße Wüstenlandschaft | Dünen, Mesas, Kakteen und Wüstenruinen |
+
+Die Biome wechseln nicht nur das Gelände, sondern auch Himmel, Wetterpixel und Horizontfarben.
+Alle drei Landschaften besitzen getrennt abgestimmte Paletten für den hellen und dunklen Modus;
+die astronomischen Positionen und Messwerte bleiben beim rein visuellen Wechsel unverändert.
 
 Die Daten fließen in einer festen Reihenfolge:
 

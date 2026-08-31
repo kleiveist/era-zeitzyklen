@@ -87,6 +87,69 @@
   --forest: #0a0e20;
   --nebula: #33275e;
   --nebula-bright: #665092;
+  --orbit-dust-a: #7990c7;
+  --orbit-dust-b: #b789cb;
+  --orbit-cloud-a: #251f50;
+  --orbit-cloud-b: #15354f;
+  --orbit-axis: #45577f;
+  --orbit-frame: #8b78b3;
+  --orbit-map-label: #9caed4;
+  --distant-world-shadow: #0d1229;
+  --distant-world-surface: #59668d;
+  --distant-world-light: #9aa9c9;
+  --distant-world-ring: #b88e63;
+  --era-surface-color: #273746;
+  --era-dither-color: #384852;
+  --era-ocean-color: #203a55;
+  --era-land-color: #526542;
+  --era-land-edge: #85845b;
+  --era-land-shadow-color: #2d3b30;
+  --era-land-light: #9c9b68;
+  --era-ice-color: #a8d0d8;
+  --era-river-color: #61a9ba;
+  --era-mountain-color: #303d31;
+  --era-cloud-color: #d8ded6;
+  --era-grid-color: #718186;
+  --polar-mountain: #344a6a;
+  --polar-mountain-light: #7292ad;
+  --polar-ground: #5c8098;
+  --polar-ground-deep: #294763;
+  --polar-ice: #9cc4d2;
+  --polar-snow: #d9edf0;
+  --polar-snow-bright: #f5ffff;
+  --polar-crevasse: #24415d;
+  --polar-structure: #263a57;
+  --polar-window: #8ce4e7;
+  --polar-aurora-deep: #315d7d;
+  --polar-aurora-light: #6fb8a7;
+  --temperate-mountain: #34445a;
+  --temperate-snow: #9aaab8;
+  --temperate-ground: #1c3b31;
+  --temperate-hill: #315944;
+  --temperate-pine-deep: #0a211d;
+  --temperate-pine: #163d31;
+  --temperate-pine-light: #3f7555;
+  --temperate-river: #2f6f7f;
+  --temperate-river-light: #69aeba;
+  --temperate-wood: #5f402f;
+  --temperate-roof: #9a6944;
+  --temperate-window: #ffd274;
+  --temperate-cloud: #7c8ba7;
+  --temperate-cloud-light: #b2b9c9;
+  --desert-mesa: #6d3c36;
+  --desert-mesa-light: #b06c4d;
+  --desert-ground: #74432d;
+  --desert-sand: #a9613c;
+  --desert-sand-light: #d39156;
+  --desert-ridge: #703b31;
+  --desert-cactus: #2d5a44;
+  --desert-cactus-light: #5f8a57;
+  --desert-ruin: #6c4438;
+  --desert-ruin-light: #c18455;
+  --desert-window: #4d2930;
+  --desert-dust: #865046;
+  --desert-dust-light: #b2775e;
+  --horizon-compass-ground: #070b1b;
   --world-wallpaper: url("assets/images/era-celestial-dark-2x.png");
   --wallpaper-veil: rgb(3 6 18 / 24%);
   --hero-surface: rgb(6 10 27 / 91%);
@@ -118,21 +181,84 @@
   --ember: #a54e42;
   --focus: #4d3c92;
   --shadow: #7f8ba8;
-  --sky-1: #11162c;
-  --sky-2: #1c2545;
-  --sky-3: #2c3760;
-  --sky-4: #455078;
+  --sky-1: #45658f;
+  --sky-2: #617da4;
+  --sky-3: #8298b5;
+  --sky-4: #abb5c5;
   --sky-ink: #fff1c9;
-  --sky-muted: #dce4ff;
-  --ground: #151a32;
-  --ground-light: #293353;
-  --mountain-back: #596384;
-  --mountain-back-light: #7783a7;
-  --mountain-front: #394361;
-  --mountain-front-light: #566180;
-  --forest: #222941;
-  --nebula: #453a71;
-  --nebula-bright: #8875aa;
+  --sky-muted: #fff0cb;
+  --ground: #263454;
+  --ground-light: #45597a;
+  --mountain-back: #7182a2;
+  --mountain-back-light: #a4b2c6;
+  --mountain-front: #526584;
+  --mountain-front-light: #7f91aa;
+  --forest: #2e4851;
+  --nebula: #8a6f9f;
+  --nebula-bright: #c39ab2;
+  --orbit-dust-a: #e8dcae;
+  --orbit-dust-b: #f1c0d0;
+  --orbit-cloud-a: #806a9b;
+  --orbit-cloud-b: #5a879c;
+  --orbit-axis: #d3caa8;
+  --orbit-frame: #f2d69e;
+  --orbit-map-label: #fff0c8;
+  --distant-world-shadow: #344563;
+  --distant-world-surface: #8c9db3;
+  --distant-world-light: #d9e5e8;
+  --distant-world-ring: #e1bd7a;
+  --era-surface-color: #647f8e;
+  --era-dither-color: #7893a0;
+  --era-ocean-color: #477995;
+  --era-land-color: #71835b;
+  --era-land-edge: #a7a06d;
+  --era-land-shadow-color: #50634f;
+  --era-land-light: #c8bd79;
+  --era-ice-color: #d9f0ef;
+  --era-river-color: #84d0da;
+  --era-mountain-color: #536651;
+  --era-cloud-color: #f5f4df;
+  --era-grid-color: #a9c2c6;
+  --polar-mountain: #718da5;
+  --polar-mountain-light: #c1d7df;
+  --polar-ground: #a8cad5;
+  --polar-ground-deep: #6e9eb6;
+  --polar-ice: #d1e9ec;
+  --polar-snow: #effafa;
+  --polar-snow-bright: #ffffff;
+  --polar-crevasse: #5683a0;
+  --polar-structure: #536d88;
+  --polar-window: #d9ffff;
+  --polar-aurora-deep: #65a7aa;
+  --polar-aurora-light: #a8dcc4;
+  --temperate-mountain: #73849a;
+  --temperate-snow: #d7dde0;
+  --temperate-ground: #51724e;
+  --temperate-hill: #70905e;
+  --temperate-pine-deep: #254b3a;
+  --temperate-pine: #37684a;
+  --temperate-pine-light: #75a06a;
+  --temperate-river: #4e94aa;
+  --temperate-river-light: #a2d7d7;
+  --temperate-wood: #76523a;
+  --temperate-roof: #bb7b4d;
+  --temperate-window: #fff0a4;
+  --temperate-cloud: #d2d6d4;
+  --temperate-cloud-light: #f5f1dc;
+  --desert-mesa: #a85f43;
+  --desert-mesa-light: #e0a064;
+  --desert-ground: #b56b42;
+  --desert-sand: #d79255;
+  --desert-sand-light: #f2c37e;
+  --desert-ridge: #a65b43;
+  --desert-cactus: #46745a;
+  --desert-cactus-light: #82a969;
+  --desert-ruin: #9f6447;
+  --desert-ruin-light: #e5b06d;
+  --desert-window: #70423c;
+  --desert-dust: #be8066;
+  --desert-dust-light: #e4b28c;
+  --horizon-compass-ground: #2d4264;
   --world-wallpaper: url("assets/images/era-celestial-light-2x.png");
   --wallpaper-veil: rgb(230 238 246 / 14%);
   --hero-surface: rgb(248 246 241 / 91%);
@@ -870,6 +996,27 @@ main {
   opacity: 0.09;
 }
 
+.orbit-dust {
+  opacity: 0.7;
+}
+
+.orbit-dust-pixel-a {
+  fill: var(--orbit-dust-a);
+}
+
+.orbit-dust-pixel-b {
+  fill: var(--orbit-dust-b);
+}
+
+.orbit-deep-cloud {
+  fill: var(--orbit-cloud-a);
+  opacity: 0.34;
+}
+
+.orbit-deep-cloud.cloud-south {
+  fill: var(--orbit-cloud-b);
+}
+
 .orbit-nebula {
   fill: var(--nebula);
   opacity: 0.38;
@@ -897,6 +1044,62 @@ main {
 .star-cross-field {
   fill: var(--brass-light);
   opacity: 0.74;
+}
+
+.distant-world-shadow {
+  fill: var(--distant-world-shadow);
+}
+
+.distant-world-surface {
+  fill: var(--distant-world-surface);
+}
+
+.distant-world-light,
+.distant-world-craters {
+  fill: var(--distant-world-light);
+}
+
+.distant-world-ring {
+  fill: var(--distant-world-ring);
+}
+
+.orbit-distant-worlds {
+  opacity: 0.62;
+}
+
+.orbit-axis-lines {
+  fill: none;
+  stroke: var(--orbit-axis);
+  stroke-width: 2;
+  stroke-dasharray: 4 8;
+  opacity: 0.48;
+}
+
+.orbit-axis-lines .orbit-axis-ticks {
+  stroke-dasharray: none;
+  opacity: 0.76;
+}
+
+.orbit-map-frame {
+  fill: none;
+  stroke: var(--orbit-frame);
+  stroke-width: 4;
+  opacity: 0.72;
+}
+
+.orbit-map-frame .orbit-scale-ticks {
+  stroke-width: 2;
+}
+
+.orbit-sector-labels {
+  fill: var(--orbit-map-label);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  paint-order: stroke;
+  stroke: var(--stone-950);
+  stroke-width: 3px;
 }
 
 .orbit {
@@ -948,49 +1151,70 @@ main {
 }
 
 .era-surface-base {
-  fill: var(--stone-800);
-}
-
-:root[data-theme="light"] .era-surface-base {
-  fill: #4d5960;
+  fill: var(--era-surface-color);
 }
 
 .era-dither-a {
-  fill: #384852;
+  fill: var(--era-dither-color);
 }
 
 .era-ocean-depth {
-  fill: #243753;
+  fill: var(--era-ocean-color);
   opacity: 0.7;
 }
 
 .era-ring {
   fill: none;
-  stroke: #718186;
+  stroke: var(--era-grid-color);
   stroke-width: 4;
   stroke-dasharray: 12 8;
 }
 
 .era-land {
-  fill: #5e6745;
-  stroke: #85845b;
+  fill: var(--era-land-color);
+  stroke: var(--era-land-edge);
   stroke-width: 2;
 }
 
 .era-land-shadow {
-  fill: #303b31;
+  fill: var(--era-land-shadow-color);
 }
 
 .era-land-highlight {
-  fill: #9a9866;
+  fill: var(--era-land-light);
+}
+
+.era-ice-fields {
+  fill: var(--era-ice-color);
+  opacity: 0.82;
+}
+
+.era-rivers {
+  fill: none;
+  stroke: var(--era-river-color);
+  stroke-width: 3;
+}
+
+.era-mountain-chains {
+  fill: var(--era-mountain-color);
+  stroke: var(--era-land-edge);
+  stroke-width: 1;
 }
 
 .era-clouds {
-  fill: #d6d6c4;
+  fill: var(--era-cloud-color);
   opacity: 0.52;
 }
 
 .era-city-lights {
+  fill: var(--sol-yellow);
+}
+
+.era-observatories {
+  fill: var(--stone-950);
+}
+
+.era-observatory-beacons {
   fill: var(--sol-yellow);
 }
 
@@ -1378,6 +1602,62 @@ main {
   opacity: 0.78;
 }
 
+.biome-layer,
+.biome-sky {
+  display: none;
+}
+
+#horizon-view[data-biome="polar"] .biome-polar,
+#horizon-view[data-biome="temperate"] .biome-temperate,
+#horizon-view[data-biome="desert"] .biome-desert {
+  display: inline;
+}
+
+.polar-aurora-deep {
+  fill: var(--polar-aurora-deep);
+  opacity: 0.26;
+}
+
+.polar-aurora-light {
+  fill: var(--polar-aurora-light);
+  opacity: 0.32;
+}
+
+.polar-snow-sky {
+  fill: var(--polar-snow-bright);
+  opacity: 0.72;
+}
+
+.temperate-cloud-deep {
+  fill: var(--temperate-cloud);
+  opacity: 0.34;
+}
+
+.temperate-cloud-light {
+  fill: var(--temperate-cloud-light);
+  opacity: 0.42;
+}
+
+.temperate-fireflies {
+  fill: var(--temperate-window);
+  opacity: 0.86;
+}
+
+.desert-dust-deep {
+  fill: var(--desert-dust);
+  opacity: 0.28;
+}
+
+.desert-dust-light {
+  fill: var(--desert-dust-light);
+  opacity: 0.34;
+}
+
+.desert-sky-sparks {
+  fill: var(--desert-sand-light);
+  opacity: 0.74;
+}
+
 .horizon-body-label {
   font-size: 18px !important;
 }
@@ -1432,6 +1712,194 @@ main {
 
 .horizon-runes {
   fill: var(--brass);
+}
+
+.polar-mountain-back {
+  fill: var(--polar-mountain);
+}
+
+.polar-snowcaps,
+.polar-ridge-light {
+  fill: var(--polar-mountain-light);
+}
+
+.polar-mountain-front {
+  fill: var(--polar-ground-deep);
+}
+
+.polar-ground {
+  fill: var(--polar-ground);
+}
+
+.polar-glacier-shadow {
+  fill: var(--polar-ground-deep);
+}
+
+.polar-glacier-light,
+.polar-snowdrifts {
+  fill: var(--polar-snow);
+}
+
+.polar-crevasses {
+  fill: none;
+  stroke: var(--polar-crevasse);
+  stroke-width: 4;
+}
+
+.polar-ice-spires {
+  fill: var(--polar-ice);
+}
+
+.polar-spire-light,
+.polar-snow-pixels {
+  fill: var(--polar-snow-bright);
+}
+
+.polar-observatory {
+  fill: var(--polar-structure);
+}
+
+.polar-observatory-light {
+  fill: var(--polar-mountain-light);
+}
+
+.polar-window {
+  fill: var(--polar-window);
+}
+
+.temperate-mountain-back {
+  fill: var(--temperate-mountain);
+}
+
+.temperate-snowcaps {
+  fill: var(--temperate-snow);
+}
+
+.temperate-ground {
+  fill: var(--temperate-ground);
+}
+
+.temperate-hills {
+  fill: var(--temperate-hill);
+}
+
+.temperate-forest-back {
+  fill: var(--temperate-pine-deep);
+}
+
+.temperate-forest-front {
+  fill: var(--temperate-pine);
+}
+
+.temperate-pine-light,
+.temperate-grass-pixels {
+  fill: var(--temperate-pine-light);
+}
+
+.temperate-river-shadow {
+  fill: var(--temperate-river);
+}
+
+.temperate-river-light {
+  fill: var(--temperate-river-light);
+}
+
+.temperate-lodge {
+  fill: var(--temperate-wood);
+}
+
+.temperate-roof-light {
+  fill: var(--temperate-roof);
+}
+
+.temperate-window {
+  fill: var(--temperate-window);
+}
+
+.desert-mesa-back {
+  fill: var(--desert-mesa);
+}
+
+.desert-mesa-light {
+  fill: var(--desert-mesa-light);
+}
+
+.desert-ground {
+  fill: var(--desert-ground);
+}
+
+.desert-dunes-back {
+  fill: var(--desert-sand);
+}
+
+.desert-dunes-light,
+.desert-sand-pixels {
+  fill: var(--desert-sand-light);
+}
+
+.desert-dune-ridges,
+.desert-cracks {
+  fill: none;
+  stroke: var(--desert-ridge);
+  stroke-width: 4;
+}
+
+.desert-cacti {
+  fill: var(--desert-cactus);
+}
+
+.desert-cactus-light {
+  fill: var(--desert-cactus-light);
+}
+
+.desert-ruins {
+  fill: var(--desert-ruin);
+}
+
+.desert-ruin-light {
+  fill: var(--desert-ruin-light);
+}
+
+.desert-ruin-window {
+  fill: var(--desert-window);
+}
+
+.biome-name-label {
+  fill: var(--sky-ink);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  paint-order: stroke;
+  stroke: var(--stone-950);
+  stroke-width: 3px;
+}
+
+.horizon-compass-ground {
+  fill: var(--horizon-compass-ground);
+}
+
+.horizon-compass-divider {
+  fill: var(--brass-dark);
+}
+
+:root[data-theme="light"] .star-field,
+:root[data-theme="light"] .horizon-stars {
+  opacity: 0.62;
+}
+
+:root[data-theme="light"] .orbit-grid {
+  opacity: 0.28;
+}
+
+:root[data-theme="light"] .horizon-nebula,
+:root[data-theme="light"] .orbit-nebula {
+  opacity: 0.24;
+}
+
+:root[data-theme="light"] .polar-aurora-deep,
+:root[data-theme="light"] .polar-aurora-light {
+  opacity: 0.2;
 }
 
 .zehs-instrument {

@@ -78,9 +78,9 @@
 
   const HORIZON_DIRECTION_ORDER = Object.freeze(["north", "east", "south", "west"]);
   const HORIZON_LATITUDES = Object.freeze({
-    0: Object.freeze({ degrees: 0, name: "Polstand", description: "wie bisher" }),
-    30: Object.freeze({ degrees: 30, name: "Mittelstufe", description: "30 Grad äquatorwärts" }),
-    60: Object.freeze({ degrees: 60, name: "Grenzstufe", description: "60 Grad äquatorwärts" }),
+    0: Object.freeze({ degrees: 0, name: "Polare Eiswelt", biome: "polar", description: "Eis- und Schneelandschaft am Polstand" }),
+    30: Object.freeze({ degrees: 30, name: "Gemäßigtes Tannenland", biome: "temperate", description: "gemäßigte Waldlandschaft 30 Grad äquatorwärts" }),
+    60: Object.freeze({ degrees: 60, name: "Heiße Wüstenlandschaft", biome: "desert", description: "Wüstenrand 60 Grad äquatorwärts" }),
   });
   const HORIZON_LATITUDE_ORDER = Object.freeze([0, 30, 60]);
   const ZEHS_PARAMETERS = Object.freeze({
@@ -968,7 +968,7 @@
       button.classList.toggle("is-active", active);
     }
     if (elements.horizonTitle) {
-      elements.horizonTitle.textContent = `Horizontverlauf · ${activeDirection.name} · ${activeLatitude.degrees}° äquatorwärts`;
+      elements.horizonTitle.textContent = `Horizontverlauf · ${activeDirection.name} · ${activeLatitude.degrees}° ${activeLatitude.name}`;
     }
     if (elements.horizonSvgTitle) {
       elements.horizonSvgTitle.textContent = `Horizontverlauf mit Blick nach ${activeDirection.name} bei ${activeLatitude.degrees} Grad Polversatz`;
@@ -995,6 +995,10 @@
         "data-active-latitude",
         String(state.horizonLatitude),
       );
+      elements.horizonLatitudeGroup.setAttribute(
+        "data-active-biome",
+        HORIZON_LATITUDES[state.horizonLatitude].biome,
+      );
     }
     for (const latitudeDegrees of HORIZON_LATITUDE_ORDER) {
       const button = elements.horizonLatitudeButtons[latitudeDegrees];
@@ -1006,7 +1010,7 @@
       button.setAttribute("aria-pressed", String(active));
       button.setAttribute(
         "aria-label",
-        `${latitude.degrees} Grad äquatorwärts, ${latitude.name}${latitude.degrees === 0 ? ", wie bisher" : ""}`,
+        `${latitude.degrees} Grad äquatorwärts, ${latitude.name}${latitude.degrees === 0 ? ", Polstand wie bisher" : ""}`,
       );
       button.setAttribute("tabindex", active ? "0" : "-1");
       button.classList.toggle("is-active", active);
@@ -1175,6 +1179,10 @@
     }
     elements.orbitView.classList.toggle("is-convection", isConvection);
     elements.orbitView.setAttribute("data-horizon-latitude", String(state.horizonLatitude));
+    elements.orbitView.setAttribute(
+      "data-horizon-biome",
+      HORIZON_LATITUDES[state.horizonLatitude].biome,
+    );
     elements.convectionMessage.hidden = !isConvection;
     elements.orbitDescription.textContent = isConvection
       ? "Nordpol-Draufsicht während der Konvektion: Sol und Yol sind nicht sichtbar; ferne Splitterwelten treten hervor. ZEHS bleibt als ungefähr 40 AU entfernter Referenzpunkt kartiert."
@@ -1244,6 +1252,7 @@
       );
       elements.horizonView.setAttribute("data-direction", state.horizonDirection);
       elements.horizonView.setAttribute("data-latitude-degrees", String(state.horizonLatitude));
+      elements.horizonView.setAttribute("data-biome", HORIZON_LATITUDES[state.horizonLatitude].biome);
     }
     if (elements.horizonConvectionField) {
       elements.horizonConvectionField.classList.toggle("is-visible", isConvection);
@@ -1258,7 +1267,7 @@
             yolVisible ? "vor" : "hinter"
           } dem lokalen Horizont.`;
       const zehsText = `ZEHS liegt ${zehsVisible ? "als heller Punkt über" : "unter"} dem lokalen Horizont.`;
-      elements.horizonDescription.textContent = `Schematischer Horizont bei Blick nach ${direction.name} und ${latitude.degrees} Grad Versatz vom Nordpol in Richtung Äquator. ${visibilityText} ${zehsText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht; der Äquator bei 90 Grad bleibt ausgeschlossen.`;
+      elements.horizonDescription.textContent = `Schematischer Horizont durch die ${latitude.name} bei Blick nach ${direction.name} und ${latitude.degrees} Grad Versatz vom Nordpol in Richtung Äquator. ${visibilityText} ${zehsText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht; der Äquator bei 90 Grad bleibt ausgeschlossen.`;
     }
   }
 
@@ -1590,13 +1599,17 @@
       updateEraOrientation(lastRenderFrame);
       updateHorizonGeometry(lastRenderFrame);
       elements.orbitView.setAttribute("data-horizon-latitude", String(normalizedLatitude));
+      elements.orbitView.setAttribute(
+        "data-horizon-biome",
+        HORIZON_LATITUDES[normalizedLatitude].biome,
+      );
     }
 
     const activeButton = elements.horizonLatitudeButtons[normalizedLatitude];
     if (options.focus && typeof activeButton?.focus === "function") activeButton.focus();
     if (changed && options.announce !== false) {
       const latitude = HORIZON_LATITUDES[normalizedLatitude];
-      announce(`${latitude.degrees} Grad äquatorwärts, ${latitude.name}. Sol und Yol stehen höher über dem Horizont.`);
+      announce(`${latitude.degrees} Grad äquatorwärts: ${latitude.name}. Sol und Yol stehen höher über dem Horizont.`);
     }
   }
 
