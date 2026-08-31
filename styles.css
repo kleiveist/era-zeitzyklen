@@ -3437,3 +3437,278 @@ footer {
     padding: 14px;
   }
 }
+
+/* High-density raster artwork layer */
+
+.instrument-rail {
+  display: grid;
+  min-width: 0;
+  gap: 20px;
+  align-content: start;
+}
+
+.instrument-rail > .panel {
+  width: 100%;
+}
+
+.instrument-rail .algorithm-panel {
+  grid-row: auto;
+  grid-column: auto;
+}
+
+.orbit-artwork,
+.horizon-artwork,
+.celestial-artwork {
+  image-rendering: auto;
+}
+
+.orbit-artwork {
+  display: none;
+}
+
+:root[data-theme="dark"] .orbit-artwork-dark,
+:root[data-theme="light"] .orbit-artwork-light {
+  display: inline;
+}
+
+.orbit-artwork-tone {
+  fill: rgb(5 8 24 / 14%);
+}
+
+:root[data-theme="light"] .orbit-artwork-tone {
+  fill: rgb(255 247 218 / 8%);
+}
+
+.orbit-dust {
+  opacity: 0.16;
+}
+
+.orbit-grid {
+  opacity: 0.11;
+}
+
+.orbit-grid-major {
+  opacity: 0.05;
+}
+
+.orbit-nebula,
+.orbit-deep-cloud,
+.orbit-distant-worlds,
+.constellation-lines,
+.star-field,
+.star-cross-field {
+  opacity: 0.12;
+}
+
+.orbit-axis-lines,
+.orbit-map-frame,
+.orbit-sector-labels {
+  opacity: 0.68;
+}
+
+.era-world-artwork {
+  opacity: 1;
+}
+
+#era-surface-details > :not(.era-world-artwork),
+.era-shadow,
+.era-rim {
+  display: none;
+}
+
+.era-aura-outer {
+  opacity: 0.2;
+}
+
+.body-halo {
+  opacity: 0.18;
+}
+
+#sol-disc,
+#yol-disc,
+#horizon-sol-body > .body-tier,
+#horizon-yol-body > .body-tier,
+.zehs > use {
+  opacity: 0.12;
+}
+
+.body-artwork,
+.zehs-artwork,
+.horizon-zehs-artwork {
+  opacity: 1;
+}
+
+[data-intensity-tier="1"] .body-artwork {
+  opacity: 0.72;
+}
+
+[data-intensity-tier="2"] .body-artwork {
+  opacity: 0.82;
+}
+
+[data-intensity-tier="4"] .body-artwork,
+[data-intensity-tier="5"] .body-artwork {
+  opacity: 1;
+}
+
+.horizon-artwork {
+  display: none;
+}
+
+#horizon-view[data-biome="polar"] .horizon-artwork-polar,
+#horizon-view[data-biome="temperate"] .horizon-artwork-temperate,
+#horizon-view[data-biome="desert"] .horizon-artwork-desert {
+  display: inline;
+}
+
+:root[data-theme="dark"] .horizon-artwork {
+  filter: brightness(0.84) saturate(1.14) contrast(1.06);
+}
+
+:root[data-theme="light"] .horizon-artwork {
+  filter: brightness(1.1) saturate(0.92) contrast(0.96);
+}
+
+.horizon-artwork-tone {
+  fill: rgb(7 11 28 / 10%);
+}
+
+:root[data-theme="light"] .horizon-artwork-tone {
+  fill: rgb(255 244 214 / 8%);
+}
+
+#horizon-view .biome-sky,
+#horizon-view .biome-layer > :not(.biome-name-label) {
+  display: none;
+}
+
+.horizon-dither,
+.horizon-nebula,
+.horizon-constellations {
+  display: none;
+}
+
+.horizon-stars,
+.horizon-star-crosses {
+  opacity: 0.38;
+}
+
+.biome-name-label {
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  stroke-width: 4px;
+}
+
+.zehs-panel {
+  padding: 16px;
+}
+
+.zehs-instrument {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.zehs-instrument-heading {
+  align-items: flex-start;
+}
+
+.zehs-instrument-heading img {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  padding: 4px;
+  border: 2px solid var(--gold-deep);
+  background: var(--sky-1);
+  box-shadow: inset 0 0 0 2px var(--engraving-strong), 3px 3px 0 var(--shadow);
+}
+
+.zehs-instrument-heading h2 {
+  margin: 2px 0 0;
+  color: var(--ink-strong);
+  overflow-wrap: normal;
+  font-family: var(--font-display);
+  font-size: 17px;
+  line-height: 20px;
+  hyphens: auto;
+}
+
+.zehs-context-note {
+  padding: 10px;
+  border: 2px solid var(--gold-deep);
+  background: var(--paper-inset);
+  box-shadow: inset 0 0 0 2px var(--engraving-soft);
+}
+
+.zehs-context-note strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--gold-bright);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.zehs-context-note p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 10px;
+  line-height: 15px;
+}
+
+.zehs-panel .zehs-parameters {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.zehs-panel .zehs-parameters div {
+  padding: 8px;
+}
+
+.zehs-panel .zehs-parameters dt {
+  font-size: 8px;
+}
+
+.zehs-panel .zehs-parameters dd {
+  font-size: 10px;
+  line-height: 14px;
+}
+
+@media (max-width: 1180px) {
+  .instrument-rail {
+    grid-row: 2;
+    grid-column: 2;
+    gap: 12px;
+  }
+
+}
+
+@media (max-width: 1000px) {
+  .instrument-rail {
+    grid-row: 3;
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 720px) {
+  .zehs-panel {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 430px) {
+  .zehs-instrument-heading img {
+    width: 52px;
+    height: 52px;
+  }
+
+  .zehs-instrument-heading h2 {
+    font-size: 16px;
+    line-height: 18px;
+  }
+}

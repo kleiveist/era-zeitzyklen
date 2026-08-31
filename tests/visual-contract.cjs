@@ -12,6 +12,28 @@ const sources = Object.fromEntries(
   ]),
 );
 
+const artworkSpecs = [
+  { file: "astral-map-dark-hd.png", minWidth: 1500, minHeight: 900 },
+  { file: "astral-map-light-hd.png", minWidth: 1500, minHeight: 900 },
+  { file: "horizon-polar-hd.png", minWidth: 2100, minHeight: 700 },
+  { file: "horizon-temperate-hd.png", minWidth: 2100, minHeight: 700 },
+  { file: "horizon-desert-hd.png", minWidth: 2100, minHeight: 700 },
+  { file: "era-world-hd.png", minWidth: 600, minHeight: 600, alpha: true },
+  { file: "sol-star-hd.png", minWidth: 600, minHeight: 600, alpha: true },
+  { file: "yol-star-hd.png", minWidth: 600, minHeight: 600, alpha: true },
+  { file: "zehs-star-hd.png", minWidth: 600, minHeight: 600, alpha: true },
+];
+
+for (const spec of artworkSpecs) {
+  const artworkPath = path.join(root, "assets", "images", spec.file);
+  const data = fs.readFileSync(artworkPath);
+  assert.equal(data.toString("ascii", 1, 4), "PNG", `${spec.file}: gültige PNG-Signatur`);
+  assert.ok(data.readUInt32BE(16) >= spec.minWidth, `${spec.file}: ausreichende native Breite`);
+  assert.ok(data.readUInt32BE(20) >= spec.minHeight, `${spec.file}: ausreichende native Höhe`);
+  assert.ok(data.byteLength > 400_000, `${spec.file}: kein niedrig aufgelöster Platzhalter`);
+  if (spec.alpha) assert.equal(data[25], 6, `${spec.file}: besitzt einen echten RGBA-Alphakanal`);
+}
+
 function reject(file, pattern, message) {
   assert.doesNotMatch(sources[file], pattern, `${file}: ${message}`);
 }
@@ -132,6 +154,9 @@ for (const id of [
 }
 
 for (const className of [
+  "orbit-artwork",
+  "celestial-artwork",
+  "horizon-artwork",
   "orbit-nebula",
   "orbit-distant-worlds",
   "orbit-axis-lines",
@@ -150,9 +175,29 @@ for (const className of [
   "zehs-point",
   "zehs-point-core",
   "zehs-instrument",
+  "instrument-rail",
+  "zehs-panel",
 ]) {
   requireMatch("index.html", new RegExp(`\\bclass\\s*=\\s*["'][^"']*\\b${className}\\b`, "i"), `${className} gehört zur hochauflösenden Pixelkulisse`);
 }
+
+for (const asset of artworkSpecs) {
+  requireMatch(
+    "index.html",
+    new RegExp(`assets/images/${asset.file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i"),
+    `${asset.file}: wird von der Live-Darstellung verwendet`,
+  );
+}
+requireMatch(
+  "index.html",
+  /class=["']instrument-rail["'][\s\S]*class=["'][^"']*algorithm-panel[^"']*["'][\s\S]*class=["'][^"']*zehs-panel[^"']*["']/i,
+  "ZEHS steht als separates Infofenster unter dem Orakel in derselben Instrumentenschiene",
+);
+requireMatch(
+  "styles.css",
+  /:root\[data-theme=["']dark["']\][^{]*\.orbit-artwork-dark[\s\S]*:root\[data-theme=["']light["']\][^{]*\.orbit-artwork-light/i,
+  "Astralkarte besitzt getrennte hochauflösende Artworks für Hell und Dunkel",
+);
 
 for (const name of [
   "ORBIT_GEOMETRY",
@@ -230,6 +275,7 @@ console.log(
     checkedFiles: Object.keys(sources),
     directions: directionIds.length,
     forbiddenPatterns: forbiddenPatterns.length,
+    artworkAssets: artworkSpecs.length,
     orbitRendering: "crispEdges",
     horizonRendering: "crispEdges",
   }),

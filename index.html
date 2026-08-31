@@ -267,6 +267,27 @@
                 </defs>
 
                 <rect class="orbit-sky" width="840" height="520" />
+                <image
+                  class="orbit-artwork orbit-artwork-dark"
+                  href="assets/images/astral-map-dark-hd.png"
+                  x="0"
+                  y="0"
+                  width="840"
+                  height="520"
+                  preserveAspectRatio="xMidYMid slice"
+                  aria-hidden="true"
+                />
+                <image
+                  class="orbit-artwork orbit-artwork-light"
+                  href="assets/images/astral-map-light-hd.png"
+                  x="0"
+                  y="0"
+                  width="840"
+                  height="520"
+                  preserveAspectRatio="xMidYMid slice"
+                  aria-hidden="true"
+                />
+                <rect class="orbit-artwork-tone" width="840" height="520" aria-hidden="true" />
                 <rect class="orbit-dust" x="20" y="20" width="800" height="480" fill="url(#orbit-dust-pattern)" />
                 <rect class="orbit-grid" x="20" y="20" width="800" height="480" fill="url(#orbit-grid-pattern)" />
                 <rect class="orbit-grid-major" x="20" y="20" width="800" height="480" fill="url(#orbit-major-pattern)" />
@@ -347,6 +368,16 @@
                         <path class="era-observatory-beacons" d="M372 246H376V250H372ZM454 256H458V260H454ZM406 312H410V316H406Z" />
                       </g>
                       <path class="era-rune-lines" d="M420 182V206M420 314V338M342 260H366M474 260H498M364 204L380 220M460 300L476 316M364 316L380 300M460 220L476 204" />
+                      <image
+                        class="celestial-artwork era-world-artwork"
+                        href="assets/images/era-world-hd.png"
+                        x="338"
+                        y="178"
+                        width="164"
+                        height="164"
+                        preserveAspectRatio="xMidYMid meet"
+                        aria-hidden="true"
+                      />
                     </g>
                   </g>
                   <path id="era-front-half" class="era-front-half" d="M338 178H502V260H338Z" clip-path="url(#era-clip)" fill="url(#era-front-pattern)" />
@@ -371,6 +402,7 @@
                     <use class="body-tier tier-2" href="#sol-tier-2-shape" />
                   </g>
                   <g id="sol-disc"><use class="body-tier tier-1" href="#sol-tier-1-shape" /></g>
+                  <image class="celestial-artwork body-artwork sol-artwork" href="assets/images/sol-star-hd.png" x="-38" y="-38" width="76" height="76" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
                   <text id="sol-label" x="0" y="54" text-anchor="middle">SOL</text>
                 </g>
 
@@ -382,6 +414,7 @@
                     <use class="body-tier tier-2" href="#yol-tier-2-shape" />
                   </g>
                   <g id="yol-disc"><use class="body-tier tier-1" href="#yol-tier-1-shape" /></g>
+                  <image class="celestial-artwork body-artwork yol-artwork" href="assets/images/yol-star-hd.png" x="-38" y="-38" width="76" height="76" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
                   <text id="yol-label" x="0" y="50" text-anchor="middle">YOL</text>
                 </g>
 
@@ -397,6 +430,7 @@
                   data-s-int="nicht definiert"
                 >
                   <use href="#zehs-star-shape" />
+                  <image class="celestial-artwork zehs-artwork" href="assets/images/zehs-star-hd.png" x="-30" y="-30" width="60" height="60" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
                   <text x="0" y="46" text-anchor="middle">ZEHS · REFERENZ</text>
                 </g>
               </svg>
@@ -467,6 +501,10 @@
                   <rect class="horizon-sky-band sky-band-2" y="44" width="840" height="44" />
                   <rect class="horizon-sky-band sky-band-3" y="88" width="840" height="44" />
                   <rect class="horizon-sky-band sky-band-4" y="132" width="840" height="44" />
+                  <image class="horizon-artwork horizon-artwork-polar" href="assets/images/horizon-polar-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-temperate" href="assets/images/horizon-temperate-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-artwork horizon-artwork-desert" href="assets/images/horizon-desert-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <rect class="horizon-artwork-tone" width="840" height="252" aria-hidden="true" />
                   <path class="horizon-dither" d="M0 40H840V44H0ZM0 84H840V88H0ZM0 128H840V132H0ZM12 36H16V40H12ZM40 36H44V40H40ZM68 36H72V40H68ZM96 36H100V40H96ZM124 36H128V40H124ZM152 36H156V40H152ZM180 36H184V40H180ZM208 36H212V40H208ZM236 36H240V40H236ZM264 36H268V40H264ZM292 36H296V40H292ZM320 36H324V40H320ZM348 36H352V40H348ZM376 36H380V40H376ZM404 36H408V40H404ZM432 36H436V40H432ZM460 36H464V40H460ZM488 36H492V40H488ZM516 36H520V40H516ZM544 36H548V40H544ZM572 36H576V40H572ZM600 36H604V40H600ZM628 36H632V40H628ZM656 36H660V40H656ZM684 36H688V40H684ZM712 36H716V40H712ZM740 36H744V40H740ZM768 36H772V40H768ZM796 36H800V40H796ZM824 36H828V40H824Z" />
                   <g class="horizon-stars" aria-hidden="true"><path d="M72 24H76V28H72ZM160 68H164V72H160ZM260 32H264V36H260ZM364 76H368V80H364ZM472 20H476V24H472ZM576 64H580V68H576ZM676 28H680V32H676ZM764 72H768V76H764Z" /></g>
                   <path class="horizon-nebula" d="M0 84H52V68H92V76H128V92H160V108H132V116H92V108H52V120H0ZM840 48H796V36H756V52H728V68H696V88H728V96H768V84H808V96H840Z" />
@@ -500,17 +538,20 @@
 
                   <g id="horizon-zehs-star" class="zehs horizon-zehs-star" transform="translate(680 124)" aria-hidden="false">
                     <use href="#zehs-star-shape" transform="scale(.72)" />
+                    <image class="celestial-artwork horizon-zehs-artwork" href="assets/images/zehs-star-hd.png" x="-22" y="-22" width="44" height="44" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
                     <text x="0" y="31" text-anchor="middle">ZEHS</text>
                   </g>
 
                   <g id="horizon-sol-body" class="body body-sol horizon-body" data-intensity-tier="3" transform="translate(560 92)">
                     <g class="body-halo sol-halo"><use class="body-tier tier-5" href="#sol-tier-5-shape" /><use class="body-tier tier-4" href="#sol-tier-4-shape" /><use class="body-tier tier-3" href="#sol-tier-3-shape" /><use class="body-tier tier-2" href="#sol-tier-2-shape" /></g>
                     <use class="body-tier tier-1" href="#sol-tier-1-shape" />
+                    <image class="celestial-artwork body-artwork horizon-body-artwork" href="assets/images/sol-star-hd.png" x="-32" y="-32" width="64" height="64" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
                     <text class="horizon-body-label" x="0" y="50" text-anchor="middle">SOL</text>
                   </g>
                   <g id="horizon-yol-body" class="body body-yol horizon-body" data-intensity-tier="3" transform="translate(280 124)">
                     <g class="body-halo yol-halo"><use class="body-tier tier-5" href="#yol-tier-5-shape" /><use class="body-tier tier-4" href="#yol-tier-4-shape" /><use class="body-tier tier-3" href="#yol-tier-3-shape" /><use class="body-tier tier-2" href="#yol-tier-2-shape" /></g>
                     <use class="body-tier tier-1" href="#yol-tier-1-shape" />
+                    <image class="celestial-artwork body-artwork horizon-body-artwork" href="assets/images/yol-star-hd.png" x="-32" y="-32" width="64" height="64" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
                     <text class="horizon-body-label" x="0" y="48" text-anchor="middle">YOL</text>
                   </g>
 
@@ -593,28 +634,6 @@
                 </svg>
               </figure>
 
-              <article class="zehs-instrument" aria-labelledby="zehs-instrument-title">
-                <div class="zehs-instrument-heading">
-                  <svg viewBox="-30 -30 60 60" shape-rendering="crispEdges" aria-hidden="true"><use href="#zehs-star-shape" /></svg>
-                  <div>
-                    <p class="panel-index">FERNSTERN-MESSPUNKT</p>
-                    <h4 id="zehs-instrument-title">ZEHS · Rotationsreferenz</h4>
-                    <p>Weltenlogischer Fernpunkt; die Darstellung erhebt keinen Anspruch auf ein physikalisch exaktes Modell.</p>
-                  </div>
-                </div>
-                <dl class="zehs-parameters">
-                  <div><dt>Klasse</dt><dd>Referenzstern</dd></div>
-                  <div><dt>Entfernung</dt><dd>ungefähr 40 AU</dd></div>
-                  <div><dt>Helligkeit</dt><dd>sehr hell</dd></div>
-                  <div><dt>Eigenbewegung</dt><dd>annähernd fest</dd></div>
-                  <div><dt>Rotationsbezug</dt><dd>Untergang → Wiederaufgang</dd></div>
-                  <div><dt>Lokale Umlaufbahn</dt><dd>keine</dd></div>
-                  <div><dt>S-Int</dt><dd>nicht definiert</dd></div>
-                  <div><dt>Namensbezug</dt><dd>Zehsen</dd></div>
-                  <div><dt>Horizontstatus</dt><dd id="zehs-visibility">sichtbar</dd></div>
-                  <div><dt>Schematischer Punkt</dt><dd id="zehs-position">x 680 · y 124</dd></div>
-                </dl>
-              </article>
             </section>
 
             <div class="readout-grid" aria-label="Aktuelle Messwerte">
@@ -637,49 +656,79 @@
             </div>
           </section>
 
-          <aside class="panel algorithm-panel" aria-labelledby="algorithm-title">
-            <div class="panel-heading">
-              <div class="section-seal" aria-hidden="true"><svg><use href="#icon-random"></use></svg><span>03</span></div>
-              <div>
-                <h2 id="algorithm-title">Orakel der Zyklen</h2>
-                <p>Gleiche Rune, gleicher vollständiger Himmelslauf.</p>
+          <div class="instrument-rail">
+            <aside class="panel algorithm-panel" aria-labelledby="algorithm-title">
+              <div class="panel-heading">
+                <div class="section-seal" aria-hidden="true"><svg><use href="#icon-random"></use></svg><span>03</span></div>
+                <div>
+                  <h2 id="algorithm-title">Orakel der Zyklen</h2>
+                  <p>Gleiche Rune, gleicher vollständiger Himmelslauf.</p>
+                </div>
               </div>
-            </div>
 
-            <label class="field-label" for="seed-input">Szenario-Seed</label>
-            <input id="seed-input" class="field-control" value="ERA-3500" maxlength="64" />
-            <div class="button-row button-row-equal">
-              <button id="apply-seed" class="button button-primary" type="button"><svg class="button-icon" aria-hidden="true"><use href="#icon-era-cycle"></use></svg>Seed anwenden</button>
-              <button id="new-seed" class="button button-quiet" type="button"><svg class="button-icon" aria-hidden="true"><use href="#icon-random"></use></svg>Neu würfeln</button>
-            </div>
-
-            <div class="algorithm-meter">
-              <div>
-                <span>Sol-Geschwindigkeit</span>
-                <strong id="sol-speed-meter-label">0°/s</strong>
+              <label class="field-label" for="seed-input">Szenario-Seed</label>
+              <input id="seed-input" class="field-control" value="ERA-3500" maxlength="64" />
+              <div class="button-row button-row-equal">
+                <button id="apply-seed" class="button button-primary" type="button"><svg class="button-icon" aria-hidden="true"><use href="#icon-era-cycle"></use></svg>Seed anwenden</button>
+                <button id="new-seed" class="button button-quiet" type="button"><svg class="button-icon" aria-hidden="true"><use href="#icon-random"></use></svg>Neu würfeln</button>
               </div>
-              <div class="meter-track"><span id="sol-speed-meter"></span></div>
-            </div>
-            <div class="algorithm-meter">
-              <div>
-                <span>Yol-Geschwindigkeit</span>
-                <strong id="yol-speed-meter-label">0°/s</strong>
+
+              <div class="algorithm-meter">
+                <div>
+                  <span>Sol-Geschwindigkeit</span>
+                  <strong id="sol-speed-meter-label">0°/s</strong>
+                </div>
+                <div class="meter-track"><span id="sol-speed-meter"></span></div>
               </div>
-              <div class="meter-track meter-yol"><span id="yol-speed-meter"></span></div>
-            </div>
+              <div class="algorithm-meter">
+                <div>
+                  <span>Yol-Geschwindigkeit</span>
+                  <strong id="yol-speed-meter-label">0°/s</strong>
+                </div>
+                <div class="meter-track meter-yol"><span id="yol-speed-meter"></span></div>
+              </div>
 
-            <dl class="algorithm-facts">
-              <div><dt>Phasen im Szenario</dt><dd id="phase-count">—</dd></div>
-              <div><dt>Wiederholungen</dt><dd id="repeat-count">—</dd></div>
-              <div><dt>Aktueller Abschnitt</dt><dd id="segment-range">—</dd></div>
-              <div><dt>Zeitabbildung</dt><dd>semantisch komprimiert</dd></div>
-            </dl>
+              <dl class="algorithm-facts">
+                <div><dt>Phasen im Szenario</dt><dd id="phase-count">—</dd></div>
+                <div><dt>Wiederholungen</dt><dd id="repeat-count">—</dd></div>
+                <div><dt>Aktueller Abschnitt</dt><dd id="segment-range">—</dd></div>
+                <div><dt>Zeitabbildung</dt><dd>semantisch komprimiert</dd></div>
+              </dl>
 
-            <p class="algorithm-caption">
-              Ein deterministischer Zufall variiert Reihenfolge, Wiederholungen, Geschwindigkeit und
-              S-Int. Die Konvektion bleibt als fester Abschluss bei 70.000 Um erhalten.
-            </p>
-          </aside>
+              <p class="algorithm-caption">
+                Ein deterministischer Zufall variiert Reihenfolge, Wiederholungen, Geschwindigkeit und
+                S-Int. Die Konvektion bleibt als fester Abschluss bei 70.000 Um erhalten.
+              </p>
+            </aside>
+
+            <aside class="panel zehs-panel" aria-labelledby="zehs-instrument-title">
+              <article class="zehs-instrument">
+                <div class="zehs-instrument-heading">
+                  <img src="assets/images/zehs-star-hd.png" alt="" width="627" height="627" />
+                  <div>
+                    <p class="panel-index">FERNSTERN-MESSPUNKT</p>
+                    <h2 id="zehs-instrument-title">ZEHS · Rotationsreferenz</h2>
+                  </div>
+                </div>
+                <div class="zehs-context-note">
+                  <strong>Weltenlogischer Hinweis</strong>
+                  <p>Fernpunkt der ERA-Chronik; die Darstellung erhebt keinen Anspruch auf ein physikalisch exaktes Modell.</p>
+                </div>
+                <dl class="zehs-parameters">
+                  <div><dt>Klasse</dt><dd>Referenzstern</dd></div>
+                  <div><dt>Entfernung</dt><dd>ungefähr 40 AU</dd></div>
+                  <div><dt>Helligkeit</dt><dd>sehr hell</dd></div>
+                  <div><dt>Eigenbewegung</dt><dd>annähernd fest</dd></div>
+                  <div><dt>Rotationsbezug</dt><dd>Untergang → Wiederaufgang</dd></div>
+                  <div><dt>Lokale Umlaufbahn</dt><dd>keine</dd></div>
+                  <div><dt>S-Int</dt><dd>nicht definiert</dd></div>
+                  <div><dt>Namensbezug</dt><dd>Zehsen</dd></div>
+                  <div><dt>Horizontstatus</dt><dd id="zehs-visibility">sichtbar</dd></div>
+                  <div><dt>Schematischer Punkt</dt><dd id="zehs-position">x 680 · y 124</dd></div>
+                </dl>
+              </article>
+            </aside>
+          </div>
         </section>
 
         <section class="panel timeline-panel" aria-labelledby="timeline-title">
