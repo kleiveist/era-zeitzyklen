@@ -18,25 +18,37 @@ Strahlungsintensität sind daher getrennte Angaben.
 
 2. Zeiteinheiten
 
+Ein Um entspricht einer vollständigen Eigenrotation Eras.
+
+Bei einer idealisierten Teilung besteht ein Um aus einer durchschnittlichen
+Hellphase von 45 irdischen Vergleichsminuten und einer durchschnittlichen
+Dunkelphase von 45 irdischen Vergleichsminuten. Durch die wechselnden
+Positionen von Sol und Yol können Dauer und Intensität dieser Phasen
+abweichen.
+
 Größe Umrechnung
 
 
 
 1 Tan
 
-20 Um
+16 Um
 
 1 Dir
 
-10 Tan = 200 Um
+8 Tan = 128 Um
 
 1 Mohn
 
-35 Dir = 350 Tan = 7000 Um
+36 Dir = 288 Tan = 4.608 Um
 
 1 Konvektionszyklus
 
-10 Mohn = 350 Dir = 3500 Tan = 70000 Um
+10 Mohn = 360 Dir = 2.880 Tan = 46.080 Um
+
+Ein Um bildet den planetaren Rotationszyklus ab. Ein Tan ist dagegen eine
+
+größere Kalendereinheit aus 16 vollständigen Rotationen.
 
 Die ältere Quellenzeile 1 Mohn = Konvektion ist rechnerisch unvereinbar mit
 
@@ -52,27 +64,23 @@ Era-Einheit Irdischer Vergleich
 
 1 Um
 
-1 Stunde
+1 Stunde und 30 Minuten
 
 1 Tan
 
-20 Stunden
+24 Stunden = 1 Tag
 
 1 Dir
 
-200 Stunden = 8 Tage und 8 Stunden
+192 Stunden = 8 Tage
 
 1 Mohn
 
-7000 Stunden = 291 Tage und 16 Stunden, ungefähr 0,8 Jahre
+6.912 Stunden = 288 Tage, ungefähr 0,79 Jahre
 
 1 Konvektionszyklus
 
-70000 Stunden = 2916 Tage und 16 Stunden, ungefähr 8 Jahre
-
-1 Dir = 8 Tage ist als gerundete Kurzform zulässig. Der exakte Vergleich
-
-bleibt 8 Tage und 8 Stunden.
+69.120 Stunden = 2.880 Tage, ungefähr 7,9 Jahre
 
 4. Theoretische In-Game-Umrechnung
 
@@ -88,19 +96,19 @@ Era-Einheit Reale Spielzeit
 
 1 Tan
 
-20 Minuten
+16 Minuten
 
 1 Dir
 
-200 Minuten = 3 Stunden und 20 Minuten
+128 Minuten = 2 Stunden und 8 Minuten
 
 1 Mohn
 
-7000 Minuten = 116 Stunden und 40 Minuten
+4.608 Minuten = 76 Stunden und 48 Minuten = 3 Tage, 4 Stunden und 48 Minuten
 
 1 Konvektionszyklus
 
-70000 Minuten = 1166 Stunden und 40 Minuten = 48 Tage, 14 Stunden und 40 Minuten
+46.080 Minuten = 768 Stunden = 32 Tage
 
 Diese Tabelle ist eine theoretische Umrechnung. Sie verpflichtet das Spiel
 
@@ -112,7 +120,7 @@ Balancing.
 
 In der Dokumentation steht eine Zeitmenge als Zahl mit Einheit, zum Beispiel
 
-20 Tan, 2 Dir oder 400 Um. Zusammengesetzte Mengen werden von der größten
+25 Tan, 3 Dir und 1 Tan oder 400 Um. Zusammengesetzte Mengen werden von der größten
 
 zur kleinsten Einheit notiert.
 
@@ -140,25 +148,31 @@ und erneuter Aufgang dienen als Bezug für eine vollständige Rotation Eras. Der
 
 Name steht in Verbindung mit Zehsen.
 
+Im lokalen Horizont verhält sich ZEHS nordsternartig: Am Polstand bei 0 Grad
+
+steht er am höchsten. Mit 30 und 60 Grad äquatorwärtigem Versatz sinkt seine
+
+projizierte Höhe, während Sol und Yol in derselben Auswahl höher steigen.
+
 ZEHS ist Weltenlogik. Entfernung und Bewegung sind keine Verpflichtung zu
 
 einer naturwissenschaftlich exakten astronomischen Simulation.
 
 7. Verhältnis zur Konvektion
 
-Der verlässliche große Konvektionszyklus umfasst 10 Mohn, 350 Dir, 3500 Tan
+Der verlässliche große Konvektionszyklus umfasst 10 Mohn, 360 Dir, 2.880 Tan
 
-oder 70000 Um und entspricht ungefähr acht irdischen Jahren.
+oder 46.080 Um und entspricht ungefähr 7,9 irdischen Jahren.
 
 Die Konvektion selbst dauert:
 
-20 Tan;
+25 Tan;
 
-2 Dir;
+3 Dir und 1 Tan;
 
 400 Um;
 
-im irdischen Vergleich 400 Stunden beziehungsweise 16 Tage und 16 Stunden;
+im irdischen Vergleich 600 Stunden beziehungsweise 25 Tage;
 
 bei der theoretischen In-Game-Skalierung 400 Minuten beziehungsweise
 6 Stunden und 40 Minuten.
@@ -191,7 +205,7 @@ Sol und Yol bewegen sich unregelmäßig auf stark elliptischen Bahnen. Welche
 
 Stellung ein Himmelskörper einnimmt und wie lange er dort bleibt, ist nicht
 
-vollständig vorhersagbar. Nur der große Konvektionszyklus nach 3500 Tan
+vollständig vorhersagbar. Nur der große Konvektionszyklus nach 2.880 Tan
 
 beziehungsweise 10 Mohn wiederholt sich verlässlich.
 
@@ -223,15 +237,15 @@ Spiel zu einer naturwissenschaftlich exakten Simulation.
 
 Konvektion
 
-Die Konvektion wiederholt sich nach 3500 Tan, 350 Dir oder 10 Mohn und damit
+Die Konvektion wiederholt sich nach 2.880 Tan, 360 Dir oder 10 Mohn und damit
 
-ungefähr alle acht irdischen Jahre. Sie dauert 20 Tan, 2 Dir oder 400 Um.
+ungefähr alle 7,9 irdischen Jahre. Sie dauert 25 Tan, 3 Dir und 1 Tan oder 400 Um.
 
 Während der Konvektion:
 
 stehen weder Sol noch Yol sichtbar am Himmel;
 
-herrscht über 2 Dir beziehungsweise 20 Tan bittere Dunkelheit;
+herrscht über 3 Dir und 1 Tan beziehungsweise 25 Tan bittere Dunkelheit;
 
 sind die Splitterwelten und Sphärenreiche Heras am Himmel sichtbar;
 
@@ -240,7 +254,7 @@ wird das Wirken äußerer Magie besonders schwer;
 sinken die Temperaturen bis zur vollständigen Vereisung Eras gegen Ende des
 Ereignisses;
 
-darf das Ereignis nicht länger als 20 Tan dauern, weil Sol Era danach nicht
+darf das Ereignis nicht länger als 25 Tan dauern, weil Sol Era danach nicht
 mehr aus der Schneehülle befreien könnte.
 
 Die Konvektion ist keine körperliche Begegnung oder Umarmung von Sol und Yol.
@@ -326,7 +340,11 @@ Synchrone Läufe
 
 Bei synchronen Läufen bewegen sich Sol oder Yol in derselben Rotationsrichtung
 
-wie Era. Aus Sicht der Oberfläche verlaufen ihre sichtbaren Bewegungen
+wie Era und mit derselben Winkelgeschwindigkeit wie Eras Eigenlauf. Wird Eras
+
+Eigenlauf für die Darstellung beschleunigt, müssen alle synchronen Läufe um
+
+denselben Faktor folgen. Aus Sicht der Oberfläche verlaufen ihre sichtbaren Bewegungen
 
 grundsätzlich von Ost nach West.
 

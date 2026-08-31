@@ -1,22 +1,37 @@
 /*
  * Kanonische Vorlagen und illustrative Simulationsparameter.
  *
- * Kanonisch sind: Namen, beobachtbare Richtungen, Einheiten, der 70.000-Um-
- * Großzyklus sowie die 400-Um-Konvektion. Zahlenbereiche für Geschwindigkeit,
+ * Kanonisch sind: Namen, beobachtbare Richtungen, Einheiten, der 46.080-Um-
+ * Konvektionszyklus sowie die 400-Um-Konvektion. Zahlenbereiche für Geschwindigkeit,
  * Intensität und Einzeldauer dienen ausschließlich der sechsminütigen Darstellung.
  */
 (function defineEraPhases(global) {
   "use strict";
 
+  const UM_PER_TAN = 16;
+  const TAN_PER_DIR = 8;
+  const DIR_PER_MOHN = 36;
+  const MOHN_PER_CYCLE = 10;
+  const CONVECTION_DURATION_UM = 400;
+  const TOTAL_UM = UM_PER_TAN * TAN_PER_DIR * DIR_PER_MOHN * MOHN_PER_CYCLE;
+
   const CONFIG = Object.freeze({
-    totalUm: 70000,
-    regularUm: 69600,
-    convectionDurationUm: 400,
+    umPerTan: UM_PER_TAN,
+    tanPerDir: TAN_PER_DIR,
+    dirPerMohn: DIR_PER_MOHN,
+    mohnPerCycle: MOHN_PER_CYCLE,
+    earthMinutesPerUm: 90,
+    idealLightMinutesPerUm: 45,
+    idealDarkMinutesPerUm: 45,
+    totalUm: TOTAL_UM,
+    regularUm: TOTAL_UM - CONVECTION_DURATION_UM,
+    convectionDurationUm: CONVECTION_DURATION_UM,
+    eraRotationDegreesPerSecond: 5.6,
     presentationMs: 360000,
     convectionPresentationMs: 32000,
     minRepeatedTemplates: 12,
     maxRepeatedTemplates: 18,
-    schemaVersion: 1,
+    schemaVersion: 2,
   });
 
   const CATEGORIES = Object.freeze([
@@ -36,6 +51,13 @@
       radialAmplitude: options.radialAmplitude || 0,
     });
 
+  const synchronizedBody = (intensity, options = {}) =>
+    body(
+      [CONFIG.eraRotationDegreesPerSecond, CONFIG.eraRotationDegreesPerSecond],
+      intensity,
+      options,
+    );
+
   const templates = [
     {
       id: "sync-standing",
@@ -46,8 +68,8 @@
       description: "Der Himmelskörper hält über längere Zeit annähernd dieselbe sichtbare Stellung.",
       direction: "Ost → West · annähernd ortsfest",
       motion: "hold",
-      sol: body([0.35, 1.2], [3.5, 8.5]),
-      yol: body([0.3, 1.0], [2.5, 8.0]),
+      sol: synchronizedBody([3.5, 8.5]),
+      yol: synchronizedBody([2.5, 8.0]),
       repeatWeight: 1.1,
       durationWeight: 1.0,
     },
@@ -60,8 +82,8 @@
       description: "Sol oder Yol bleibt an einen lang anhaltenden Morgen- beziehungsweise Abendbereich gebunden.",
       direction: "Ost → West · horizontnah",
       motion: "horizon",
-      sol: body([0.7, 2.2], [2.0, 7.0], { radialAmplitude: 8 }),
-      yol: body([0.6, 2.0], [2.0, 7.5], { radialAmplitude: 7 }),
+      sol: synchronizedBody([2.0, 7.0], { radialAmplitude: 8 }),
+      yol: synchronizedBody([2.0, 7.5], { radialAmplitude: 7 }),
       repeatWeight: 1.0,
       durationWeight: 1.05,
     },
@@ -74,8 +96,8 @@
       description: "Der Übergangsbereich am Rand einer langen Nacht- oder Abendphase bleibt bestehen.",
       direction: "Ost → West · gedehnter Übergang",
       motion: "horizon",
-      sol: body([0.45, 1.5], [1.5, 5.5], { radialAmplitude: 11 }),
-      yol: body([0.4, 1.4], [4.0, 9.0], { radialAmplitude: 8 }),
+      sol: synchronizedBody([1.5, 5.5], { radialAmplitude: 11 }),
+      yol: synchronizedBody([4.0, 9.0], { radialAmplitude: 8 }),
       repeatWeight: 0.9,
       durationWeight: 1.2,
     },
@@ -88,8 +110,8 @@
       description: "Auf- oder Untergang zieht sich aus Sicht der Region stark in die Länge.",
       direction: "Ost → West · langsamer Auf-/Untergang",
       motion: "horizon",
-      sol: body([0.55, 1.8], [2.5, 8.5], { radialAmplitude: 10 }),
-      yol: body([0.5, 1.6], [2.5, 8.0], { radialAmplitude: 10 }),
+      sol: synchronizedBody([2.5, 8.5], { radialAmplitude: 10 }),
+      yol: synchronizedBody([2.5, 8.0], { radialAmplitude: 10 }),
       repeatWeight: 0.9,
       durationWeight: 1.15,
     },
@@ -102,8 +124,8 @@
       description: "Der Himmelskörper verschiebt sich langsam weiter, ohne die synchrone Richtung zu verlassen.",
       direction: "Ost → West",
       motion: "orbit",
-      sol: body([2.2, 5.4], [2.0, 9.0], { radialAmplitude: 6 }),
-      yol: body([1.9, 5.0], [2.0, 9.0], { radialAmplitude: 5 }),
+      sol: synchronizedBody([2.0, 9.0], { radialAmplitude: 6 }),
+      yol: synchronizedBody([2.0, 9.0], { radialAmplitude: 5 }),
       repeatWeight: 1.5,
       durationWeight: 0.9,
     },
@@ -116,8 +138,8 @@
       description: "Die sichtbare Stellung pendelt innerhalb eines Morgen- oder Abendbereichs.",
       direction: "Ost ↔ West · begrenztes Pendeln",
       motion: "oscillate",
-      sol: body([0.8, 2.4], [2.0, 9.0], { radialAmplitude: 12 }),
-      yol: body([0.7, 2.2], [2.0, 9.0], { radialAmplitude: 10 }),
+      sol: synchronizedBody([2.0, 9.0], { radialAmplitude: 12 }),
+      yol: synchronizedBody([2.0, 9.0], { radialAmplitude: 10 }),
       repeatWeight: 1.2,
       durationWeight: 1.0,
     },
@@ -128,10 +150,10 @@
       label: "Kurzer Tag und lange Nacht",
       shortLabel: "Kurzer Tag",
       description: "Eine kurze Sol-Phase liegt zwischen deutlich längeren Yol- oder Dunkelphasen.",
-      direction: "Ost → West · Sol beschleunigt",
+      direction: "Ost → West · mit Era synchron",
       motion: "short-sol",
-      sol: body([8.0, 14.0], [3.0, 10.0]),
-      yol: body([0.8, 2.5], [3.5, 9.5]),
+      sol: synchronizedBody([3.0, 10.0]),
+      yol: synchronizedBody([3.5, 9.5]),
       repeatWeight: 0.85,
       durationWeight: 0.8,
     },
@@ -142,10 +164,10 @@
       label: "Kurze Nacht und langer Tag",
       shortLabel: "Kurze Nacht",
       description: "Eine kurze Yol- oder Dunkelphase liegt zwischen deutlich längeren Sol-Phasen.",
-      direction: "Ost → West · Yol beschleunigt",
+      direction: "Ost → West · mit Era synchron",
       motion: "short-yol",
-      sol: body([0.8, 2.5], [4.0, 10.0]),
-      yol: body([8.0, 14.0], [2.0, 9.0]),
+      sol: synchronizedBody([4.0, 10.0]),
+      yol: synchronizedBody([2.0, 9.0]),
       repeatWeight: 0.85,
       durationWeight: 0.8,
     },

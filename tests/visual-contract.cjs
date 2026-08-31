@@ -88,6 +88,12 @@ reject("index.html", /\bid\s*=\s*["']duration-mode["']/i, "keine alternative Dre
 reject("phases.js", /\blongPresentationMs\b/, "keine zweite Präsentationsdauer");
 requireMatch("phases.js", /\bpresentationMs\s*:\s*360000\b/, "die Chronik ist fest auf sechs Minuten eingestellt");
 requireMatch("phases.js", /\bconvectionPresentationMs\s*:\s*32000\b/, "die Konvektion erhält 32 Sekunden");
+requireMatch("phases.js", /\bUM_PER_TAN\s*=\s*16\b/, "ein Tan besteht aus 16 Um");
+requireMatch("phases.js", /\bTAN_PER_DIR\s*=\s*8\b/, "ein Dir besteht aus 8 Tan");
+requireMatch("phases.js", /\bDIR_PER_MOHN\s*=\s*36\b/, "ein Mohn besteht aus 36 Dir");
+requireMatch("phases.js", /\bMOHN_PER_CYCLE\s*=\s*10\b/, "ein Konvektionszyklus besteht aus 10 Mohn");
+requireMatch("phases.js", /\beraRotationDegreesPerSecond\s*:\s*5\.6\b/, "Eras Eigenrotation ist auf 5,6 Grad pro Sekunde verdoppelt");
+requireMatch("app.js", /template\.category\s*===\s*["']synchron["'][\s\S]*?drift\s*=\s*config\.eraRotationDegreesPerSecond[\s\S]*?amplitude\s*=\s*0\b/, "alle synchronen Phasen bleiben exakt an Eras Winkelgeschwindigkeit gekoppelt");
 
 reject(
   "index.html",
@@ -108,6 +114,15 @@ requireMatch("index.html", /\bstroke-linejoin\s*=\s*["']miter["']/i, "blockige S
 const directionGroupTag = openingTag("index.html", "horizon-direction-group");
 assert.match(directionGroupTag, /\brole\s*=\s*["']radiogroup["']/i, "Richtungsauswahl ist ein Radiogroup");
 assert.match(directionGroupTag, /\baria-label(?:ledby)?\s*=/i, "Richtungsauswahl besitzt einen zugänglichen Namen");
+
+const autoCycleTag = openingTag("index.html", "auto-cycle");
+assert.match(autoCycleTag, /^<button\b/i, "Auto-Neuwürfeln ist eine echte Schaltfläche");
+assert.match(autoCycleTag, /\baria-pressed\s*=\s*["']false["']/i, "Auto-Neuwürfeln startet deaktiviert");
+assert.match(autoCycleTag, /\baria-label\s*=/i, "Auto-Neuwürfeln besitzt einen zugänglichen Namen");
+requireMatch("index.html", /\bid\s*=\s*["']icon-auto-cycle["'][\s\S]*?<circle\b[^>]*cx=["']7\.5["'][\s\S]*?<circle\b[^>]*cx=["']16\.5["']/i, "Doppelkreis-Icon zeigt zwei nebeneinanderliegende Kreise");
+requireMatch("index.html", /id=["']play-toggle["'][\s\S]*id=["']auto-cycle["'][\s\S]*id=["']restart["']/i, "Doppelkreis-Schalter sitzt rechts neben Abspielen/Pause und vor Zum Anfang");
+requireMatch("styles.css", /\.auto-cycle-toggle\s*\{[^}]*width\s*:\s*48px\b[^}]*flex\s*:\s*0\s+0\s+48px\b/is, "Doppelkreis-Schalter bleibt eine kleine quadratische Schaltfläche");
+requireMatch("app.js", /if\s*\(state\.autoCycle\)[\s\S]*?loadScenario\(createNewSeed\(\),\s*\{\s*announce\s*:\s*false\s*\}\)[\s\S]*?requestAnimationFrame\(tick\)/i, "aktiver Endlosmodus würfelt nach Zyklusende neu und läuft weiter");
 
 const directionIds = ["north", "east", "south", "west"];
 for (const direction of directionIds) {
@@ -244,6 +259,7 @@ for (const name of [
   "getViewBasis",
   "projectOrbitPointToHorizon",
   "getSnapshot",
+  "formatEraTime",
   "getLastRenderFrame",
   "getState",
   "ERA_CYCLE_CONTRACT",
@@ -254,6 +270,7 @@ for (const name of [
 requireMatch("app.js", /era-horizon-direction/, "Blickrichtung wird unter dem vereinbarten localStorage-Schlüssel gespeichert");
 requireMatch("app.js", /era-horizon-latitude/, "Breitenstufe wird unter dem vereinbarten localStorage-Schlüssel gespeichert");
 requireMatch("app.js", /Object\.freeze\(\[0,\s*30,\s*60\]\)/, "nur die drei vereinbarten Breitenstufen sind wählbar");
+requireMatch("app.js", /motion\s*===\s*["']zehs["']\s*\?\s*HORIZON_GEOMETRY\.maxLatitudeDegrees\s*-\s*safeDegrees\s*:\s*safeDegrees/i, "ZEHS erhält die nordsternartig invertierte Breitenhöhe");
 requireMatch("app.js", /biome\s*:\s*["']polar["']/, "0 Grad wählen die polare Eiswelt");
 requireMatch("app.js", /biome\s*:\s*["']temperate["']/, "30 Grad wählen die gemäßigte Tannenlandschaft");
 requireMatch("app.js", /biome\s*:\s*["']desert["']/, "60 Grad wählen die Wüstenlandschaft");

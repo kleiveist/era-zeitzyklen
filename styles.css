@@ -2278,6 +2278,30 @@ main {
   min-width: 144px;
 }
 
+.auto-cycle-toggle {
+  width: 48px;
+  min-width: 48px;
+  padding: 0;
+  flex: 0 0 48px;
+}
+
+.auto-cycle-toggle .button-icon {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+}
+
+.auto-cycle-toggle[aria-pressed="true"] {
+  color: var(--convection-ice);
+  border-color: var(--convection-ice);
+  background: var(--paper-inset);
+  box-shadow: 4px 4px 0 var(--shadow), inset 0 0 0 2px var(--magic);
+}
+
+.auto-cycle-toggle + #restart {
+  margin-left: 4px;
+}
+
 .inline-field {
   display: flex;
   align-items: center;

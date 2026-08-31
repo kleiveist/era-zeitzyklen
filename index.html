@@ -50,6 +50,7 @@
         <symbol id="icon-timeline" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.6"><path d="M3 12h18" /><circle cx="6" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="18" cy="12" r="2" /><path d="M6 8V5M12 16v3M18 8V5" /></g></symbol>
         <symbol id="icon-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7Z" fill="currentColor" /></symbol>
         <symbol id="icon-pause" viewBox="0 0 24 24"><path d="M7 5h3v14H7zM14 5h3v14h-3z" fill="currentColor" /></symbol>
+        <symbol id="icon-auto-cycle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.7"><circle cx="7.5" cy="12" r="4.5" /><circle cx="16.5" cy="12" r="4.5" /><path d="m7.5 5.5-2 2 2 2M16.5 18.5l2-2-2-2" /></g></symbol>
         <symbol id="icon-restart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.8"><path d="M5.2 8.2A8 8 0 1 1 4 15" /><path d="M4 4v5h5" /></g></symbol>
         <symbol id="icon-arrow-left" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6" fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.8" /></symbol>
         <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter" stroke-width="1.8" /></symbol>
@@ -96,7 +97,7 @@
             <p class="eyebrow">ERA · ASTRALARCHIV VII · NORDPOL-OBSERVATORIUM</p>
             <h1><span class="title-main">Zeitzyklen</span><span class="title-orbit">von Sol und Yol</span></h1>
             <p class="subtitle">
-              Betritt das Observatorium von Era und verfolge 70.000 Um als lebendige Astralchronik.
+              Betritt das Observatorium von Era und verfolge 46.080 Um als lebendige Astralchronik.
               Die Bahnen von Sol und Yol verdichten sich zu einer sechsminütigen Astralchronik.
             </p>
             <div class="hero-runes" aria-label="Merkmale der Astralchronik">
@@ -112,7 +113,7 @@
             <span><small>Erscheinungsbild</small><strong id="theme-label">Dunkle Chronik</strong></span>
           </button>
           <div class="header-facts" aria-label="Kanonische Eckdaten">
-            <div><svg aria-hidden="true"><use href="#icon-grand-cycle"></use></svg><strong>10</strong><span>Mohn pro Großzyklus</span></div>
+            <div><svg aria-hidden="true"><use href="#icon-grand-cycle"></use></svg><strong>10</strong><span>Mohn pro Konvektionszyklus</span></div>
             <div><svg aria-hidden="true"><use href="#icon-convection-time"></use></svg><strong>400</strong><span>Um Konvektion</span></div>
             <div><svg aria-hidden="true"><use href="#icon-presentation"></use></svg><strong>6:00</strong><span>Minuten Astralchronik</span></div>
           </div>
@@ -167,8 +168,8 @@
               <summary>Kanon und Simulation unterscheiden</summary>
               <p>
                 Die Einheiten, die Konvektionsdauer und die Laufarten sind kanonisch. Reihenfolge,
-                Einzeldauer, Geschwindigkeit und Intensitätsverlauf dieses Beispiels entstehen aus
-                dem gewählten Seed.
+                Einzeldauer, nicht synchrone Geschwindigkeit und Intensitätsverlauf dieses Beispiels
+                entstehen aus dem gewählten Seed. Synchrone Phasen bleiben fest an Era gekoppelt.
               </p>
             </details>
           </aside>
@@ -663,7 +664,7 @@
               </div>
 
               <label class="field-label" for="seed-input">Szenario-Seed</label>
-              <input id="seed-input" class="field-control" value="ERA-3500" maxlength="64" />
+              <input id="seed-input" class="field-control" value="ERA-2880" maxlength="64" />
               <div class="button-row button-row-equal">
                 <button id="apply-seed" class="button button-primary" type="button"><svg class="button-icon" aria-hidden="true"><use href="#icon-era-cycle"></use></svg>Seed anwenden</button>
                 <button id="new-seed" class="button button-quiet" type="button"><svg class="button-icon" aria-hidden="true"><use href="#icon-random"></use></svg>Neu würfeln</button>
@@ -692,8 +693,9 @@
               </dl>
 
               <p class="algorithm-caption">
-                Ein deterministischer Zufall variiert Reihenfolge, Wiederholungen, Geschwindigkeit und
-                S-Int. Die Konvektion bleibt als fester Abschluss bei 70.000 Um erhalten.
+                Ein deterministischer Zufall variiert Reihenfolge, Wiederholungen, nicht synchrone
+                Geschwindigkeit und S-Int. Die Konvektion bleibt als fester Abschluss bei 46.080 Um
+                erhalten.
               </p>
             </aside>
 
@@ -732,7 +734,7 @@
             <div class="timeline-title-lockup">
               <div class="section-seal" aria-hidden="true"><svg><use href="#icon-timeline"></use></svg><span>04</span></div>
               <div>
-                <p class="panel-index">04 · GROSSZYKLUS-CHRONIK</p>
+                <p class="panel-index">04 · KONVEKTIONSZYKLUS-CHRONIK</p>
                 <h2 id="timeline-title">Sechs-Minuten-Zeitpfad</h2>
               </div>
             </div>
@@ -744,7 +746,7 @@
 
           <div id="phase-track" class="phase-track" aria-label="Klickbare Abschnitte des erzeugten Zyklus"></div>
 
-          <label class="sr-only" for="time-slider">Darstellungszeit im Gesamtzyklus</label>
+          <label class="sr-only" for="time-slider">Darstellungszeit im Konvektionszyklus</label>
           <input
             id="time-slider"
             class="time-slider"
@@ -760,6 +762,10 @@
             <button id="play-toggle" class="button button-play" type="button" aria-pressed="false">
               <svg id="play-icon" class="button-icon" aria-hidden="true"><use id="play-icon-use" href="#icon-play"></use></svg>
               <span id="play-label">Abspielen</span>
+            </button>
+            <button id="auto-cycle" class="button auto-cycle-toggle" type="button" aria-pressed="false" aria-label="Nach jeder Konvektion automatisch neu würfeln und weiterlaufen" title="Automatisches Neuwürfeln nach der Konvektion einschalten">
+              <svg class="button-icon" aria-hidden="true"><use href="#icon-auto-cycle"></use></svg>
+              <span class="sr-only">Automatisch neu würfeln und weiterlaufen</span>
             </button>
             <button id="restart" class="button button-quiet" type="button"><svg class="button-icon" aria-hidden="true"><use href="#icon-restart"></use></svg>Zum Anfang</button>
             <label class="inline-field" for="playback-rate">
@@ -787,16 +793,18 @@
               <svg class="explanation-icon" aria-hidden="true"><use href="#icon-canon"></use></svg>
               <h3>Kanonische Struktur</h3>
               <p>
-                1 Tan = 20 Um, 1 Dir = 200 Um, 1 Mohn = 7.000 Um. Ein Großzyklus umfasst
-                70.000 Um; die Konvektion dauert 400 Um.
+                1 Um ist eine vollständige Era-Rotation mit 90 Vergleichsminuten. 1 Tan = 16 Um,
+                1 Dir = 128 Um, 1 Mohn = 4.608 Um. Der Konvektionszyklus umfasst 46.080 Um;
+                die Konvektion dauert 400 Um.
               </p>
             </article>
             <article>
               <svg class="explanation-icon" aria-hidden="true"><use href="#icon-simulation"></use></svg>
               <h3>Illustratives Szenario</h3>
               <p>
-                Phasenfolge, Einzeldauern, Geschwindigkeiten und S-Int werden reproduzierbar erzeugt.
-                Sie sind eine Anschauung und kein festgeschriebenes historisches Datum.
+                Phasenfolge, Einzeldauern, nicht synchrone Geschwindigkeiten und S-Int werden
+                reproduzierbar erzeugt. Sie sind eine Anschauung und kein festgeschriebenes
+                historisches Datum.
               </p>
             </article>
             <article>

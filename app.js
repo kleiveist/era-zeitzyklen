@@ -198,6 +198,7 @@
     playIcon: document.querySelector("#play-icon"),
     playIconUse: document.querySelector("#play-icon-use"),
     playLabel: document.querySelector("#play-label"),
+    autoCycle: document.querySelector("#auto-cycle"),
     restart: document.querySelector("#restart"),
     playbackRate: document.querySelector("#playback-rate"),
     timelineNow: document.querySelector("#timeline-now"),
@@ -214,6 +215,7 @@
     scenario: null,
     currentMs: 0,
     playing: false,
+    autoCycle: false,
     playbackRate: 1,
     presentationMs: config.presentationMs,
     animationFrame: null,
@@ -276,7 +278,7 @@
       .trim()
       .replace(/\s+/g, " ")
       .slice(0, 64);
-    return normalized || "ERA-3500";
+    return normalized || "ERA-2880";
   }
 
   function hashString(value) {
@@ -342,21 +344,23 @@
     }
   }
 
-  function getLatitudeLift(latitudeDegrees) {
+  function getLatitudeLift(latitudeDegrees, motion = "orbit") {
     const numericValue = Number(latitudeDegrees);
     const safeDegrees = clamp(
       Number.isFinite(numericValue) ? numericValue : 0,
       0,
       HORIZON_GEOMETRY.maxLatitudeDegrees,
     );
-    return Math.sin((safeDegrees * Math.PI) / 180) * HORIZON_GEOMETRY.maxLatitudeLift;
+    const projectedDegrees = motion === "zehs"
+      ? HORIZON_GEOMETRY.maxLatitudeDegrees - safeDegrees
+      : safeDegrees;
+    return Math.sin((projectedDegrees * Math.PI) / 180) * HORIZON_GEOMETRY.maxLatitudeLift;
   }
 
   function getEraRotationDegrees(ms, motion) {
     const safeMs = Number.isFinite(Number(ms)) ? Number(ms) : 0;
     const sampledMs = state.reducedMotion ? Math.round(safeMs / 1000) * 1000 : safeMs;
-    const degreesPerSecond = 2.8;
-    return normalizeDegrees((sampledMs / 1000) * degreesPerSecond);
+    return normalizeDegrees((sampledMs / 1000) * config.eraRotationDegreesPerSecond);
   }
 
   function getIntensityTier(intensity) {
@@ -469,7 +473,7 @@
     const visible = motion !== "convection" && forwardAmount >= -0.000001;
     const baseHeight =
       Math.pow(Math.max(0, forwardAmount), 0.8) * HORIZON_GEOMETRY.maxSkyHeight * heightScale;
-    const latitudeLift = visible ? getLatitudeLift(latitudeDegrees) : 0;
+    const latitudeLift = visible ? getLatitudeLift(latitudeDegrees, motion) : 0;
     const height = baseHeight + latitudeLift;
 
     return Object.freeze({
@@ -569,7 +573,10 @@
     let drift = direction * baseSpeed;
     let amplitude = Math.max(0.06, baseSpeed * (0.08 + unitFor(seed, `${prefix}|noise`) * 0.16));
 
-    if (template.motion === "switching") {
+    if (template.category === "synchron") {
+      drift = config.eraRotationDegreesPerSecond;
+      amplitude = 0;
+    } else if (template.motion === "switching") {
       drift = (unitFor(seed, `${prefix}|drift`) - 0.5) * 1.4;
       amplitude = 13 + unitFor(seed, `${prefix}|switch-amplitude`) * 24;
     } else if (template.motion === "oscillate") {
@@ -776,12 +783,14 @@
 
   function formatEraTime(cycleUm) {
     const safeUm = clamp(Math.floor(cycleUm), 0, config.totalUm);
-    const mohn = Math.floor(safeUm / 7000);
-    let remainder = safeUm % 7000;
-    const dir = Math.floor(remainder / 200);
-    remainder %= 200;
-    const tan = Math.floor(remainder / 20);
-    const um = remainder % 20;
+    const umPerDir = config.umPerTan * config.tanPerDir;
+    const umPerMohn = umPerDir * config.dirPerMohn;
+    const mohn = Math.floor(safeUm / umPerMohn);
+    let remainder = safeUm % umPerMohn;
+    const dir = Math.floor(remainder / umPerDir);
+    remainder %= umPerDir;
+    const tan = Math.floor(remainder / config.umPerTan);
+    const um = remainder % config.umPerTan;
     return `Mohn ${mohn} · Dir ${dir} · Tan ${tan} · Um ${um}`;
   }
 
@@ -1266,7 +1275,7 @@
         : `Sol ist ${solVisible ? "vor" : "hinter"} dem lokalen Horizont, Yol ist ${
             yolVisible ? "vor" : "hinter"
           } dem lokalen Horizont.`;
-      const zehsText = `ZEHS liegt ${zehsVisible ? "als heller Punkt über" : "unter"} dem lokalen Horizont.`;
+      const zehsText = `ZEHS liegt ${zehsVisible ? "als heller Punkt über" : "unter"} dem lokalen Horizont und sinkt als nordsternartiger Referenzpunkt von 0° nach 60° flacher.`;
       elements.horizonDescription.textContent = `Schematischer Horizont durch die ${latitude.name} bei Blick nach ${direction.name} und ${latitude.degrees} Grad Versatz vom Nordpol in Richtung Äquator. ${visibilityText} ${zehsText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht; der Äquator bei 90 Grad bleibt ausgeschlossen.`;
     }
   }
@@ -1493,6 +1502,18 @@
     elements.playLabel.textContent = state.playing ? "Pausieren" : "Abspielen";
   }
 
+  function updateAutoCycleButton() {
+    const enabled = state.autoCycle;
+    elements.autoCycle.setAttribute("aria-pressed", String(enabled));
+    elements.autoCycle.classList.toggle("is-active", enabled);
+    elements.autoCycle.setAttribute(
+      "title",
+      enabled
+        ? "Automatisches Neuwürfeln nach der Konvektion ist aktiv"
+        : "Automatisches Neuwürfeln nach der Konvektion einschalten",
+    );
+  }
+
   function updatePlaybackLabels() {
     const options = elements.playbackRate.querySelectorAll("option");
     options.forEach((option) => {
@@ -1524,8 +1545,17 @@
     if (state.currentMs >= state.presentationMs) {
       state.currentMs = state.presentationMs;
       render(state.currentMs);
+      if (state.autoCycle) {
+        const completedSeed = state.seed;
+        state.currentMs = 0;
+        loadScenario(createNewSeed(), { announce: false });
+        state.lastFrameAt = timestamp;
+        state.animationFrame = requestAnimationFrame(tick);
+        announce(`Konvektionszyklus ${completedSeed} beendet. Neuer Zyklus ${state.seed} läuft.`);
+        return;
+      }
       setPlaying(false);
-      announce("Großzyklus beendet. Die nächste Konvektion beginnt nach dem Neustart des Zyklus.");
+      announce("Konvektionszyklus beendet. Die nächste Konvektion beginnt nach dem Neustart des Zyklus.");
       return;
     }
     render(state.currentMs);
@@ -1609,7 +1639,7 @@
     if (options.focus && typeof activeButton?.focus === "function") activeButton.focus();
     if (changed && options.announce !== false) {
       const latitude = HORIZON_LATITUDES[normalizedLatitude];
-      announce(`${latitude.degrees} Grad äquatorwärts: ${latitude.name}. Sol und Yol stehen höher über dem Horizont.`);
+      announce(`${latitude.degrees} Grad äquatorwärts: ${latitude.name}. Sol und Yol steigen mit der Breite, ZEHS sinkt nordsternartig zum Horizont.`);
     }
   }
 
@@ -1632,6 +1662,7 @@
       horizonDirection: state.horizonDirection,
       horizonLatitude: state.horizonLatitude,
       playing: state.playing,
+      autoCycle: state.autoCycle,
       playbackRate: state.playbackRate,
       reducedMotion: state.reducedMotion,
       theme: state.theme,
@@ -1697,6 +1728,15 @@
       announce(`${formatClock(state.currentMs)}. ${snapshot.template.label}.`);
     });
     elements.playToggle.addEventListener("click", () => setPlaying(!state.playing));
+    elements.autoCycle.addEventListener("click", () => {
+      state.autoCycle = !state.autoCycle;
+      updateAutoCycleButton();
+      announce(
+        state.autoCycle
+          ? "Automatisches Neuwürfeln nach der Konvektion aktiviert."
+          : "Automatisches Neuwürfeln deaktiviert.",
+      );
+    });
     elements.restart.addEventListener("click", () => {
       seekTo(0, true);
     });
@@ -1742,6 +1782,7 @@
     getViewBasis,
     projectOrbitPointToHorizon,
     getSnapshot,
+    formatEraTime,
     getLastRenderFrame,
     getState,
   });
@@ -1752,4 +1793,5 @@
   attachEvents();
   loadScenario(state.seed, { announce: false });
   updatePlayButton();
+  updateAutoCycleButton();
 })();

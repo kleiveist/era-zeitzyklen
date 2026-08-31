@@ -292,8 +292,14 @@ global.matchMedia = () => ({
   addEventListener: () => {},
   addListener: () => {},
 });
-global.requestAnimationFrame = () => 1;
-global.cancelAnimationFrame = () => {};
+let nextAnimationFrame = null;
+global.requestAnimationFrame = (callback) => {
+  nextAnimationFrame = callback;
+  return 1;
+};
+global.cancelAnimationFrame = () => {
+  nextAnimationFrame = null;
+};
 
 const directionGroup = registerElement("#horizon-direction-group", new FakeElement("div"));
 directionGroup.setAttribute("role", "radiogroup");
@@ -314,7 +320,7 @@ const latitudeButtons = [0, 30, 60].map((latitude) => {
   return button;
 });
 
-elementFor("#seed-input").value = "ERA-3500";
+elementFor("#seed-input").value = "ERA-2880";
 elementFor("#playback-rate").value = "1";
 elementFor("#time-slider").value = "0";
 
@@ -340,6 +346,7 @@ for (const functionName of [
   "getViewBasis",
   "projectOrbitPointToHorizon",
   "getSnapshot",
+  "formatEraTime",
   "getLastRenderFrame",
   "getState",
 ]) {
@@ -356,12 +363,24 @@ assert.equal(
   18,
   "jede Phasenvorlage besitzt eine eindeutige ID",
 );
-assert.equal(ERA_PHASES.config.totalUm, 70000, "Großzyklus umfasst 70.000 Um");
-assert.equal(ERA_PHASES.config.regularUm, 69600, "reguläre Phasen umfassen 69.600 Um");
+assert.equal(ERA_PHASES.config.umPerTan, 16, "ein Tan umfasst 16 Um");
+assert.equal(ERA_PHASES.config.tanPerDir, 8, "ein Dir umfasst 8 Tan");
+assert.equal(ERA_PHASES.config.dirPerMohn, 36, "ein Mohn umfasst 36 Dir");
+assert.equal(ERA_PHASES.config.mohnPerCycle, 10, "ein Konvektionszyklus umfasst 10 Mohn");
+assert.equal(ERA_PHASES.config.earthMinutesPerUm, 90, "ein Um entspricht 90 irdischen Vergleichsminuten");
+assert.equal(ERA_PHASES.config.idealLightMinutesPerUm, 45, "die idealisierte Hellphase umfasst 45 Minuten");
+assert.equal(ERA_PHASES.config.idealDarkMinutesPerUm, 45, "die idealisierte Dunkelphase umfasst 45 Minuten");
+assert.equal(ERA_PHASES.config.totalUm, 46080, "Konvektionszyklus umfasst 46.080 Um");
+assert.equal(ERA_PHASES.config.regularUm, 45680, "reguläre Phasen umfassen 45.680 Um");
 assert.equal(ERA_PHASES.config.convectionDurationUm, 400, "Konvektion umfasst 400 Um");
-assert.equal(70000 / 7000, 10, "Großzyklus entspricht 10 Mohn");
-assert.equal(70000 / 200, 350, "Großzyklus entspricht 350 Dir");
-assert.equal(70000 / 20, 3500, "Großzyklus entspricht 3.500 Tan");
+assert.equal(ERA_PHASES.config.eraRotationDegreesPerSecond, 5.6, "Eras Eigenrotation wurde auf 5,6 Grad pro Sekunde verdoppelt");
+assert.equal(46080 / 4608, 10, "Konvektionszyklus entspricht 10 Mohn");
+assert.equal(46080 / 128, 360, "Konvektionszyklus entspricht 360 Dir");
+assert.equal(46080 / 16, 2880, "Konvektionszyklus entspricht 2.880 Tan");
+assert.equal(contract.formatEraTime(16), "Mohn 0 · Dir 0 · Tan 1 · Um 0");
+assert.equal(contract.formatEraTime(128), "Mohn 0 · Dir 1 · Tan 0 · Um 0");
+assert.equal(contract.formatEraTime(4608), "Mohn 1 · Dir 0 · Tan 0 · Um 0");
+assert.equal(contract.formatEraTime(46080), "Mohn 10 · Dir 0 · Tan 0 · Um 0");
 assert.equal(contract.ZEHS_PARAMETERS.name, "ZEHS", "Referenzstern besitzt seinen kanonischen Namen");
 assert.equal(contract.ZEHS_PARAMETERS.type, "Referenzstern", "ZEHS ist als Referenzstern klassifiziert");
 assert.equal(contract.ZEHS_PARAMETERS.distanceAu, 40, "ZEHS liegt ungefähr 40 AU entfernt");
@@ -401,6 +420,26 @@ for (const template of ERA_PHASES.templates) {
     `#${template.icon}`,
     `aktives Siegel für ${template.id}`,
   );
+  if (template.category === "synchron") {
+    const synchronizedSnapshot = contract.getLastRenderFrame().snapshot;
+    for (const bodyName of ["sol", "yol"]) {
+      assert.deepEqual(
+        template[bodyName].speed,
+        [ERA_PHASES.config.eraRotationDegreesPerSecond, ERA_PHASES.config.eraRotationDegreesPerSecond],
+        `${template.id}/${bodyName}: Geschwindigkeitsvertrag entspricht Era`,
+      );
+      assert.equal(
+        synchronizedSnapshot[bodyName].angularVelocity,
+        ERA_PHASES.config.eraRotationDegreesPerSecond,
+        `${template.id}/${bodyName}: momentane Winkelgeschwindigkeit bleibt an Era gekoppelt`,
+      );
+      assert.equal(
+        synchronizedSnapshot[bodyName].speed,
+        ERA_PHASES.config.eraRotationDegreesPerSecond,
+        `${template.id}/${bodyName}: angezeigte Geschwindigkeit entspricht Era`,
+      );
+    }
+  }
 }
 
 function pressed(button) {
@@ -459,6 +498,8 @@ assert.equal(directionButtons.length, 4, "exakt vier Blickrichtungen");
 assert.equal(latitudeButtons.length, 3, "exakt drei Breitenstufen");
 assertDirection("north", "Standardrichtung Norden");
 assertLatitude(0, "Standardbreite ist der bisherige Polstand");
+assert.equal(contract.getState().autoCycle, false, "automatisches Neuwürfeln ist standardmäßig aus");
+assert.equal(elementFor("#auto-cycle").getAttribute("aria-pressed"), "false", "Doppelkreis-Schalter meldet den inaktiven Zustand");
 
 slider.value = "54000";
 slider.emit("input");
@@ -633,6 +674,46 @@ assert.equal(slider.getAttribute("max"), "360000");
 assert.equal(elementFor("#timeline-total").textContent, "6:00");
 assert.equal(contract.getState().presentationMs, 360000, "ausschließlich sechs Minuten sind aktiv");
 
+const autoCycleButton = elementFor("#auto-cycle");
+autoCycleButton.emit("click");
+assert.equal(contract.getState().autoCycle, true, "Doppelkreis-Schalter aktiviert den Endlosmodus");
+assert.equal(autoCycleButton.getAttribute("aria-pressed"), "true", "aktiver Endlosmodus ist zugänglich ausgewiesen");
+assert.ok(autoCycleButton.classList.contains("is-active"), "aktiver Endlosmodus erhält einen sichtbaren Zustand");
+slider.value = "359950";
+slider.emit("input");
+const completedSeed = contract.getState().seed;
+elementFor("#play-toggle").emit("click");
+assert.equal(contract.getState().playing, true, "Wiedergabe startet kurz vor Zyklusende");
+assert.equal(typeof nextAnimationFrame, "function", "laufende Wiedergabe plant ein Animationsbild");
+const completionFrame = nextAnimationFrame;
+nextAnimationFrame = null;
+completionFrame(performance.now() + 200);
+assert.notEqual(contract.getState().seed, completedSeed, "nach der Konvektion wird automatisch neu gewürfelt");
+assert.equal(contract.getState().currentMs, 0, "der neue Konvektionszyklus beginnt automatisch am Anfang");
+assert.equal(contract.getState().playing, true, "der neue Konvektionszyklus läuft ohne Pause weiter");
+assert.equal(typeof nextAnimationFrame, "function", "Endlosmodus plant den nächsten Zyklus weiter");
+const firstAutomaticSeed = contract.getState().seed;
+slider.value = "359950";
+slider.emit("input");
+const secondCompletionFrame = nextAnimationFrame;
+nextAnimationFrame = null;
+secondCompletionFrame(performance.now() + 200);
+assert.notEqual(
+  contract.getState().seed,
+  firstAutomaticSeed,
+  "Endlosmodus würfelt auch nach dem nächsten vollständig beendeten Zyklus erneut",
+);
+assert.equal(contract.getState().currentMs, 0, "auch der zweite automatische Zyklus beginnt bei null");
+assert.equal(contract.getState().playing, true, "Endlosmodus bleibt über mehrere Zyklen aktiv");
+elementFor("#play-toggle").emit("click");
+assert.equal(contract.getState().playing, false, "Pause beendet auch den automatisch fortgesetzten Lauf");
+const pausedFrame = nextAnimationFrame;
+nextAnimationFrame = null;
+pausedFrame(performance.now() + 16);
+autoCycleButton.emit("click");
+assert.equal(contract.getState().autoCycle, false, "Doppelkreis-Schalter deaktiviert den Endlosmodus wieder");
+assert.equal(autoCycleButton.getAttribute("aria-pressed"), "false", "deaktivierter Endlosmodus ist zugänglich ausgewiesen");
+
 const orbitGeometry = contract.ORBIT_GEOMETRY;
 const horizonGeometry = contract.HORIZON_GEOMETRY;
 for (const property of ["centerX", "centerY", "eraRadius", "safeGap", "maxVisualBodyRadius"]) {
@@ -733,6 +814,14 @@ for (const bodyName of ["sol", "yol"]) {
 
 assert.equal(contract.normalizeDegrees(-90), 270, "negative Winkel werden normalisiert");
 assert.equal(contract.normalizeDegrees(450), 90, "Winkel über 360° werden normalisiert");
+assert.ok(
+  Math.abs(contract.getEraRotationDegrees(1000, "orbit") - 5.6) < 1e-9,
+  "Era dreht sich nach einer Sekunde um 5,6 Grad",
+);
+assert.ok(
+  Math.abs(contract.getEraRotationDegrees(2000, "orbit") - 11.2) < 1e-9,
+  "Eras verdoppelte Eigenrotation bleibt linear",
+);
 assert.deepEqual(Object.keys(contract.HORIZON_LATITUDES), ["0", "30", "60"], "nur drei äquatorwärtige Breitenstufen sind definiert");
 assert.equal(contract.HORIZON_LATITUDES[0].biome, "polar", "0 Grad sind mit Eis und Schnee verknüpft");
 assert.equal(contract.HORIZON_LATITUDES[30].biome, "temperate", "30 Grad sind mit gemäßigtem Tannenland verknüpft");
@@ -744,6 +833,9 @@ assert.equal(contract.normalizeHorizonLatitude(90), 0, "der Äquator bei 90 Grad
 assert.equal(contract.getLatitudeLift(0), 0, "Polstand verändert die bisherige Horizonthöhe nicht");
 assert.ok(contract.getLatitudeLift(30) > 0, "30 Grad heben sichtbare Körper an");
 assert.ok(contract.getLatitudeLift(60) > contract.getLatitudeLift(30), "60 Grad heben sichtbare Körper stärker an");
+assert.ok(contract.getLatitudeLift(0, "zehs") > contract.getLatitudeLift(30, "zehs"), "ZEHS steht bei 0 Grad höher als bei 30 Grad");
+assert.ok(contract.getLatitudeLift(30, "zehs") > contract.getLatitudeLift(60, "zehs"), "ZEHS sinkt von 30 auf 60 Grad weiter ab");
+assert.equal(contract.getLatitudeLift(60, "zehs"), 0, "ZEHS erreicht bei 60 Grad seine flachste Zusatzhöhe");
 
 const zehsWorldPoint = contract.ZEHS_PARAMETERS.worldPoint;
 assert.ok(Number.isFinite(zehsWorldPoint.x) && Number.isFinite(zehsWorldPoint.y), "ZEHS besitzt einen endlichen Kartenpunkt");
@@ -755,8 +847,8 @@ const zehsNorth60 = contract.projectOrbitPointToHorizon(zehsWorldPoint, zehsNort
 const zehsSouth0 = contract.projectOrbitPointToHorizon(zehsWorldPoint, zehsSouthBasis, "zehs", 0);
 assert.equal(zehsNorth0.visible, true, "ZEHS kann über dem nördlichen Horizont als Punkt erscheinen");
 assert.equal(zehsSouth0.visible, false, "ZEHS kann durch Eras Horizont verdeckt werden");
-assert.ok(zehsNorth30.y < zehsNorth0.y, "ZEHS reagiert auf die mittlere Beobachterbreite");
-assert.ok(zehsNorth60.y < zehsNorth30.y, "ZEHS reagiert auf die äquatornahe Grenzstufe");
+assert.ok(zehsNorth0.y < zehsNorth30.y, "ZEHS steht am Polstand nordsternartig am höchsten");
+assert.ok(zehsNorth30.y < zehsNorth60.y, "ZEHS wandert mit höherem Polversatz flacher zum Horizont");
 
 function directionMetadata(directionId) {
   if (Array.isArray(contract.HORIZON_DIRECTIONS)) {
@@ -972,16 +1064,20 @@ assert.equal(
   "ZEHS behält während der Konvektion seine normale Horizontprojektion",
 );
 
-console.log(
-  JSON.stringify({
-    templates: ERA_PHASES.templates.length,
-    sigils: sigils.children.length,
-    generatedSegments: track.children.length,
-    phaseJumps: ERA_PHASES.templates.length,
-    directions: directionButtons.length,
-    latitudes: latitudeButtons.length,
-    zehsDistanceAu: contract.ZEHS_PARAMETERS.distanceAu,
-    geometrySnapshots: sampledSnapshots,
-    finalEraTime: elementFor("#era-time").textContent,
-  }),
-);
+if (require.main === module) {
+  console.log(
+    JSON.stringify({
+      templates: ERA_PHASES.templates.length,
+      sigils: sigils.children.length,
+      generatedSegments: track.children.length,
+      phaseJumps: ERA_PHASES.templates.length,
+      directions: directionButtons.length,
+      latitudes: latitudeButtons.length,
+      zehsDistanceAu: contract.ZEHS_PARAMETERS.distanceAu,
+      geometrySnapshots: sampledSnapshots,
+      finalEraTime: elementFor("#era-time").textContent,
+    }),
+  );
+}
+
+module.exports = Object.freeze({ contract });
