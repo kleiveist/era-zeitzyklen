@@ -376,7 +376,7 @@ assert.equal(ERA_PHASES.config.totalUm, 46080, "Konvektionszyklus umfasst 46.080
 assert.equal(ERA_PHASES.config.regularUm, 45680, "reguläre Phasen umfassen 45.680 Um");
 assert.equal(ERA_PHASES.config.convectionDurationUm, 400, "Konvektion umfasst 400 Um");
 assert.equal(ERA_PHASES.config.eraRotationDegreesPerSecond, 5.6, "Eras Eigenrotation wurde auf 5,6 Grad pro Sekunde verdoppelt");
-assert.equal(ERA_PHASES.config.schemaVersion, 3, "Szenarioschema enthält den Kontinuitätsvertrag");
+assert.equal(ERA_PHASES.config.schemaVersion, 4, "Szenarioschema enthält Zeitmodus- und Kontinuitätsvertrag");
 assert.equal(46080 / 4608, 10, "Konvektionszyklus entspricht 10 Mohn");
 assert.equal(46080 / 128, 360, "Konvektionszyklus entspricht 360 Dir");
 assert.equal(46080 / 16, 2880, "Konvektionszyklus entspricht 2.880 Tan");
@@ -823,7 +823,7 @@ assert.notDeepEqual(
   firstSchedule,
   "anderer Seed erzeugt einen anderen Ereignisplan",
 );
-assert.match(elementFor("#era-time").textContent, /^Mohn 10 · Dir 0 · Tan 0 · Um 0$/);
+assert.match(elementFor("#era-time").textContent, /^Mohn 0 · Dir 0 · Tan 0 · Um 0$/);
 assertDirection(preservedDirection, "Seedwechsel bewahrt die Blickrichtung");
 
 assert.equal(
@@ -838,7 +838,7 @@ assert.equal(
 );
 assert.equal(slider.getAttribute("max"), "360000");
 assert.equal(elementFor("#timeline-total").textContent, "6:00");
-assert.equal(contract.getState().presentationMs, 360000, "ausschließlich sechs Minuten sind aktiv");
+assert.equal(contract.getState().presentationMs, 360000, "der sechsminütige Erklärmodus ist standardmäßig aktiv");
 
 function angularDistanceDegrees(left, right) {
   return Math.abs(((Number(left) - Number(right) + 540) % 360) - 180);
@@ -1080,23 +1080,26 @@ assert.equal(typeof nextAnimationFrame, "function", "laufende Wiedergabe plant e
 const completionFrame = nextAnimationFrame;
 nextAnimationFrame = null;
 completionFrame(performance.now() + 200);
-assert.notEqual(contract.getState().seed, completedSeed, "nach der Konvektion wird automatisch neu gewürfelt");
-assert.equal(contract.getState().currentMs, 0, "der neue Konvektionszyklus beginnt automatisch am Anfang");
+assert.notEqual(contract.getState().seed, completedSeed, "nach der Konvektion wird ein reproduzierbarer Folgeseed aktiviert");
+assert.ok(
+  contract.getState().currentMs >= 0 && contract.getState().currentMs < 400,
+  "der Anschlusszyklus übernimmt den nicht verbrauchten rAF-Zeitanteil",
+);
 assert.equal(contract.getState().playing, true, "der neue Konvektionszyklus läuft ohne Pause weiter");
 assert.equal(typeof nextAnimationFrame, "function", "Endlosmodus plant den nächsten Zyklus weiter");
 const automaticRestartSnapshot = contract.getSnapshot(0, { exact: true });
 assert.ok(
   angularDistanceDegrees(contract.getEraRotationDegrees(0, automaticRestartSnapshot.template.motion), completedEraRotation) < 1e-9,
-  "automatisches Neuwürfeln bewahrt auch Eras lokalen Blickwinkel",
+  "der automatische Anschluss bewahrt auch Eras lokalen Blickwinkel",
 );
 for (const bodyName of ["sol", "yol"]) {
   assert.ok(
     angularDistanceDegrees(automaticRestartSnapshot[bodyName].angle, completedCelestialState[bodyName].angle) < 1e-9,
-    `${bodyName}: automatisches Neuwürfeln bewahrt die Sternposition`,
+    `${bodyName}: der automatische Anschluss bewahrt die Sternposition`,
   );
   assert.ok(
     Math.abs(automaticRestartSnapshot[bodyName].radialOffset - completedCelestialState[bodyName].radialOffset) < 1e-9,
-    `${bodyName}: automatisches Neuwürfeln bewahrt den Bahnradius`,
+    `${bodyName}: der automatische Anschluss bewahrt den Bahnradius`,
   );
   const completedPoint = contract.getOrbitPoint(completedEndSnapshot, bodyName);
   const restartedPoint = contract.getOrbitPoint(automaticRestartSnapshot, bodyName);
@@ -1154,15 +1157,18 @@ secondCompletionFrame(performance.now() + 200);
 assert.notEqual(
   contract.getState().seed,
   firstAutomaticSeed,
-  "Endlosmodus würfelt auch nach dem nächsten vollständig beendeten Zyklus erneut",
+  "Endlosmodus leitet auch den nächsten Folgeseed ab",
 );
-assert.equal(contract.getState().currentMs, 0, "auch der zweite automatische Zyklus beginnt bei null");
+assert.ok(
+  contract.getState().currentMs >= 0 && contract.getState().currentMs < 400,
+  "auch der zweite Anschluss bewahrt den rAF-Zeitüberhang",
+);
 assert.equal(contract.getState().playing, true, "Endlosmodus bleibt über mehrere Zyklen aktiv");
 elementFor("#play-toggle").emit("click");
 assert.equal(contract.getState().playing, false, "Pause beendet auch den automatisch fortgesetzten Lauf");
 const pausedFrame = nextAnimationFrame;
 nextAnimationFrame = null;
-pausedFrame(performance.now() + 16);
+if (pausedFrame) pausedFrame(performance.now() + 16);
 autoCycleButton.emit("click");
 assert.equal(contract.getState().autoCycle, false, "Doppelkreis-Schalter deaktiviert den Endlosmodus wieder");
 assert.equal(autoCycleButton.getAttribute("aria-pressed"), "false", "deaktivierter Endlosmodus ist zugänglich ausgewiesen");

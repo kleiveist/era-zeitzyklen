@@ -7,6 +7,9 @@
   }
 
   const { config, categories, templates } = source;
+  const TIME_MODES = config.timeModes;
+  const TIME_MODE_ORDER = Object.freeze(["chronicle", "inspection"]);
+  const TIMELINE_ZOOM_ORDER = Object.freeze(["series", "cycle", "detail"]);
   const templateById = new Map(templates.map((template) => [template.id, template]));
   const categoryById = new Map(categories.map((category) => [category.id, category]));
   const sigilButtonsById = new Map();
@@ -179,10 +182,12 @@
     zehsVisibility: document.querySelector("#zehs-visibility"),
     zehsPosition: document.querySelector("#zehs-position"),
     eraTime: document.querySelector("#era-time"),
+    timeMode: document.querySelector("#time-mode"),
     solIntensity: document.querySelector("#sol-intensity"),
     yolIntensity: document.querySelector("#yol-intensity"),
     solSpeed: document.querySelector("#sol-speed"),
     yolSpeed: document.querySelector("#yol-speed"),
+    presentationLabel: document.querySelector("#presentation-label"),
     presentationTime: document.querySelector("#presentation-time"),
     seedInput: document.querySelector("#seed-input"),
     applySeed: document.querySelector("#apply-seed"),
@@ -194,8 +199,17 @@
     phaseCount: document.querySelector("#phase-count"),
     repeatCount: document.querySelector("#repeat-count"),
     segmentRange: document.querySelector("#segment-range"),
+    cycleProgress: document.querySelector("#cycle-progress"),
+    timeMapping: document.querySelector("#time-mapping"),
     phaseTrack: document.querySelector("#phase-track"),
     timelineTitle: document.querySelector("#timeline-title"),
+    timelineSummary: document.querySelector("#timeline-summary"),
+    timelineZoomControls: document.querySelector("#timeline-zoom-controls"),
+    timelineZoomOut: document.querySelector("#timeline-zoom-out"),
+    timelineZoomIn: document.querySelector("#timeline-zoom-in"),
+    timelineZoomLevel: document.querySelector("#timeline-zoom-level"),
+    previousCycle: document.querySelector("#previous-cycle"),
+    nextCycle: document.querySelector("#next-cycle"),
     timeSlider: document.querySelector("#time-slider"),
     playToggle: document.querySelector("#play-toggle"),
     playIcon: document.querySelector("#play-icon"),
@@ -214,16 +228,24 @@
   };
 
   const state = {
+    rootSeed: normalizeSeed(elements.seedInput.value),
     seed: normalizeSeed(elements.seedInput.value),
     scenario: null,
+    cycles: new Map(),
+    cycleIndex: 0,
     currentMs: 0,
     playing: false,
     autoCycle: false,
     playbackRate: 1,
-    presentationMs: config.presentationMs,
+    timeMode: readStoredTimeMode(),
+    presentationMs: getTimeMode(readStoredTimeMode()).presentationMs,
+    timelineZoom: "cycle",
+    timelineDetailSegmentIndex: 0,
     eraRotationOffsetDegrees: 0,
     animationFrame: null,
     lastFrameAt: null,
+    playbackAnchorAt: null,
+    playbackAnchorMs: 0,
     lastRenderedSegment: -1,
     reducedMotion: reducedMotionQuery.matches,
     theme: document.documentElement?.dataset?.theme === "light" ? "light" : "dark",
@@ -284,6 +306,68 @@
       .replace(/\s+/g, " ")
       .slice(0, 64);
     return normalized || "ERA-2880";
+  }
+
+  function normalizeTimeMode(value) {
+    return TIME_MODES[value] ? value : config.defaultTimeMode;
+  }
+
+  function getTimeMode(modeId = state?.timeMode) {
+    return TIME_MODES[normalizeTimeMode(modeId)];
+  }
+
+  function readStoredTimeMode() {
+    try {
+      return normalizeTimeMode(localStorage.getItem("era-time-mode"));
+    } catch (_) {
+      return config.defaultTimeMode;
+    }
+  }
+
+  function persistTimeMode(modeId) {
+    try {
+      localStorage.setItem("era-time-mode", normalizeTimeMode(modeId));
+    } catch (_) {
+      // Der Zeitmodus bleibt auch ohne verfügbaren lokalen Speicher bedienbar.
+    }
+  }
+
+  function isInspectionMode(modeId = state.timeMode) {
+    return normalizeTimeMode(modeId) === "inspection";
+  }
+
+  function modeMsToCycleUm(ms, modeId = state.timeMode, scenario = state.scenario) {
+    const mode = getTimeMode(modeId);
+    const boundedMs = clamp(Number(ms) || 0, 0, mode.presentationMs);
+    if (mode.kind === "linear-world-time") {
+      return clamp(boundedMs / mode.millisecondsPerUm, 0, config.totalUm);
+    }
+    const activeScenario = scenario || state.scenario;
+    if (!activeScenario) return 0;
+    const segment = findSegment(boundedMs, {
+      timeMode: mode.id,
+      scenario: activeScenario,
+    });
+    const duration = Math.max(1, segment.displayEnd - segment.displayStart);
+    const progress = clamp((boundedMs - segment.displayStart) / duration, 0, 1);
+    return segment.umStart + (segment.umEnd - segment.umStart) * progress;
+  }
+
+  function cycleUmToModeMs(cycleUm, modeId = state.timeMode, scenario = state.scenario) {
+    const mode = getTimeMode(modeId);
+    const boundedUm = clamp(Number(cycleUm) || 0, 0, config.totalUm);
+    if (mode.kind === "linear-world-time") {
+      return boundedUm * mode.millisecondsPerUm;
+    }
+    const activeScenario = scenario || state.scenario;
+    if (!activeScenario) return 0;
+    if (boundedUm === config.totalUm) return mode.presentationMs;
+    const segment = activeScenario.segments.find(
+      (candidate) => boundedUm >= candidate.umStart && boundedUm < candidate.umEnd,
+    ) || activeScenario.segments[0];
+    const durationUm = Math.max(1, segment.umEnd - segment.umStart);
+    const progress = clamp((boundedUm - segment.umStart) / durationUm, 0, 1);
+    return segment.displayStart + (segment.displayEnd - segment.displayStart) * progress;
   }
 
   function hashString(value) {
@@ -371,13 +455,31 @@
     return Math.sin((projectedDegrees * Math.PI) / 180) * HORIZON_GEOMETRY.maxLatitudeLift;
   }
 
-  function getEraRotationDegrees(ms, motion) {
+  function getEraRotationUnwrappedDegrees(ms, motion, options = {}) {
+    const timeMode = normalizeTimeMode(options.timeMode || state.timeMode);
+    const mode = getTimeMode(timeMode);
+    const scenario = options.scenario || state.scenario;
+    const cycleIndex = Number.isInteger(options.cycleIndex)
+      ? options.cycleIndex
+      : state.cycleIndex;
     const safeMs = Number.isFinite(Number(ms)) ? Number(ms) : 0;
-    const sampledMs = state.reducedMotion ? Math.round(safeMs / 1000) * 1000 : safeMs;
-    return normalizeDegrees(
-      state.eraRotationOffsetDegrees +
-        (sampledMs / 1000) * config.eraRotationDegreesPerSecond,
-    );
+    const sampledMs = options.exact || !state.reducedMotion
+      ? safeMs
+      : Math.round(safeMs / 1000) * 1000;
+    if (mode.kind === "linear-world-time") {
+      const absoluteWorldUm =
+        cycleIndex * config.totalUm +
+        clamp(sampledMs, 0, mode.presentationMs) / mode.millisecondsPerUm;
+      const initialDegrees = Number(scenario?.eraRotationStartDegrees?.inspection) || 0;
+      return initialDegrees + absoluteWorldUm * mode.eraRotationDegreesPerUm;
+    }
+    const initialDegrees = Number(scenario?.eraRotationStartDegrees?.chronicle);
+    return (Number.isFinite(initialDegrees) ? initialDegrees : state.eraRotationOffsetDegrees) +
+      (sampledMs / 1000) * mode.eraRotationDegreesPerSecond;
+  }
+
+  function getEraRotationDegrees(ms, motion, options = {}) {
+    return normalizeDegrees(getEraRotationUnwrappedDegrees(ms, motion, options));
   }
 
   function getIntensityTier(intensity) {
@@ -441,8 +543,21 @@
     }
 
     const radians = (normalizeDegrees(bodySnapshot.angle) * Math.PI) / 180;
-    const baseX = orbit.radiusX * Math.cos(radians);
-    const baseY = orbit.radiusY * Math.sin(radians);
+    let baseX;
+    let baseY;
+    if (bodySnapshot.angleKind === "polar") {
+      const cosine = Math.cos(radians);
+      const sine = Math.sin(radians);
+      const rayRadius = 1 / Math.sqrt(
+        (cosine * cosine) / (orbit.radiusX * orbit.radiusX) +
+          (sine * sine) / (orbit.radiusY * orbit.radiusY),
+      );
+      baseX = rayRadius * cosine;
+      baseY = rayRadius * sine;
+    } else {
+      baseX = orbit.radiusX * Math.cos(radians);
+      baseY = orbit.radiusY * Math.sin(radians);
+    }
     const baseDistance = Math.hypot(baseX, baseY) || 1;
     const requestedOffset = Number(bodySnapshot.radialOffset);
     const radialOffset = clamp(
@@ -537,7 +652,12 @@
       const isConvection = snapshot.template.motion === "convection";
       const viewBasis = getViewBasis(
         direction,
-        getEraRotationDegrees(sampleMs, snapshot.template.motion),
+        getEraRotationDegrees(sampleMs, snapshot.template.motion, {
+          timeMode: snapshot.timeMode,
+          scenario: snapshot.scenario,
+          cycleIndex: snapshot.cycleIndex,
+          exact: true,
+        }),
       );
       const next = {};
       for (const bodyName of ["sol", "yol"]) {
@@ -582,6 +702,142 @@
     return Object.freeze(samples);
   }
 
+  function getIrradianceVisibilityState(
+    ms,
+    direction,
+    latitude,
+    scenario = state.scenario,
+    cycleIndex = state.cycleIndex,
+  ) {
+    const snapshot = getSnapshot(ms, {
+      exact: true,
+      timeMode: "inspection",
+      scenario,
+      cycleIndex,
+    });
+    const isConvection = snapshot.template.motion === "convection";
+    const viewBasis = getViewBasis(
+      direction,
+      getEraRotationDegrees(ms, snapshot.template.motion, {
+        timeMode: "inspection",
+        scenario,
+        cycleIndex,
+        exact: true,
+      }),
+    );
+    const visibility = {};
+    for (const bodyName of ["sol", "yol"]) {
+      const projection = projectOrbitPointToHorizon(
+        getOrbitPoint(snapshot, bodyName),
+        viewBasis,
+        isConvection ? "convection" : "celestial",
+        latitude,
+      );
+      visibility[bodyName] = Boolean(
+        !isConvection && snapshot[bodyName].visible && projection.visible,
+      );
+    }
+    return visibility;
+  }
+
+  function buildInspectionIrradianceState(
+    targetMs,
+    direction,
+    latitude,
+    cachedState = null,
+  ) {
+    const boundedTarget = clamp(
+      Number(targetMs) || 0,
+      0,
+      TIME_MODES.inspection.presentationMs,
+    );
+    const lookbackMs = Math.max(
+      120000,
+      IRRADIANCE_MODEL.delayMs +
+        Math.max(IRRADIANCE_MODEL.buildupMs, IRRADIANCE_MODEL.decayMs) * 8,
+    );
+    const canContinue = cachedState &&
+      cachedState.kind === "inspection" &&
+      boundedTarget >= cachedState.ms &&
+      boundedTarget - cachedState.ms <= lookbackMs;
+    const startMs = canContinue
+      ? cachedState.ms
+      : Math.max(0, boundedTarget - lookbackMs);
+    let previous = canContinue
+      ? {
+          sol: {
+            visible: cachedState.solVisible,
+            dwellMs: cachedState.solDwellMs,
+            envelope: cachedState.solEnvelope,
+          },
+          yol: {
+            visible: cachedState.yolVisible,
+            dwellMs: cachedState.yolDwellMs,
+            envelope: cachedState.yolEnvelope,
+          },
+        }
+      : (() => {
+          const visibility = getIrradianceVisibilityState(
+            startMs,
+            direction,
+            latitude,
+          );
+          return {
+            sol: { visible: visibility.sol, dwellMs: 0, envelope: 0 },
+            yol: { visible: visibility.yol, dwellMs: 0, envelope: 0 },
+          };
+        })();
+    let previousMs = startMs;
+
+    while (previousMs < boundedTarget) {
+      const sampleMs = Math.min(
+        boundedTarget,
+        previousMs + IRRADIANCE_MODEL.sampleMs,
+      );
+      const elapsedMs = sampleMs - previousMs;
+      const visibility = getIrradianceVisibilityState(
+        sampleMs,
+        direction,
+        latitude,
+      );
+      const next = {};
+      for (const bodyName of ["sol", "yol"]) {
+        const visible = visibility[bodyName];
+        const dwellMs = visible
+          ? previous[bodyName].visible
+            ? previous[bodyName].dwellMs + elapsedMs
+            : 0
+          : 0;
+        let envelope = previous[bodyName].envelope;
+        if (visible && dwellMs >= IRRADIANCE_MODEL.delayMs) {
+          const buildupRetention = Math.exp(-elapsedMs / IRRADIANCE_MODEL.buildupMs);
+          envelope = 1 - (1 - envelope) * buildupRetention;
+        } else if (!visible) {
+          envelope *= Math.exp(-elapsedMs / IRRADIANCE_MODEL.decayMs);
+        }
+        if (envelope < 0.000001) envelope = 0;
+        next[bodyName] = {
+          visible,
+          dwellMs,
+          envelope: clamp(envelope, 0, 1),
+        };
+      }
+      previous = next;
+      previousMs = sampleMs;
+    }
+
+    return Object.freeze({
+      kind: "inspection",
+      ms: boundedTarget,
+      solVisible: previous.sol.visible,
+      yolVisible: previous.yol.visible,
+      solDwellMs: previous.sol.dwellMs,
+      yolDwellMs: previous.yol.dwellMs,
+      solEnvelope: previous.sol.envelope,
+      yolEnvelope: previous.yol.envelope,
+    });
+  }
+
   function getIrradianceDwellAt(
     ms,
     directionId = state.horizonDirection,
@@ -597,7 +853,22 @@
       });
     }
     const direction = HORIZON_DIRECTIONS[directionId] ? directionId : "north";
-    const key = `${direction}|${latitude}`;
+    const key = `${state.timeMode}|${state.cycleIndex}|${direction}|${latitude}`;
+    if (isInspectionMode()) {
+      const nextState = buildInspectionIrradianceState(
+        ms,
+        direction,
+        latitude,
+        state.irradianceTimelines.get(key),
+      );
+      state.irradianceTimelines.set(key, nextState);
+      return Object.freeze({
+        solDwellMs: nextState.solDwellMs,
+        yolDwellMs: nextState.yolDwellMs,
+        solEnvelope: nextState.solEnvelope,
+        yolEnvelope: nextState.yolEnvelope,
+      });
+    }
     if (!state.irradianceTimelines.has(key)) {
       state.irradianceTimelines.set(key, buildIrradianceTimeline(direction, latitude));
     }
@@ -628,7 +899,9 @@
     const latitudeStrength = IRRADIANCE_MODEL.latitudeStrength[latitude] || 0;
     const isConvection = snapshot?.template?.motion === "convection";
     const sampledMs = Number(snapshot?.positionMs ?? snapshot?.ms);
-    const segmentStart = Number(snapshot?.segment?.displayStart) || 0;
+    const segmentStart = snapshot?.segment
+      ? segmentStartMs(snapshot.segment, snapshot.timeMode)
+      : 0;
     const fallbackDwellMs = Number.isFinite(sampledMs)
       ? Math.max(0, sampledMs - segmentStart)
       : 0;
@@ -665,9 +938,11 @@
 
       const intensity = clamp((Number(body.intensity) || 1) / 10, 0.1, 1);
       const angularVelocity = Number(body.angularVelocity);
+      const eraAngularVelocity = Number(snapshot?.mode?.eraRotationDegreesPerSecond) ||
+        config.eraRotationDegreesPerSecond;
       const relativeSpeed = Number.isFinite(angularVelocity)
-        ? Math.abs(angularVelocity - config.eraRotationDegreesPerSecond)
-        : config.eraRotationDegreesPerSecond;
+        ? Math.abs(angularVelocity - eraAngularVelocity)
+        : eraAngularVelocity;
       const stability = clamp(
         1 / (1 + relativeSpeed / IRRADIANCE_MODEL.relativeSpeedScale),
         IRRADIANCE_MODEL.minimumStability,
@@ -790,12 +1065,24 @@
     return 1;
   }
 
-  function createMotionParameters(seed, segment, bodyName, continuity = {}) {
+  function createMotionParameters(
+    seed,
+    segment,
+    bodyName,
+    continuity = {},
+    timeMode = "chronicle",
+  ) {
     const template = segment.template;
     const bodyConfig = template[bodyName];
-    const prefix = `${segment.index}|${template.id}|${bodyName}`;
-    const minSpeed = bodyConfig.speed[0];
-    const maxSpeed = bodyConfig.speed[1];
+    const normalizedMode = normalizeTimeMode(timeMode);
+    const mode = getTimeMode(normalizedMode);
+    const inspection = mode.kind === "linear-world-time";
+    const prefix = `${normalizedMode}|${segment.index}|${template.id}|${bodyName}`;
+    const speedScale = inspection
+      ? mode.eraRotationDegreesPerUm / config.eraRotationDegreesPerSecond
+      : 1;
+    let minSpeed = bodyConfig.speed[0] * speedScale;
+    let maxSpeed = bodyConfig.speed[1] * speedScale;
     const speedRange = maxSpeed - minSpeed;
     const baseSpeed = minSpeed + speedRange * unitFor(seed, `${prefix}|base-speed`);
     const direction = directionFor(template);
@@ -804,21 +1091,37 @@
     let drift = direction * baseSpeed;
     let amplitude = Math.max(0.06, baseSpeed * (0.08 + unitFor(seed, `${prefix}|noise`) * 0.16));
 
-    if (template.category === "synchron") {
-      drift = config.eraRotationDegreesPerSecond;
+    if (template.motion === "convection") {
+      drift = 0;
+      amplitude = 0;
+      minSpeed = 0;
+      maxSpeed = 0;
+    } else if (template.category === "synchron") {
+      drift = inspection
+        ? mode.eraRotationDegreesPerUm
+        : mode.eraRotationDegreesPerSecond;
+      minSpeed = drift;
+      maxSpeed = drift;
       amplitude = 0;
     } else if (template.motion === "switching") {
-      drift = (unitFor(seed, `${prefix}|drift`) - 0.5) * 1.4;
-      amplitude = 13 + unitFor(seed, `${prefix}|switch-amplitude`) * 24;
+      drift = (unitFor(seed, `${prefix}|drift`) - 0.5) * 1.4 * speedScale;
+      amplitude = (13 + unitFor(seed, `${prefix}|switch-amplitude`) * 24) * speedScale;
     } else if (template.motion === "oscillate") {
       drift *= 0.18;
-      amplitude = 9 + unitFor(seed, `${prefix}|osc-amplitude`) * 16;
+      amplitude = (9 + unitFor(seed, `${prefix}|osc-amplitude`) * 16) * speedScale;
     } else if (template.motion === "fixed-orbit") {
-      drift *= 0.15;
-      amplitude = 0.8;
+      if (inspection) {
+        drift = 0;
+        amplitude = 0;
+        minSpeed = 0;
+        maxSpeed = 0;
+      } else {
+        drift *= 0.15;
+        amplitude = 0.8 * speedScale;
+      }
     } else if (template.motion === "hold") {
       drift *= 0.25;
-      amplitude = 1.2;
+      amplitude = 1.2 * speedScale;
     }
 
     const radialAmplitude = Number(bodyConfig.radialAmplitude) || 0;
@@ -826,10 +1129,14 @@
     const startRadialOffset = Number.isFinite(requestedRadialStart)
       ? requestedRadialStart
       : radialAmplitude * (unitFor(seed, `${prefix}|radial-start`) * 1.2 - 0.6);
-    const endRadialOffset = radialAmplitude *
+    let endRadialOffset = radialAmplitude *
       (unitFor(seed, `${prefix}|radial-end`) * 1.2 - 0.6);
-    const radialSwing = radialAmplitude *
+    let radialSwing = radialAmplitude *
       (unitFor(seed, `${prefix}|radial-swing`) * 0.5 - 0.25);
+    if (inspection && template.motion === "fixed-orbit") {
+      endRadialOffset = startRadialOffset;
+      radialSwing = 0;
+    }
     const intensityRange = bodyConfig.intensity;
     const requestedIntensityStart = Number(continuity.intensity);
     const startIntensity = intensityRange
@@ -868,6 +1175,9 @@
       startIntensity,
       endIntensity,
       intensitySwing,
+      timeMode: normalizedMode,
+      angleKind: inspection ? "polar" : "eccentric",
+      rateUnit: inspection ? "degrees-per-um" : "degrees-per-second",
     };
   }
 
@@ -879,7 +1189,14 @@
     return parameters.startAngle + parameters.drift * localSeconds + wave;
   }
 
-  function buildScenario(seed, initialCelestialState = null) {
+  function buildScenario(seed, options = {}) {
+    const initialCelestialStates = options.initialCelestialStates ||
+      (options.initialCelestialState
+        ? {
+            chronicle: options.initialCelestialState,
+            inspection: options.initialCelestialState,
+          }
+        : null);
     const random = mulberry32(hashString(`${config.schemaVersion}|${seed}|schedule`));
     const repeatTotal = Math.round(
       randomBetween(random, config.minRepeatedTemplates, config.maxRepeatedTemplates),
@@ -901,12 +1218,10 @@
     const displayWeights = umDurations.map(
       (duration, index) => Math.sqrt(duration) * (sequence[index].id === "changing" ? 1.12 : 1),
     );
-    const convectionPresentationMs = Math.round(
-      config.convectionPresentationMs * (state.presentationMs / config.presentationMs),
-    );
+    const convectionPresentationMs = TIME_MODES.chronicle.convectionPresentationMs;
     const displayDurations = allocateIntegerDurations(
       displayWeights,
-      state.presentationMs - convectionPresentationMs,
+      TIME_MODES.chronicle.presentationMs - convectionPresentationMs,
       2200,
     );
 
@@ -933,56 +1248,84 @@
       template: convectionTemplate,
       umStart: config.regularUm,
       umEnd: config.totalUm,
-      displayStart: state.presentationMs - convectionPresentationMs,
-      displayEnd: state.presentationMs,
+      displayStart: TIME_MODES.chronicle.presentationMs - convectionPresentationMs,
+      displayEnd: TIME_MODES.chronicle.presentationMs,
       motion: {},
     });
 
-    const celestialState = {
-      sol: {
-        angle: Number.isFinite(Number(initialCelestialState?.sol?.angle))
-          ? Number(initialCelestialState.sol.angle)
-          : unitFor(seed, "initial|sol-angle") * 360,
-        radialOffset: Number(initialCelestialState?.sol?.radialOffset),
-        intensity: Number(initialCelestialState?.sol?.intensity),
-      },
-      yol: {
-        angle: Number.isFinite(Number(initialCelestialState?.yol?.angle))
-          ? Number(initialCelestialState.yol.angle)
-          : unitFor(seed, "initial|yol-angle") * 360 + 140,
-        radialOffset: Number(initialCelestialState?.yol?.radialOffset),
-        intensity: Number(initialCelestialState?.yol?.intensity),
-      },
-    };
-    for (const segment of segments) {
-      const durationSeconds = (segment.displayEnd - segment.displayStart) / 1000;
-      for (const bodyName of ["sol", "yol"]) {
-        const previousIntensity = celestialState[bodyName].intensity;
-        segment.motion[bodyName] = createMotionParameters(
-          seed,
-          segment,
-          bodyName,
-          celestialState[bodyName],
-        );
-        const parameters = segment.motion[bodyName];
-        celestialState[bodyName] = {
-          angle: rawAngle(parameters, durationSeconds),
-          radialOffset: parameters.endRadialOffset,
-          intensity: parameters.endIntensity ?? previousIntensity,
-        };
+    const finalCelestialStates = {};
+    for (const timeMode of TIME_MODE_ORDER) {
+      const requestedState = initialCelestialStates?.[timeMode];
+      const celestialState = {
+        sol: {
+          angle: Number.isFinite(Number(requestedState?.sol?.angle))
+            ? Number(requestedState.sol.angle)
+            : unitFor(seed, "initial|sol-angle") * 360,
+          radialOffset: Number(requestedState?.sol?.radialOffset),
+          intensity: Number(requestedState?.sol?.intensity),
+        },
+        yol: {
+          angle: Number.isFinite(Number(requestedState?.yol?.angle))
+            ? Number(requestedState.yol.angle)
+            : unitFor(seed, "initial|yol-angle") * 360 + 140,
+          radialOffset: Number(requestedState?.yol?.radialOffset),
+          intensity: Number(requestedState?.yol?.intensity),
+        },
+      };
+      for (const segment of segments) {
+        segment.motion[timeMode] = {};
+        const durationUnits = timeMode === "inspection"
+          ? segment.umEnd - segment.umStart
+          : (segment.displayEnd - segment.displayStart) / 1000;
+        for (const bodyName of ["sol", "yol"]) {
+          const previousIntensity = celestialState[bodyName].intensity;
+          segment.motion[timeMode][bodyName] = createMotionParameters(
+            seed,
+            segment,
+            bodyName,
+            celestialState[bodyName],
+            timeMode,
+          );
+          const parameters = segment.motion[timeMode][bodyName];
+          celestialState[bodyName] = {
+            angle: rawAngle(parameters, durationUnits),
+            radialOffset: parameters.endRadialOffset,
+            intensity: parameters.endIntensity ?? previousIntensity,
+          };
+        }
       }
+      finalCelestialStates[timeMode] = Object.freeze({
+        sol: Object.freeze({ ...celestialState.sol }),
+        yol: Object.freeze({ ...celestialState.yol }),
+      });
     }
+
+    const requestedEraStarts = options.eraRotationStartDegrees || {};
+    const eraRotationStartDegrees = Object.freeze({
+      chronicle: Number.isFinite(Number(requestedEraStarts.chronicle))
+        ? Number(requestedEraStarts.chronicle)
+        : 0,
+      inspection: Number.isFinite(Number(requestedEraStarts.inspection))
+        ? Number(requestedEraStarts.inspection)
+        : 0,
+    });
 
     return {
       seed,
       repeatTotal,
-      presentationMs: state.presentationMs,
+      presentationMs: TIME_MODES.chronicle.presentationMs,
       convectionPresentationMs,
       segments,
-      finalCelestialState: Object.freeze({
-        sol: Object.freeze({ ...celestialState.sol }),
-        yol: Object.freeze({ ...celestialState.yol }),
+      eraRotationStartDegrees,
+      eraRotationEndDegrees: Object.freeze({
+        chronicle: eraRotationStartDegrees.chronicle +
+          (TIME_MODES.chronicle.presentationMs / 1000) *
+            TIME_MODES.chronicle.eraRotationDegreesPerSecond,
+        inspection: eraRotationStartDegrees.inspection +
+          config.totalUm * TIME_MODES.inspection.eraRotationDegreesPerUm,
       }),
+      finalCelestialStates: Object.freeze(finalCelestialStates),
+      finalCelestialState: finalCelestialStates.chronicle,
       occurrences: segments.reduce((map, segment) => {
         const list = map.get(segment.template.id) || [];
         list.push(segment.index);
@@ -992,47 +1335,90 @@
     };
   }
 
-  function findSegment(ms) {
-    const bounded = clamp(ms, 0, state.presentationMs);
-    if (bounded === state.presentationMs) {
-      return state.scenario.segments[state.scenario.segments.length - 1];
+  function segmentStartMs(segment, timeMode = state.timeMode) {
+    const mode = getTimeMode(timeMode);
+    return mode.kind === "linear-world-time"
+      ? segment.umStart * mode.millisecondsPerUm
+      : segment.displayStart;
+  }
+
+  function segmentEndMs(segment, timeMode = state.timeMode) {
+    const mode = getTimeMode(timeMode);
+    return mode.kind === "linear-world-time"
+      ? segment.umEnd * mode.millisecondsPerUm
+      : segment.displayEnd;
+  }
+
+  function findSegment(ms, options = {}) {
+    const timeMode = normalizeTimeMode(options.timeMode || state.timeMode);
+    const mode = getTimeMode(timeMode);
+    const scenario = options.scenario || state.scenario;
+    if (!scenario) return null;
+    const bounded = clamp(Number(ms) || 0, 0, mode.presentationMs);
+    if (bounded === mode.presentationMs) {
+      return scenario.segments[scenario.segments.length - 1];
     }
     return (
-      state.scenario.segments.find(
-        (segment) => bounded >= segment.displayStart && bounded < segment.displayEnd,
-      ) || state.scenario.segments[0]
+      scenario.segments.find(
+        (segment) =>
+          bounded >= segmentStartMs(segment, timeMode) &&
+          bounded < segmentEndMs(segment, timeMode),
+      ) || scenario.segments[0]
     );
   }
 
   function getSnapshot(ms, options = {}) {
-    const segment = findSegment(ms);
-    const displayDuration = Math.max(1, segment.displayEnd - segment.displayStart);
-    const progress = clamp((ms - segment.displayStart) / displayDuration, 0, 1);
-    const cycleUm = segment.umStart + (segment.umEnd - segment.umStart) * progress;
+    const timeMode = normalizeTimeMode(options.timeMode || state.timeMode);
+    const mode = getTimeMode(timeMode);
+    const scenario = options.scenario || state.scenario;
+    const cycleIndex = Number.isInteger(options.cycleIndex)
+      ? options.cycleIndex
+      : state.cycleIndex;
+    const boundedMs = clamp(Number(ms) || 0, 0, mode.presentationMs);
+    const segment = findSegment(boundedMs, { timeMode, scenario });
+    if (!segment) throw new Error("Kein aktiver Zyklus für den Snapshot vorhanden.");
+    const startMs = segmentStartMs(segment, timeMode);
+    const endMs = segmentEndMs(segment, timeMode);
+    const durationMs = Math.max(1, endMs - startMs);
+    const progress = clamp((boundedMs - startMs) / durationMs, 0, 1);
+    const cycleUm = mode.kind === "linear-world-time"
+      ? clamp(boundedMs / mode.millisecondsPerUm, 0, config.totalUm)
+      : segment.umStart + (segment.umEnd - segment.umStart) * progress;
     const positionMs = options.exact
-      ? ms
+      ? boundedMs
       : state.reducedMotion
-        ? Math.round(ms / 1000) * 1000
-        : ms;
-    const positionProgress = clamp(
-      (positionMs - segment.displayStart) / displayDuration,
-      0,
-      1,
-    );
-    const localSeconds = (positionProgress * displayDuration) / 1000;
+        ? Math.round(boundedMs / 1000) * 1000
+        : boundedMs;
+    const positionProgress = clamp((positionMs - startMs) / durationMs, 0, 1);
+    const localUnits = mode.kind === "linear-world-time"
+      ? positionProgress * (segment.umEnd - segment.umStart)
+      : (positionProgress * durationMs) / 1000;
     const template = segment.template;
 
     function bodySnapshot(bodyName) {
       const bodyConfig = template[bodyName];
-      const parameters = segment.motion[bodyName];
-      const angle = rawAngle(parameters, localSeconds);
-      const derivative =
+      const parameters = segment.motion[timeMode][bodyName];
+      const angle = rawAngle(parameters, localUnits);
+      const derivativeInModelUnits =
         parameters.drift +
         parameters.amplitude *
           parameters.frequency *
-          Math.cos(parameters.frequency * localSeconds + parameters.phase);
-      const speed = clamp(Math.abs(derivative), parameters.minSpeed, parameters.maxSpeed);
-      const directionSign = Math.abs(derivative) < 0.0001 ? 0 : derivative > 0 ? 1 : -1;
+          Math.cos(parameters.frequency * localUnits + parameters.phase);
+      const speedInModelUnits = mode.kind === "linear-world-time"
+        ? Math.abs(derivativeInModelUnits)
+        : clamp(
+            Math.abs(derivativeInModelUnits),
+            parameters.minSpeed,
+            parameters.maxSpeed,
+          );
+      const realTimeScale = mode.kind === "linear-world-time" ? mode.umPerSecond : 1;
+      const angularVelocity = derivativeInModelUnits * realTimeScale;
+      const speed = speedInModelUnits * realTimeScale;
+      const directionSign = Math.abs(angularVelocity) < 0.0001
+        ? 0
+        : angularVelocity > 0
+          ? 1
+          : -1;
       const transitionProgress = smoothstep(positionProgress);
       const transitionArc = Math.sin(positionProgress * Math.PI);
       const intensity = bodyConfig.intensity
@@ -1053,7 +1439,12 @@
       ) + parameters.radialSwing * transitionArc;
       return {
         angle,
-        angularVelocity: derivative,
+        angleKind: parameters.angleKind,
+        angularVelocity,
+        angularVelocityPerUm: mode.kind === "linear-world-time"
+          ? derivativeInModelUnits
+          : derivativeInModelUnits /
+            (TIME_MODES.chronicle.eraRotationDegreesPerSecond / 360),
         directionSign,
         speed,
         intensity,
@@ -1063,26 +1454,40 @@
     }
 
     return {
-      ms,
+      ms: boundedMs,
+      timeMode,
+      mode,
+      scenario,
+      cycleIndex,
       segment,
       template,
       progress,
       cycleUm,
+      absoluteWorldUm: cycleIndex * config.totalUm + cycleUm,
+      cycleProgress: cycleUm / config.totalUm,
       positionMs,
       sol: bodySnapshot("sol"),
       yol: bodySnapshot("yol"),
     };
   }
 
-  function formatClock(ms) {
-    const totalSeconds = Math.round(clamp(ms, 0, state.presentationMs) / 1000);
+  function formatClock(ms, maximumMs = state.presentationMs) {
+    const numericMs = Number(ms) || 0;
+    const boundedMs = Number.isFinite(Number(maximumMs))
+      ? clamp(numericMs, 0, Number(maximumMs))
+      : Math.max(0, numericMs);
+    const totalSeconds = Math.round(boundedMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return `${hours}:${String(minutes % 60).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
     return `${minutes}:${String(seconds).padStart(2, "0")}`;
   }
 
-  function formatEraTime(cycleUm) {
-    const safeUm = clamp(Math.floor(cycleUm), 0, config.totalUm);
+  function formatEraTime(worldUm) {
+    const safeUm = Math.max(0, Math.floor(Number(worldUm) || 0));
     const umPerDir = config.umPerTan * config.tanPerDir;
     const umPerMohn = umPerDir * config.dirPerMohn;
     const mohn = Math.floor(safeUm / umPerMohn);
@@ -1175,7 +1580,15 @@
       yol: Object.freeze(getOrbitPoint(snapshot, "yol")),
       zehs: ZEHS_PARAMETERS.worldPoint,
     });
-    const eraRotationDegrees = getEraRotationDegrees(snapshot.ms, snapshot.template.motion);
+    const eraRotationDegrees = getEraRotationDegrees(
+      snapshot.ms,
+      snapshot.template.motion,
+      {
+        timeMode: snapshot.timeMode,
+        scenario: snapshot.scenario,
+        cycleIndex: snapshot.cycleIndex,
+      },
+    );
     const viewBasis = getViewBasis(state.horizonDirection, eraRotationDegrees);
     const horizonProjection = Object.freeze({
       sol: createFrameProjection(worldPoints.sol, viewBasis, snapshot, "sol"),
@@ -1576,17 +1989,37 @@
 
   function updateTimelineProgress(snapshot) {
     const buttons = elements.phaseTrack.querySelectorAll(".phase-segment");
-    buttons.forEach((button, index) => {
+    buttons.forEach((button) => {
+      const index = Number(button.dataset.segmentIndex);
       const segment = state.scenario.segments[index];
+      if (!segment) return;
       let progress = 0;
-      if (snapshot.ms >= segment.displayEnd) progress = 100;
-      else if (snapshot.ms > segment.displayStart) {
-        progress =
-          ((snapshot.ms - segment.displayStart) / (segment.displayEnd - segment.displayStart)) * 100;
+      if (snapshot.cycleUm >= segment.umEnd) progress = 100;
+      else if (snapshot.cycleUm > segment.umStart) {
+        progress = ((snapshot.cycleUm - segment.umStart) /
+          (segment.umEnd - segment.umStart)) * 100;
       }
       button.style.setProperty("--segment-progress", `${clamp(progress, 0, 100)}%`);
+      const detailProgress = button.querySelector(".segment-detail-progress");
+      if (detailProgress) {
+        detailProgress.textContent =
+          `${clamp(progress, 0, 100).toFixed(2).replace(".", ",")} % Abschnittsfortschritt`;
+      }
       button.classList.toggle("is-active", index === snapshot.segment.index);
       button.setAttribute("aria-current", index === snapshot.segment.index ? "step" : "false");
+    });
+
+    const cycleButtons = elements.phaseTrack.querySelectorAll(".cycle-segment");
+    cycleButtons.forEach((button) => {
+      const cycleIndex = Number(button.dataset.cycleIndex);
+      const progress = cycleIndex < state.cycleIndex
+        ? 100
+        : cycleIndex > state.cycleIndex
+          ? 0
+          : snapshot.cycleProgress * 100;
+      button.style.setProperty("--cycle-progress", `${clamp(progress, 0, 100)}%`);
+      button.classList.toggle("is-active", cycleIndex === state.cycleIndex);
+      button.setAttribute("aria-current", cycleIndex === state.cycleIndex ? "step" : "false");
     });
   }
 
@@ -1609,8 +2042,15 @@
     elements.activePhaseName.textContent = template.label;
     elements.activePhaseDescription.textContent = template.description;
     elements.activeDirection.textContent = template.direction;
-    const displaySeconds = (segment.displayEnd - segment.displayStart) / 1000;
-    elements.activeSpan.textContent = `${displaySeconds.toFixed(1).replace(".", ",")} s Darstellung`;
+    const segmentUm = segment.umEnd - segment.umStart;
+    if (isInspectionMode(snapshot.timeMode)) {
+      const inspectionDurationMs = segmentUm * TIME_MODES.inspection.millisecondsPerUm;
+      elements.activeSpan.textContent =
+        `${segmentUm.toLocaleString("de-DE")} Um · ${formatClock(inspectionDurationMs, Infinity)} Prüfzeit`;
+    } else {
+      const displaySeconds = (segment.displayEnd - segment.displayStart) / 1000;
+      elements.activeSpan.textContent = `${displaySeconds.toFixed(1).replace(".", ",")} s Darstellung`;
+    }
     elements.stateBadge.textContent = category.label;
     elements.stateBadge.style.color = category.color;
     elements.stateBadgeShell.style.color = category.color;
@@ -1630,9 +2070,10 @@
       elements.phaseSelect.value = template.id;
     }
 
-    if (state.lastRenderedSegment !== segment.index) {
-      state.lastRenderedSegment = segment.index;
-      announce(`${template.label}. Abschnitt ${segment.index + 1} von ${state.scenario.segments.length}.`);
+    const renderedSegmentKey = `${snapshot.cycleIndex}:${segment.index}`;
+    if (state.lastRenderedSegment !== renderedSegmentKey) {
+      state.lastRenderedSegment = renderedSegmentKey;
+      announce(`Zyklus ${snapshot.cycleIndex + 1}, ${template.label}. Abschnitt ${segment.index + 1} von ${state.scenario.segments.length}.`);
     }
   }
 
@@ -1649,7 +2090,7 @@
     updateOrbitGeometry(lastRenderFrame);
     updateHorizonGeometry(lastRenderFrame);
 
-    elements.eraTime.textContent = formatEraTime(snapshot.cycleUm);
+    elements.eraTime.textContent = formatEraTime(snapshot.absoluteWorldUm);
     elements.solIntensity.textContent = snapshot.sol.intensity !== null
       ? `S-Int ${snapshot.sol.intensity.toFixed(1).replace(".", ",")}`
       : "nicht sichtbar";
@@ -1658,23 +2099,49 @@
       : "nicht sichtbar";
     elements.solSpeed.textContent = isConvection ? "—" : solSpeedText;
     elements.yolSpeed.textContent = isConvection ? "—" : yolSpeedText;
-    const totalClock = formatClock(state.presentationMs);
-    elements.presentationTime.textContent = `${formatClock(ms)} / ${totalClock}`;
-    elements.timelineNow.textContent = formatClock(ms);
+    const totalClock = formatClock(state.presentationMs, state.presentationMs);
+    const currentClock = formatClock(ms, state.presentationMs);
+    elements.presentationLabel.textContent = isInspectionMode()
+      ? "Prüflaufzeit"
+      : "Darstellungszeit";
+    elements.presentationTime.textContent = `${currentClock} / ${totalClock}`;
+    elements.timelineNow.textContent = currentClock;
     elements.timelineTotal.textContent = totalClock;
     elements.timeSlider.value = String(Math.round(ms));
     elements.timeSlider.setAttribute(
       "aria-valuetext",
-      `${formatClock(ms)} von ${totalClock}, ${snapshot.template.label}`,
+      `${currentClock} von ${totalClock}, Zyklus ${snapshot.cycleIndex + 1}, ${snapshot.template.label}`,
     );
     elements.segmentRange.textContent = formatRange(snapshot.segment);
+    const cyclePercent = snapshot.cycleProgress * 100;
+    const percentDigits = cyclePercent < 1 ? 5 : 2;
+    elements.cycleProgress.textContent =
+      `${cyclePercent.toFixed(percentDigits).replace(".", ",")} %`;
+    elements.timeMapping.textContent = isInspectionMode()
+      ? "linear · 5 s/Um"
+      : "semantisch komprimiert";
     elements.solSpeedMeterLabel.textContent = isConvection ? "nicht sichtbar" : solSpeedText;
     elements.yolSpeedMeterLabel.textContent = isConvection ? "nicht sichtbar" : yolSpeedText;
-    elements.solSpeedMeter.style.width = `${isConvection ? 0 : clamp(snapshot.sol.speed / 14, 0, 1) * 100}%`;
-    elements.yolSpeedMeter.style.width = `${isConvection ? 0 : clamp(snapshot.yol.speed / 14, 0, 1) * 100}%`;
+    const speedMeterMaximum = isInspectionMode() ? 160 : 14;
+    elements.solSpeedMeter.style.width = `${isConvection ? 0 : clamp(snapshot.sol.speed / speedMeterMaximum, 0, 1) * 100}%`;
+    elements.yolSpeedMeter.style.width = `${isConvection ? 0 : clamp(snapshot.yol.speed / speedMeterMaximum, 0, 1) * 100}%`;
+
+    elements.phaseTrack.setAttribute("data-time-mode", state.timeMode);
+    elements.phaseTrack.setAttribute("data-zoom", state.timelineZoom);
+    elements.phaseTrack.setAttribute("data-cycle-index", String(state.cycleIndex));
+
+    if (
+      isInspectionMode() &&
+      state.timelineZoom === "detail" &&
+      state.timelineDetailSegmentIndex !== snapshot.segment.index
+    ) {
+      state.timelineDetailSegmentIndex = snapshot.segment.index;
+      buildTimeline();
+    }
 
     updatePhaseDetails(snapshot);
     updateTimelineProgress(snapshot);
+    updateTimelineControls();
   }
 
   function buildPhaseSelect() {
@@ -1715,62 +2182,348 @@
     }
   }
 
+  function createPhaseSegmentButton(segment, options = {}) {
+    const category = categoryById.get(segment.template.category);
+    const button = document.createElement("button");
+    const startMs = segmentStartMs(segment);
+    const endMs = segmentEndMs(segment);
+    const duration = isInspectionMode()
+      ? segment.umEnd - segment.umStart
+      : endMs - startMs;
+    button.type = "button";
+    button.className = options.detail
+      ? "phase-segment phase-segment-detail"
+      : "phase-segment";
+    button.setAttribute("data-segment-index", String(segment.index));
+    button.style.setProperty("--segment-grow", String(duration));
+    button.style.setProperty("--segment-color", category.color);
+    button.setAttribute(
+      "aria-label",
+      `${segment.template.label}, ${formatClock(startMs, state.presentationMs)} bis ${formatClock(endMs, state.presentationMs)}, ${formatRange(segment)}`,
+    );
+    button.setAttribute("title", segment.template.label);
+    button.append(createIcon(segment.template.icon, "segment-icon"));
+    const label = document.createElement("span");
+    label.className = "segment-label";
+    label.textContent = options.detail
+      ? segment.template.label
+      : segment.template.shortLabel;
+    button.append(label);
+    if (options.detail) {
+      const metadata = document.createElement("small");
+      metadata.className = "segment-detail-meta";
+      const durationMs = (segment.umEnd - segment.umStart) *
+        TIME_MODES.inspection.millisecondsPerUm;
+      metadata.textContent =
+        `${formatRange(segment)} · ${formatClock(durationMs, Infinity)} bei 1×`;
+      button.append(metadata);
+      const progressLabel = document.createElement("strong");
+      progressLabel.className = "segment-detail-progress";
+      progressLabel.textContent = "0,00 % Abschnittsfortschritt";
+      button.append(progressLabel);
+    }
+    button.addEventListener("click", () => {
+      const modeDuration = endMs - startMs;
+      if (isInspectionMode() && !options.detail) {
+        state.timelineZoom = "detail";
+        state.timelineDetailSegmentIndex = segment.index;
+        seekTo(startMs + Math.min(100, modeDuration / 10), true);
+        buildTimeline();
+        render(state.currentMs);
+        return;
+      }
+      seekTo(startMs + Math.min(80, modeDuration / 10), true);
+    });
+    return button;
+  }
+
+  function createCycleSegmentButton(scenario, cycleIndex) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "cycle-segment";
+    button.setAttribute("data-cycle-index", String(cycleIndex));
+    button.style.setProperty("--cycle-color", categoryById.get("konvektion").color);
+    button.setAttribute(
+      "aria-label",
+      `Zyklus ${cycleIndex + 1}, Seed ${scenario.seed}, 46.080 Um. Zyklus öffnen`,
+    );
+    button.setAttribute("title", `Zyklus ${cycleIndex + 1} · ${scenario.seed}`);
+    button.append(createIcon("icon-grand-cycle", "cycle-segment-icon"));
+    const label = document.createElement("span");
+    label.className = "cycle-segment-label";
+    label.textContent = `ZYKLUS ${cycleIndex + 1}`;
+    button.append(label);
+    const seedLabel = document.createElement("small");
+    seedLabel.textContent = scenario.seed;
+    button.append(seedLabel);
+    const convectionMark = document.createElement("i");
+    convectionMark.className = "cycle-convection-mark";
+    convectionMark.setAttribute("aria-hidden", "true");
+    button.append(convectionMark);
+    button.addEventListener("click", () => {
+      state.timelineZoom = "cycle";
+      selectCycle(cycleIndex, {
+        cycleUm: cycleIndex === state.cycleIndex
+          ? modeMsToCycleUm(state.currentMs)
+          : 0,
+        rebuildTimeline: false,
+        render: false,
+      });
+      buildTimeline();
+      render(state.currentMs);
+      announce(`Zyklus ${cycleIndex + 1} geöffnet.`);
+    });
+    return button;
+  }
+
   function buildTimeline() {
     elements.phaseTrack.replaceChildren();
-    state.scenario.segments.forEach((segment) => {
-      const category = categoryById.get(segment.template.category);
-      const button = document.createElement("button");
-      const duration = segment.displayEnd - segment.displayStart;
-      button.type = "button";
-      button.className = "phase-segment";
-      button.style.setProperty("--segment-grow", String(duration));
-      button.style.setProperty("--segment-color", category.color);
-      button.setAttribute(
-        "aria-label",
-        `${segment.template.label}, ${formatClock(segment.displayStart)} bis ${formatClock(segment.displayEnd)}, ${formatRange(segment)}`,
-      );
-      button.setAttribute("title", segment.template.label);
-      button.append(createIcon(segment.template.icon, "segment-icon"));
-      const label = document.createElement("span");
-      label.className = "segment-label";
-      label.textContent = segment.template.shortLabel;
-      button.append(label);
-      button.addEventListener("click", () => {
-        seekTo(segment.displayStart + Math.min(80, duration / 10), true);
+    if (!state.scenario) return;
+
+    if (!isInspectionMode()) {
+      state.scenario.segments.forEach((segment) => {
+        elements.phaseTrack.append(createPhaseSegmentButton(segment));
       });
-      elements.phaseTrack.append(button);
+      return;
+    }
+
+    if (state.timelineZoom === "series") {
+      [...state.cycles.entries()]
+        .sort(([left], [right]) => left - right)
+        .forEach(([cycleIndex, scenario]) => {
+          elements.phaseTrack.append(createCycleSegmentButton(scenario, cycleIndex));
+        });
+      return;
+    }
+
+    if (state.timelineZoom === "detail") {
+      const segment = state.scenario.segments[state.timelineDetailSegmentIndex] ||
+        findSegment(state.currentMs);
+      state.timelineDetailSegmentIndex = segment.index;
+      elements.phaseTrack.append(createPhaseSegmentButton(segment, { detail: true }));
+      return;
+    }
+
+    state.scenario.segments.forEach((segment) => {
+      elements.phaseTrack.append(createPhaseSegmentButton(segment));
     });
+  }
+
+  function updateTimelineControls() {
+    const inspection = isInspectionMode();
+    elements.timelineZoomControls.hidden = !inspection;
+    if (!inspection) return;
+
+    const zoomIndex = TIMELINE_ZOOM_ORDER.indexOf(state.timelineZoom);
+    const safeZoomIndex = zoomIndex === -1 ? 1 : zoomIndex;
+    const labels = Object.freeze({
+      series: "Zyklusfolge",
+      cycle: `Zyklus ${state.cycleIndex + 1}`,
+      detail: `Abschnitt ${state.timelineDetailSegmentIndex + 1}`,
+    });
+    elements.timelineZoomLevel.textContent = labels[state.timelineZoom] || labels.cycle;
+    elements.timelineZoomOut.disabled = safeZoomIndex === 0;
+    elements.timelineZoomIn.disabled = safeZoomIndex === TIMELINE_ZOOM_ORDER.length - 1;
+    elements.previousCycle.disabled = state.cycleIndex === 0;
+    elements.previousCycle.setAttribute(
+      "aria-label",
+      state.cycleIndex === 0
+        ? "Kein voriger Zyklus vorhanden"
+        : `Zyklus ${state.cycleIndex} öffnen`,
+    );
+    elements.nextCycle.setAttribute("aria-label", `Zyklus ${state.cycleIndex + 2} öffnen`);
+  }
+
+  function setTimelineZoom(zoomId, options = {}) {
+    if (!isInspectionMode()) return;
+    const normalizedZoom = TIMELINE_ZOOM_ORDER.includes(zoomId) ? zoomId : "cycle";
+    if (normalizedZoom === "detail") {
+      state.timelineDetailSegmentIndex = findSegment(state.currentMs).index;
+    }
+    state.timelineZoom = normalizedZoom;
+    buildTimeline();
+    render(state.currentMs);
+    if (options.announce !== false) {
+      const labels = {
+        series: "Zyklusfolge",
+        cycle: `Zyklus ${state.cycleIndex + 1}`,
+        detail: `Abschnitt ${state.timelineDetailSegmentIndex + 1}`,
+      };
+      announce(`${labels[normalizedZoom]} im Zeitpfad geöffnet.`);
+    }
+  }
+
+  function shiftTimelineZoom(offset) {
+    const currentIndex = Math.max(0, TIMELINE_ZOOM_ORDER.indexOf(state.timelineZoom));
+    const targetIndex = clamp(
+      currentIndex + offset,
+      0,
+      TIMELINE_ZOOM_ORDER.length - 1,
+    );
+    setTimelineZoom(TIMELINE_ZOOM_ORDER[targetIndex]);
+  }
+
+  function moveCycle(offset) {
+    if (!isInspectionMode()) return;
+    const targetIndex = Math.max(0, state.cycleIndex + offset);
+    if (targetIndex === state.cycleIndex) return;
+    selectCycle(targetIndex, {
+      cycleUm: 0,
+      rebuildTimeline: false,
+      render: false,
+    });
+    if (state.timelineZoom === "detail") state.timelineDetailSegmentIndex = 0;
+    buildTimeline();
+    render(state.currentMs);
+    announce(`Zyklus ${targetIndex + 1} geöffnet.`);
+  }
+
+  function deriveCycleSeed(rootSeed, cycleIndex) {
+    const normalizedRoot = normalizeSeed(rootSeed);
+    if (cycleIndex <= 0) return normalizedRoot;
+    const digest = hashString(
+      `${config.schemaVersion}|${normalizedRoot}|cycle|${cycleIndex}`,
+    ).toString(36).toUpperCase();
+    const suffix = `${(cycleIndex + 1).toString(36).toUpperCase()}-${digest}`;
+    return `${normalizedRoot.slice(0, Math.max(1, 63 - suffix.length))}-${suffix}`.slice(0, 64);
+  }
+
+  function ensureCycle(cycleIndex) {
+    const normalizedIndex = Math.max(0, Math.floor(Number(cycleIndex) || 0));
+    if (state.cycles.has(normalizedIndex)) return state.cycles.get(normalizedIndex);
+    for (let index = 0; index <= normalizedIndex; index += 1) {
+      if (state.cycles.has(index)) continue;
+      let scenario;
+      if (index === 0) {
+        scenario = buildScenario(deriveCycleSeed(state.rootSeed, 0), {
+          eraRotationStartDegrees: { chronicle: 0, inspection: 0 },
+        });
+      } else {
+        const previous = state.cycles.get(index - 1);
+        scenario = buildScenario(deriveCycleSeed(state.rootSeed, index), {
+          initialCelestialStates: previous.finalCelestialStates,
+          eraRotationStartDegrees: {
+            chronicle: previous.eraRotationEndDegrees.chronicle,
+            inspection: 0,
+          },
+        });
+      }
+      scenario.cycleIndex = index;
+      state.cycles.set(index, scenario);
+    }
+    return state.cycles.get(normalizedIndex);
+  }
+
+  function selectCycle(cycleIndex, options = {}) {
+    const normalizedIndex = Math.max(0, Math.floor(Number(cycleIndex) || 0));
+    const scenario = ensureCycle(normalizedIndex);
+    state.cycleIndex = normalizedIndex;
+    state.scenario = scenario;
+    state.seed = scenario.seed;
+    const cycleUm = clamp(Number(options.cycleUm) || 0, 0, config.totalUm);
+    state.currentMs = cycleUmToModeMs(cycleUm, state.timeMode, scenario);
+    state.playbackAnchorMs = state.currentMs;
+    state.playbackAnchorAt = performance.now();
+    state.irradianceTimelines.clear();
+    state.lastRenderedSegment = -1;
+    elements.phaseCount.textContent = String(scenario.segments.length);
+    elements.repeatCount.textContent = String(scenario.repeatTotal);
+    if (options.rebuildTimeline !== false) buildTimeline();
+    if (options.render !== false) render(state.currentMs);
+  }
+
+  function updateTimeModePresentation() {
+    const mode = getTimeMode();
+    state.presentationMs = mode.presentationMs;
+    elements.timeMode.value = state.timeMode;
+    elements.timeSlider.setAttribute("max", String(state.presentationMs));
+    elements.timeSlider.setAttribute("step", isInspectionMode() ? "100" : "50");
+    elements.timelineZoomControls.hidden = !isInspectionMode();
+    if (isInspectionMode()) {
+      elements.timelineTitle.textContent = "Linearer 5-s/Um-Prüfpfad";
+      elements.timelineSummary.textContent =
+        "Ein Um dauert bei 1× exakt fünf Sekunden. Die Konvektion beginnt bei 63:26:40 und endet mit dem Zyklus bei 64:00:00.";
+      elements.phaseTrack.setAttribute(
+        "aria-label",
+        "Lineare Abschnitte und Zyklen des 5-Sekunden-pro-Um-Prüfmodus",
+      );
+    } else {
+      state.timelineZoom = "cycle";
+      elements.timelineTitle.textContent = "Sechs-Minuten-Zeitpfad · Erklärmodus";
+      elements.timelineSummary.textContent =
+        "Abschnittsbreiten zeigen die Erklärzeit, nicht das lineare Verhältnis der Um. Die Konvektion erhält 32 Sekunden.";
+      elements.phaseTrack.setAttribute(
+        "aria-label",
+        "Klickbare Abschnitte des sechsminütigen Erklärmodus",
+      );
+    }
+    updatePlaybackLabels();
+    updateTimelineControls();
+  }
+
+  function setTimeMode(modeId, options = {}) {
+    const normalizedMode = normalizeTimeMode(modeId);
+    if (normalizedMode === state.timeMode && !options.force) return;
+    const cycleUm = state.scenario ? modeMsToCycleUm(state.currentMs) : 0;
+    if (state.playing) setPlaying(false, { announce: false });
+    state.timeMode = normalizedMode;
+    state.presentationMs = getTimeMode(normalizedMode).presentationMs;
+    state.currentMs = cycleUmToModeMs(cycleUm, normalizedMode, state.scenario);
+    state.playbackAnchorMs = state.currentMs;
+    state.playbackAnchorAt = performance.now();
+    state.irradianceTimelines.clear();
+    state.lastRenderedSegment = -1;
+    if (isInspectionMode()) {
+      state.timelineZoom = "cycle";
+      state.timelineDetailSegmentIndex = findSegment(state.currentMs, {
+        timeMode: normalizedMode,
+      }).index;
+    }
+    if (options.persist !== false) persistTimeMode(normalizedMode);
+    updateTimeModePresentation();
+    buildTimeline();
+    render(state.currentMs);
+    if (options.announce !== false) {
+      announce(isInspectionMode()
+        ? "Prüfmodus aktiviert. Fünf Sekunden entsprechen einem Um; ein Zyklus dauert 64 Stunden."
+        : "Sechs-Minuten-Zeitfahrt als schematischer Erklärmodus aktiviert.");
+    }
   }
 
   function loadScenario(seed, options = {}) {
     const normalized = normalizeSeed(seed);
-    if (Number.isFinite(Number(options.initialEraRotationDegrees))) {
-      state.eraRotationOffsetDegrees = normalizeDegrees(options.initialEraRotationDegrees);
-    }
+    state.rootSeed = normalized;
     state.seed = normalized;
-    state.scenario = buildScenario(normalized, options.initialCelestialState || null);
+    state.cycles.clear();
+    state.cycleIndex = 0;
+    state.currentMs = 0;
+    state.playbackAnchorMs = 0;
+    state.playbackAnchorAt = performance.now();
+    state.scenario = ensureCycle(0);
     state.irradianceTimelines.clear();
     state.lastRenderedSegment = -1;
+    state.timelineDetailSegmentIndex = 0;
     elements.seedInput.value = normalized;
+    updateTimeModePresentation();
     elements.phaseCount.textContent = String(state.scenario.segments.length);
     elements.repeatCount.textContent = String(state.scenario.repeatTotal);
-    elements.timeSlider.setAttribute("max", String(state.presentationMs));
-    elements.timelineTitle.textContent = "Sechs-Minuten-Zeitpfad";
     buildTimeline();
-    updatePlaybackLabels();
     render(state.currentMs);
     if (options.announce !== false) {
-      announce(`Szenario ${normalized} erzeugt. ${state.scenario.segments.length} Abschnitte.`);
+      announce(`Szenariofolge ${normalized} erzeugt. Zyklus 1 enthält ${state.scenario.segments.length} Abschnitte.`);
     }
   }
 
   function seekTo(ms, shouldAnnounce = false) {
     state.currentMs = clamp(ms, 0, state.presentationMs);
     state.lastFrameAt = performance.now();
+    state.playbackAnchorAt = state.lastFrameAt;
+    state.playbackAnchorMs = state.currentMs;
+    state.irradianceTimelines.clear();
     render(state.currentMs);
     if (shouldAnnounce) {
       const snapshot = getSnapshot(state.currentMs);
-      announce(`Gesprungen zu ${snapshot.template.label}, ${formatClock(state.currentMs)}.`);
+      announce(`Gesprungen zu Zyklus ${state.cycleIndex + 1}, ${snapshot.template.label}, ${formatClock(state.currentMs, state.presentationMs)}.`);
     }
   }
 
@@ -1780,18 +2533,40 @@
     const nextIndex =
       occurrences.find(
         (segmentIndex) =>
-          state.scenario.segments[segmentIndex].displayStart > state.currentMs + 120,
+          segmentStartMs(state.scenario.segments[segmentIndex]) > state.currentMs + 120,
       ) ?? occurrences[0];
     const segment = state.scenario.segments[nextIndex];
-    seekTo(segment.displayStart + Math.min(80, (segment.displayEnd - segment.displayStart) / 10), true);
+    const startMs = segmentStartMs(segment);
+    const durationMs = segmentEndMs(segment) - startMs;
+    if (isInspectionMode() && state.timelineZoom === "detail") {
+      state.timelineDetailSegmentIndex = segment.index;
+      buildTimeline();
+    }
+    seekTo(startMs + Math.min(80, durationMs / 10), true);
   }
 
   function jumpBySegment(offset) {
     const current = findSegment(state.currentMs);
     const length = state.scenario.segments.length;
-    const index = (current.index + offset + length) % length;
+    let targetCycleIndex = state.cycleIndex;
+    let index = current.index + offset;
+    if (isInspectionMode() && index >= length) {
+      targetCycleIndex += 1;
+      index = 0;
+    } else if (isInspectionMode() && index < 0 && state.cycleIndex > 0) {
+      targetCycleIndex -= 1;
+      index = ensureCycle(targetCycleIndex).segments.length - 1;
+    } else {
+      index = (index + length) % length;
+    }
+    if (targetCycleIndex !== state.cycleIndex) {
+      selectCycle(targetCycleIndex);
+    }
     const segment = state.scenario.segments[index];
-    seekTo(segment.displayStart + Math.min(80, (segment.displayEnd - segment.displayStart) / 10), true);
+    state.timelineDetailSegmentIndex = segment.index;
+    const startMs = segmentStartMs(segment);
+    seekTo(startMs + Math.min(80, (segmentEndMs(segment) - startMs) / 10), true);
+    if (isInspectionMode() && state.timelineZoom === "detail") buildTimeline();
   }
 
   function updatePlayButton() {
@@ -1807,8 +2582,8 @@
     elements.autoCycle.setAttribute(
       "title",
       enabled
-        ? "Automatisches Neuwürfeln nach der Konvektion ist aktiv"
-        : "Automatisches Neuwürfeln nach der Konvektion einschalten",
+        ? "Automatischer Anschlusszyklus ist aktiv"
+        : "Automatischen Anschlusszyklus einschalten",
     );
   }
 
@@ -1821,48 +2596,68 @@
     });
   }
 
-  function setPlaying(playing) {
+  function setPlaying(playing, options = {}) {
     if (playing && state.currentMs >= state.presentationMs) {
       seekTo(0);
     }
-    state.playing = playing;
-    state.lastFrameAt = performance.now();
+    state.playing = Boolean(playing);
+    const now = performance.now();
+    state.lastFrameAt = now;
+    state.playbackAnchorAt = now;
+    state.playbackAnchorMs = state.currentMs;
+    if (!state.playing && state.animationFrame !== null) {
+      cancelAnimationFrame(state.animationFrame);
+      state.animationFrame = null;
+    }
     updatePlayButton();
     if (state.playing && state.animationFrame === null) {
       state.animationFrame = requestAnimationFrame(tick);
     }
-    announce(state.playing ? "Simulation läuft." : "Simulation pausiert.");
+    if (options.announce !== false) {
+      announce(state.playing ? "Simulation läuft." : "Simulation pausiert.");
+    }
   }
 
   function tick(timestamp) {
     state.animationFrame = null;
     if (!state.playing) return;
-    const elapsed = state.lastFrameAt === null ? 0 : clamp(timestamp - state.lastFrameAt, 0, 120);
+    if (state.playbackAnchorAt === null) {
+      state.playbackAnchorAt = timestamp;
+      state.playbackAnchorMs = state.currentMs;
+    }
+    const elapsed = Math.max(0, timestamp - state.playbackAnchorAt);
     state.lastFrameAt = timestamp;
-    state.currentMs += elapsed * state.playbackRate;
+    state.currentMs = state.playbackAnchorMs + elapsed * state.playbackRate;
     if (state.currentMs >= state.presentationMs) {
-      state.currentMs = state.presentationMs;
-      render(state.currentMs);
       if (state.autoCycle) {
+        const completedCycleIndex = state.cycleIndex;
         const completedSeed = state.seed;
-        const initialCelestialState = state.scenario.finalCelestialState;
-        const initialEraRotationDegrees = getEraRotationDegrees(
-          state.presentationMs,
-          state.scenario.segments.at(-1).template.motion,
-        );
-        state.currentMs = 0;
-        loadScenario(createNewSeed(), {
-          announce: false,
-          initialCelestialState,
-          initialEraRotationDegrees,
-        });
-        state.lastFrameAt = timestamp;
+        const elapsedCycles = Math.floor(state.currentMs / state.presentationMs);
+        const targetCycleIndex = state.cycleIndex + elapsedCycles;
+        const localMs = state.currentMs % state.presentationMs;
+        state.scenario = ensureCycle(targetCycleIndex);
+        state.cycleIndex = targetCycleIndex;
+        state.seed = state.scenario.seed;
+        state.currentMs = localMs;
+        state.playbackAnchorAt = timestamp;
+        state.playbackAnchorMs = localMs;
+        state.irradianceTimelines.clear();
+        state.lastRenderedSegment = -1;
+        elements.phaseCount.textContent = String(state.scenario.segments.length);
+        elements.repeatCount.textContent = String(state.scenario.repeatTotal);
+        buildTimeline();
+        render(localMs);
         state.animationFrame = requestAnimationFrame(tick);
-        announce(`Konvektionszyklus ${completedSeed} beendet. Neuer Zyklus ${state.seed} läuft.`);
+        announce(
+          `Zyklus ${completedCycleIndex + 1} (${completedSeed}) beendet. ` +
+          `Zyklus ${targetCycleIndex + 1} läuft ohne Positionssprung weiter.`,
+        );
         return;
       }
-      setPlaying(false);
-      announce("Konvektionszyklus beendet. Die nächste Konvektion beginnt nach dem Neustart des Zyklus.");
+      state.currentMs = state.presentationMs;
+      render(state.currentMs);
+      setPlaying(false, { announce: false });
+      announce("Konvektionszyklus beendet. Der abgeschlossene Zyklus bleibt am Endpunkt stehen.");
       return;
     }
     render(state.currentMs);
@@ -1962,10 +2757,17 @@
   }
 
   function getState() {
+    const localWorldUm = state.scenario ? modeMsToCycleUm(state.currentMs) : 0;
     return Object.freeze({
+      rootSeed: state.rootSeed,
       seed: state.seed,
+      timeMode: state.timeMode,
+      cycleIndex: state.cycleIndex,
+      cycleCount: state.cycles.size,
+      timelineZoom: state.timelineZoom,
       currentMs: state.currentMs,
       presentationMs: state.presentationMs,
+      absoluteWorldUm: state.cycleIndex * config.totalUm + localWorldUm,
       horizonDirection: state.horizonDirection,
       horizonLatitude: state.horizonLatitude,
       playing: state.playing,
@@ -2022,6 +2824,11 @@
     elements.phaseSelect.addEventListener("change", () => {
       jumpToTemplate(elements.phaseSelect.value);
     });
+    elements.timeMode.addEventListener("change", () => setTimeMode(elements.timeMode.value));
+    elements.timelineZoomOut.addEventListener("click", () => shiftTimelineZoom(-1));
+    elements.timelineZoomIn.addEventListener("click", () => shiftTimelineZoom(1));
+    elements.previousCycle.addEventListener("click", () => moveCycle(-1));
+    elements.nextCycle.addEventListener("click", () => moveCycle(1));
     elements.jumpPhase.addEventListener("click", () => jumpToTemplate(elements.phaseSelect.value));
     elements.previousPhase.addEventListener("click", () => jumpBySegment(-1));
     elements.nextPhase.addEventListener("click", () => jumpBySegment(1));
@@ -2041,16 +2848,23 @@
       updateAutoCycleButton();
       announce(
         state.autoCycle
-          ? "Automatisches Neuwürfeln nach der Konvektion aktiviert."
-          : "Automatisches Neuwürfeln deaktiviert.",
+          ? "Automatischer Anschluss an den nächsten Zyklus aktiviert."
+          : "Automatischer Anschlusszyklus deaktiviert.",
       );
     });
     elements.restart.addEventListener("click", () => {
       seekTo(0, true);
     });
     elements.playbackRate.addEventListener("change", () => {
+      const now = performance.now();
+      if (state.playing && state.playbackAnchorAt !== null) {
+        state.currentMs = state.playbackAnchorMs +
+          Math.max(0, now - state.playbackAnchorAt) * state.playbackRate;
+      }
       state.playbackRate = Number(elements.playbackRate.value) || 1;
-      state.lastFrameAt = performance.now();
+      state.lastFrameAt = now;
+      state.playbackAnchorAt = now;
+      state.playbackAnchorMs = state.currentMs;
       announce(`Wiedergabetempo ${String(state.playbackRate).replace(".", ",")} fach.`);
     });
     elements.themeToggle.addEventListener("click", () => {
@@ -2058,12 +2872,8 @@
       applyTheme(nextTheme);
       announce(nextTheme === "dark" ? "Dunkle Chronik aktiviert." : "Helles Pergament aktiviert.");
     });
-    document.addEventListener("visibilitychange", () => {
-      state.lastFrameAt = performance.now();
-    });
     const onReducedMotionChange = (event) => {
       state.reducedMotion = event.matches;
-      state.lastFrameAt = performance.now();
       render(state.currentMs);
       announce(event.matches ? "Reduzierte Bewegung aktiv." : "Normale Bewegung aktiv.");
     };
@@ -2075,6 +2885,7 @@
   }
 
   window.ERA_CYCLE_CONTRACT = Object.freeze({
+    TIME_MODES,
     ORBIT_GEOMETRY,
     HORIZON_GEOMETRY,
     HORIZON_DIRECTIONS,
@@ -2082,10 +2893,14 @@
     HORIZON_PROJECTION_SCALE,
     IRRADIANCE_MODEL,
     ZEHS_PARAMETERS,
+    normalizeTimeMode,
+    modeMsToCycleUm,
+    cycleUmToModeMs,
     normalizeDegrees,
     normalizeHorizonLatitude,
     getLatitudeLift,
     getEraRotationDegrees,
+    getEraRotationUnwrappedDegrees,
     getOrbitPoint,
     getBodyVisualRadius,
     ensureOrbitClearance,
@@ -2095,6 +2910,12 @@
     getHorizonIrradiance,
     getSnapshot,
     formatEraTime,
+    deriveCycleSeed,
+    setTimeMode,
+    setTimelineZoom,
+    selectCycle,
+    setPlaying,
+    tick,
     getLastRenderFrame,
     getState,
   });

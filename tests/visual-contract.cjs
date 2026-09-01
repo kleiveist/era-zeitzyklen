@@ -1,6 +1,7 @@
 "use strict";
 
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 const zlib = require("node:zlib");
@@ -16,7 +17,6 @@ const sources = Object.fromEntries(
 const artworkSpecs = [
   { file: "astral-map-dark-hd.png", minWidth: 1400, minHeight: 1000 },
   { file: "astral-map-light-hd.png", minWidth: 1400, minHeight: 1000 },
-  { file: "horizon-clouds-pixel-hd.png", minWidth: 2100, minHeight: 700, alpha: true },
   { file: "horizon-stars-pixel-hd.png", minWidth: 2100, minHeight: 700, minBytes: 180_000, alpha: true },
   { file: "horizon-convection-hd.png", minWidth: 2100, minHeight: 700, alpha: true },
   { file: "orbit-convection-hd.png", minWidth: 1500, minHeight: 900, alpha: true },
@@ -33,6 +33,20 @@ const directionalBiomes = Object.freeze({
 });
 const panoramaDirections = Object.freeze(["north", "east", "south", "west"]);
 const panoramaThemes = Object.freeze(["night", "day"]);
+
+for (const biome of ["polar", "temperate"]) {
+  for (const direction of panoramaDirections) {
+    artworkSpecs.push({
+      file: `horizon-clouds-${biome}-${direction}-hd.png`,
+      exactWidth: 2172,
+      exactHeight: 724,
+      minWidth: 2172,
+      minHeight: 724,
+      minBytes: 60_000,
+      alpha: true,
+    });
+  }
+}
 
 function horizonArtworkFile(biome, direction, theme, layer) {
   const directionPart = direction === "north" ? "" : `-${direction}`;
@@ -157,6 +171,30 @@ function readPngPixels(file) {
   return { width, height, colorType, rgb, alpha };
 }
 
+const cloudMaskHashes = new Set();
+const cloudCoverageByDirection = {};
+for (const direction of panoramaDirections) {
+  cloudCoverageByDirection[direction] = {};
+  for (const biome of ["polar", "temperate"]) {
+    const file = `horizon-clouds-${biome}-${direction}-hd.png`;
+    const clouds = readPngPixels(file);
+    const alphaSum = clouds.alpha.reduce((sum, alpha) => sum + alpha, 0);
+    const coverage = alphaSum / (255 * clouds.width * clouds.height);
+    cloudCoverageByDirection[direction][biome] = coverage;
+    cloudMaskHashes.add(crypto.createHash("sha256").update(clouds.alpha).digest("hex"));
+    if (biome === "polar") {
+      assert.ok(coverage > 0.015 && coverage < 0.06, `${direction}: Polarhimmel besitzt nur wenige Wolken`);
+    } else {
+      assert.ok(coverage > 0.12 && coverage < 0.25, `${direction}: gemäßigter Himmel besitzt einige Wolken`);
+    }
+  }
+  assert.ok(
+    cloudCoverageByDirection[direction].polar < cloudCoverageByDirection[direction].temperate * 0.4,
+    `${direction}: Polar bleibt deutlich wolkenärmer als Gemäßigt`,
+  );
+}
+assert.equal(cloudMaskHashes.size, 8, "jede Biom-/Richtungskombination besitzt ein eigenes Wolkenmuster");
+
 for (const biome of Object.keys(directionalBiomes)) {
   for (const direction of panoramaDirections) {
     const palettes = {};
@@ -271,17 +309,21 @@ for (const file of ["index.html", "styles.css", "app.js", "phases.js"]) {
 
 reject("index.html", /\bid\s*=\s*["']duration-mode["']/i, "keine alternative Drei-Minuten-Zeitfassung");
 reject("phases.js", /\blongPresentationMs\b/, "keine zweite Präsentationsdauer");
-requireMatch("phases.js", /\bpresentationMs\s*:\s*360000\b/, "die Chronik ist fest auf sechs Minuten eingestellt");
-requireMatch("phases.js", /\bconvectionPresentationMs\s*:\s*32000\b/, "die Konvektion erhält 32 Sekunden");
+requireMatch("phases.js", /\bCHRONICLE_PRESENTATION_MS\s*=\s*360000\b/, "der Erklärmodus bleibt auf sechs Minuten eingestellt");
+requireMatch("phases.js", /\bCHRONICLE_CONVECTION_MS\s*=\s*32000\b/, "die Erklärmodus-Konvektion erhält weiter 32 Sekunden");
+requireMatch("phases.js", /\bINSPECTION_MILLISECONDS_PER_UM\s*=\s*5000\b/, "der Prüfmodus verwendet fünf Sekunden pro Um");
+requireMatch("phases.js", /\bINSPECTION_PRESENTATION_MS\s*=\s*TOTAL_UM\s*\*\s*INSPECTION_MILLISECONDS_PER_UM\b/, "die 64 Stunden werden aus 46.080 Um berechnet");
+requireMatch("phases.js", /\bdefaultTimeMode\s*:\s*["']chronicle["']/, "die sechsminütige Zeitfahrt bleibt Standard");
 requireMatch("phases.js", /\bUM_PER_TAN\s*=\s*16\b/, "ein Tan besteht aus 16 Um");
 requireMatch("phases.js", /\bTAN_PER_DIR\s*=\s*8\b/, "ein Dir besteht aus 8 Tan");
 requireMatch("phases.js", /\bDIR_PER_MOHN\s*=\s*36\b/, "ein Mohn besteht aus 36 Dir");
 requireMatch("phases.js", /\bMOHN_PER_CYCLE\s*=\s*10\b/, "ein Konvektionszyklus besteht aus 10 Mohn");
 requireMatch("phases.js", /\beraRotationDegreesPerSecond\s*:\s*5\.6\b/, "Eras Eigenrotation ist auf 5,6 Grad pro Sekunde verdoppelt");
-requireMatch("phases.js", /\bschemaVersion\s*:\s*3\b/, "Szenarioschema schützt kontinuierliche Phasenübergänge");
-requireMatch("app.js", /template\.category\s*===\s*["']synchron["'][\s\S]*?drift\s*=\s*config\.eraRotationDegreesPerSecond[\s\S]*?amplitude\s*=\s*0\b/, "alle synchronen Phasen bleiben exakt an Eras Winkelgeschwindigkeit gekoppelt");
+requireMatch("phases.js", /\bschemaVersion\s*:\s*4\b/, "Szenarioschema schützt Zeitmodi und kontinuierliche Übergänge");
+requireMatch("app.js", /template\.category\s*===\s*["']synchron["'][\s\S]*?mode\.eraRotationDegreesPerUm[\s\S]*?amplitude\s*=\s*0\b/, "alle synchronen Prüfphasen bleiben exakt an Eras Winkelgeschwindigkeit gekoppelt");
+requireMatch("app.js", /template\.motion\s*===\s*["']fixed-orbit["'][\s\S]*?if\s*\(inspection\)[\s\S]*?drift\s*=\s*0[\s\S]*?amplitude\s*=\s*0/, "weltfest stehende Sonnen erhalten im Prüfmodus keine Winkelbewegung");
 requireMatch("app.js", /startRadialOffset[\s\S]*endRadialOffset[\s\S]*startIntensity[\s\S]*endIntensity/i, "Radialposition und Intensität besitzen explizite kontinuierliche Segmentenden");
-requireMatch("app.js", /finalCelestialState[\s\S]*initialCelestialState/i, "vollständige Zyklen übergeben ihre letzte Sternposition an den nächsten Seed");
+requireMatch("app.js", /finalCelestialStates[\s\S]*initialCelestialStates/i, "vollständige Zyklen übergeben ihre letzten Sternpositionen getrennt je Zeitmodus");
 
 reject(
   "index.html",
@@ -314,14 +356,27 @@ const directionGroupTag = openingTag("index.html", "horizon-direction-group");
 assert.match(directionGroupTag, /\brole\s*=\s*["']radiogroup["']/i, "Richtungsauswahl ist ein Radiogroup");
 assert.match(directionGroupTag, /\baria-label(?:ledby)?\s*=/i, "Richtungsauswahl besitzt einen zugänglichen Namen");
 
+const timeModeTag = openingTag("index.html", "time-mode");
+assert.match(timeModeTag, /^<select\b/i, "Zeitmodus ist ein natives, tastaturbedienbares Auswahlfeld");
+assert.match(timeModeTag, /\baria-label\s*=/i, "Zeitmodus besitzt einen zugänglichen Namen");
+requireMatch("index.html", /id=["']time-mode["'][\s\S]*?<option\b[^>]*value=["']chronicle["'][\s\S]*?<option\b[^>]*value=["']inspection["']/i, "Dropdown enthält Erklär- und Prüfmodus");
+requireMatch("index.html", /5\s*s\/Um\s*·\s*64\s*Stunden/i, "Prüfoption benennt 5 s/Um und 64 Stunden eindeutig");
+for (const controlId of ["timeline-zoom-out", "timeline-zoom-in", "previous-cycle", "next-cycle"]) {
+  assert.match(openingTag("index.html", controlId), /^<button\b/i, `${controlId}: Timeline-Steuerung ist eine echte Schaltfläche`);
+}
+requireMatch("styles.css", /\.phase-segment-detail::before\s*\{[^}]*height\s*:\s*var\(--segment-progress/is, "großes Abschnittssiegel besitzt eine flächige Fortschrittsfüllung");
+requireMatch("styles.css", /\.cycle-segment::before\s*\{[^}]*width\s*:\s*var\(--cycle-progress/is, "Zyklussiegel besitzt eine Gesamtfortschrittsfüllung");
+requireMatch("app.js", /state\.playbackAnchorMs\s*\+\s*elapsed\s*\*\s*state\.playbackRate/i, "rAF-Zeitstempel bestimmt die Wiedergabe analytisch");
+reject("app.js", /clamp\(timestamp\s*-\s*state\.lastFrameAt\s*,\s*0\s*,\s*120\)/i, "gedrosselte Frames verlieren keine Weltzeit durch die alte 120-ms-Kappung");
+
 const autoCycleTag = openingTag("index.html", "auto-cycle");
-assert.match(autoCycleTag, /^<button\b/i, "Auto-Neuwürfeln ist eine echte Schaltfläche");
-assert.match(autoCycleTag, /\baria-pressed\s*=\s*["']false["']/i, "Auto-Neuwürfeln startet deaktiviert");
-assert.match(autoCycleTag, /\baria-label\s*=/i, "Auto-Neuwürfeln besitzt einen zugänglichen Namen");
+assert.match(autoCycleTag, /^<button\b/i, "Autozyklus ist eine echte Schaltfläche");
+assert.match(autoCycleTag, /\baria-pressed\s*=\s*["']false["']/i, "Autozyklus startet deaktiviert");
+assert.match(autoCycleTag, /\baria-label\s*=/i, "Autozyklus besitzt einen zugänglichen Namen");
 requireMatch("index.html", /\bid\s*=\s*["']icon-auto-cycle["'][\s\S]*?<circle\b[^>]*cx=["']7\.5["'][\s\S]*?<circle\b[^>]*cx=["']16\.5["']/i, "Doppelkreis-Icon zeigt zwei nebeneinanderliegende Kreise");
 requireMatch("index.html", /id=["']play-toggle["'][\s\S]*id=["']auto-cycle["'][\s\S]*id=["']restart["']/i, "Doppelkreis-Schalter sitzt rechts neben Abspielen/Pause und vor Zum Anfang");
 requireMatch("styles.css", /\.auto-cycle-toggle\s*\{[^}]*width\s*:\s*48px\b[^}]*flex\s*:\s*0\s+0\s+48px\b/is, "Doppelkreis-Schalter bleibt eine kleine quadratische Schaltfläche");
-requireMatch("app.js", /if\s*\(state\.autoCycle\)[\s\S]*?initialCelestialState\s*=\s*state\.scenario\.finalCelestialState[\s\S]*?initialEraRotationDegrees\s*=\s*getEraRotationDegrees[\s\S]*?loadScenario\(createNewSeed\(\),\s*\{[\s\S]*?initialCelestialState,[\s\S]*?initialEraRotationDegrees,[\s\S]*?\}\)[\s\S]*?requestAnimationFrame\(tick\)/i, "aktiver Endlosmodus würfelt nach Zyklusende neu, übernimmt Sternpositionen und Eras Blickwinkel und läuft weiter");
+requireMatch("app.js", /if\s*\(state\.autoCycle\)[\s\S]*?targetCycleIndex[\s\S]*?ensureCycle\(targetCycleIndex\)[\s\S]*?state\.cycleIndex\s*=\s*targetCycleIndex[\s\S]*?requestAnimationFrame\(tick\)/i, "aktiver Endlosmodus schließt reproduzierbar und ohne Pause an den nächsten registrierten Zyklus an");
 
 const directionIds = ["north", "east", "south", "west"];
 for (const direction of directionIds) {
@@ -505,11 +560,32 @@ requireMatch(
 );
 requireMatch(
   "index.html",
-  /horizon-polar-hd1\.png[\s\S]*horizon-stars-pixel-hd\.png[\s\S]*id=["']horizon-zehs-star["'][\s\S]*id=["']horizon-sol-body["'][\s\S]*id=["']horizon-yol-body["'][\s\S]*horizon-clouds-pixel-hd\.png[\s\S]*horizon-polar-hd2\.png/i,
+  /horizon-polar-hd1\.png[\s\S]*horizon-stars-pixel-hd\.png[\s\S]*id=["']horizon-zehs-star["'][\s\S]*id=["']horizon-sol-body["'][\s\S]*id=["']horizon-yol-body["'][\s\S]*horizon-clouds-polar-north-hd\.png[\s\S]*horizon-clouds-temperate-west-hd\.png[\s\S]*horizon-polar-hd2\.png/i,
   "Horizontebenen liegen in der Reihenfolge Hintergrund, Sterne, Himmelskörper, Wolken und Vordergrund",
 );
 requireMatch("styles.css", /\.horizon-atmosphere\s*\{[^}]*mix-blend-mode\s*:\s*screen\b/i, "Atmosphärenebenen blenden den schwarzen Bildgrund ohne Blur aus");
 requireMatch("styles.css", /\.horizon-clouds-artwork\s*\{[^}]*opacity\s*:\s*0\.12\b/i, "Wolken bleiben stark transparent");
+assert.equal(
+  [...sources["index.html"].matchAll(/<image\b[^>]*\bclass=["'][^"']*\bhorizon-clouds-artwork\b[^"']*["'][^>]*>/gi)].length,
+  8,
+  "Polar und Gemäßigt besitzen je vier richtungsgenaue Wolkenebenen",
+);
+for (const biome of ["polar", "temperate"]) {
+  for (const direction of panoramaDirections) {
+    requireMatch(
+      "styles.css",
+      new RegExp(`#horizon-view\\[data-biome=["']${biome}["']\\]\\[data-direction=["']${direction}["']\\]\\s+\\.horizon-clouds-${biome}\\.horizon-clouds-${direction}`, "i"),
+      `${biome}/${direction}: exakt passendes Wolkenmuster wird eingeblendet`,
+    );
+  }
+}
+requireMatch(
+  "styles.css",
+  /#horizon-view\[data-biome=["']desert["']\]\s+\.horizon-clouds-artwork\s*\{[^}]*display\s*:\s*none[^}]*opacity\s*:\s*0/is,
+  "die Wüste blendet Wolken ausdrücklich vollständig aus",
+);
+reject("index.html", /horizon-clouds-pixel-hd\.png/i, "die frühere gemeinsame Wolkenebene wird nicht mehr verwendet");
+reject("index.html", /horizon-clouds-desert-/i, "für die Wüste existiert keine Wolkenebene");
 requireMatch("index.html", /id=["']horizon-irradiance["'][\s\S]*horizon-irradiance-warm[\s\S]*horizon-irradiance-cool[\s\S]*horizon-shimmer-a[\s\S]*horizon-shimmer-b/i, "Einstrahlung besitzt warme, kühle und zweifache Schimmerebenen");
 requireMatch("index.html", /id=["']horizon-warm-field["'][\s\S]*id=["']horizon-cool-field["'][\s\S]*id=["']horizon-shimmer-spectrum["']/i, "Einstrahlung verwendet hochauflösende kontinuierliche Farbfelder");
 requireMatch("index.html", /id=["']horizon-shimmer-noise["'][^>]*filterRes=["']3360 1120["'][\s\S]*<feTurbulence\b[^>]*numOctaves=["']3["']/i, "Schimmerrauschen wird mit hoher Filterauflösung erzeugt");

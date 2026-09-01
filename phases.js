@@ -3,7 +3,8 @@
  *
  * Kanonisch sind: Namen, beobachtbare Richtungen, Einheiten, der 46.080-Um-
  * Konvektionszyklus sowie die 400-Um-Konvektion. Zahlenbereiche für Geschwindigkeit,
- * Intensität und Einzeldauer dienen ausschließlich der sechsminütigen Darstellung.
+ * Intensität und Einzeldauer sind ein illustratives Modell; der Prüfmodus übernimmt daraus
+ * nur relative, seedgebundene Bewegungsverhältnisse.
  */
 (function defineEraPhases(global) {
   "use strict";
@@ -14,6 +15,35 @@
   const MOHN_PER_CYCLE = 10;
   const CONVECTION_DURATION_UM = 400;
   const TOTAL_UM = UM_PER_TAN * TAN_PER_DIR * DIR_PER_MOHN * MOHN_PER_CYCLE;
+  const CHRONICLE_PRESENTATION_MS = 360000;
+  const CHRONICLE_CONVECTION_MS = 32000;
+  const INSPECTION_MILLISECONDS_PER_UM = 5000;
+  const INSPECTION_PRESENTATION_MS = TOTAL_UM * INSPECTION_MILLISECONDS_PER_UM;
+  const INSPECTION_CONVECTION_MS =
+    CONVECTION_DURATION_UM * INSPECTION_MILLISECONDS_PER_UM;
+  const TIME_MODES = Object.freeze({
+    chronicle: Object.freeze({
+      id: "chronicle",
+      label: "6-Minuten-Zeitfahrt",
+      shortLabel: "6:00 Erklärmodus",
+      kind: "semantic-preview",
+      presentationMs: CHRONICLE_PRESENTATION_MS,
+      convectionPresentationMs: CHRONICLE_CONVECTION_MS,
+      eraRotationDegreesPerSecond: 5.6,
+    }),
+    inspection: Object.freeze({
+      id: "inspection",
+      label: "5 Sekunden pro Um",
+      shortLabel: "5 s/Um Prüfmodus",
+      kind: "linear-world-time",
+      presentationMs: INSPECTION_PRESENTATION_MS,
+      convectionPresentationMs: INSPECTION_CONVECTION_MS,
+      millisecondsPerUm: INSPECTION_MILLISECONDS_PER_UM,
+      umPerSecond: 1 / (INSPECTION_MILLISECONDS_PER_UM / 1000),
+      eraRotationDegreesPerUm: 360,
+      eraRotationDegreesPerSecond: 360 / (INSPECTION_MILLISECONDS_PER_UM / 1000),
+    }),
+  });
 
   const CONFIG = Object.freeze({
     umPerTan: UM_PER_TAN,
@@ -26,12 +56,17 @@
     totalUm: TOTAL_UM,
     regularUm: TOTAL_UM - CONVECTION_DURATION_UM,
     convectionDurationUm: CONVECTION_DURATION_UM,
-    eraRotationDegreesPerSecond: 5.6,
-    presentationMs: 360000,
-    convectionPresentationMs: 32000,
+    defaultTimeMode: "chronicle",
+    timeModes: TIME_MODES,
+    eraRotationDegreesPerSecond: TIME_MODES.chronicle.eraRotationDegreesPerSecond,
+    presentationMs: TIME_MODES.chronicle.presentationMs,
+    convectionPresentationMs: TIME_MODES.chronicle.convectionPresentationMs,
+    inspectionMillisecondsPerUm: INSPECTION_MILLISECONDS_PER_UM,
+    inspectionPresentationMs: INSPECTION_PRESENTATION_MS,
+    inspectionConvectionPresentationMs: INSPECTION_CONVECTION_MS,
     minRepeatedTemplates: 12,
     maxRepeatedTemplates: 18,
-    schemaVersion: 3,
+    schemaVersion: 4,
   });
 
   const CATEGORIES = Object.freeze([

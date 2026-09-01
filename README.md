@@ -10,7 +10,8 @@ sich auf vollständig sichtbaren, schematisch elliptischen Bahnen. Ein zweites P
 projiziert denselben Zustand als lokalen Horizontverlauf nach Norden, Osten, Süden oder Westen.
 Beide Ansichten stammen aus demselben deterministischen Simulationssnapshot.
 
-Der 46.080-Um-Konvektionszyklus wird auf sechs Minuten verdichtet. Alle 18
+Der 46.080-Um-Konvektionszyklus kann entweder als sechsminütige Zeitfahrt erklärt oder mit
+exakt fünf realen Sekunden pro Um über 64 Stunden linear geprüft werden. Alle 18
 dokumentierten Phasenvorlagen kommen in jedem erzeugten Szenario mindestens einmal vor;
 weitere Wiederholungen, Reihenfolge, nicht synchrone Geschwindigkeiten und S-Int-Verläufe werden
 aus einem reproduzierbaren Seed erzeugt.
@@ -28,15 +29,23 @@ Laufzeitabhängigkeiten.
 
 ## Bedienung
 
-- Mit **Abspielen** läuft der vollständige Erklärzyklus in 6:00 Minuten.
+- Das anklickbare Feld **Zeitmodus** im Kopf schaltet zwischen
+  **6:00 · Erklärmodus** und **5 s/Um · 64 Stunden** um. Die Auswahl bleibt lokal gespeichert.
+- Mit **Abspielen** läuft der gewählte Zeitmodus timestampbasiert; bei 1× dauert der schnelle
+  Erklärzyklus 6:00 Minuten, der lineare Prüfzyklus 64:00:00 Stunden.
 - Das **Archiv der Phasen** springt zur nächsten Instanz einer ausgewählten Vorlage.
 - Die 18 **Zyklus-Runen** erlauben denselben Sprung direkt über ein Siegel.
 - Das klickbare Chronikband und der Zeitregler erlauben direkte Zeitsprünge.
 - Ein **Seed** erzeugt immer wieder dieselbe Phasenfolge und dieselben Bewegungswerte.
 - **Neu würfeln** erzeugt einen anderen Seed.
-- Der kleine **Doppelkreis-Schalter** neben Abspielen/Pause würfelt nach jeder vollständig
-  beendeten Konvektion automatisch einen neuen Seed und startet den nächsten Zyklus. Sol, Yol
-  und Eras letzter Rotationswinkel werden dabei ohne Positionssprung übernommen.
+- Der kleine **Doppelkreis-Schalter** neben Abspielen/Pause schließt nach jeder vollständig
+  beendeten Konvektion automatisch den nächsten Zyklus an. Sein Folgeseed wird einmalig und
+  reproduzierbar aus Root-Seed und Zyklusnummer abgeleitet; Sol, Yol, Era und die absolute
+  Weltzeit laufen ohne Positionssprung weiter.
+- Nur im Prüfmodus besitzt das Chronikband die Zoomstufen **Zyklusfolge**, **Zyklus** und
+  **Abschnitt**. Rauszoomen zeigt alle bereits geladenen Zyklen, die Zyklusansicht zeigt genau
+  einen linearen 46.080-Um-Zyklus und die Detailansicht ein großes, fortschreitend gefülltes
+  Phasen- oder Konvektionssiegel.
 - 1×, 1,5×, 2× und 4× verändern nur das Wiedergabetempo; das Zeitmodell bleibt gleich.
 - **Helles Pergament / Dunkle Chronik** wechselt das vollständige Pixel-Fantasy-Farbsystem. Jede
   der zwölf Biom-/Richtungsszenen besitzt eine eigene Tag- und Nachtpalette als verlustfrei
@@ -49,7 +58,7 @@ Runter wechseln zur nächsten Richtung im Uhrzeigersinn, Links und Hoch zur vorh
 Tastaturfokus folgt der Auswahl. Standard ist Norden. Die Auswahl wird unter
 `era-horizon-direction` lokal gespeichert und bleibt bei Phasen-, Seed- und Zeitsprüngen
 erhalten. Die Breitenstufe wird unabhängig davon unter `era-horizon-latitude` gespeichert. Das
-Theme wird weiterhin unter `era-theme` gespeichert.
+Theme wird weiterhin unter `era-theme`, der Zeitmodus unter `era-time-mode` gespeichert.
 
 ## Nordpol-Orbitansicht
 
@@ -57,9 +66,12 @@ Era liegt als kreisförmige, pixelig abgestufte Polansicht im Mittelpunkt. Der M
 der Nordpol, der äußere Rand entspricht dem Äquator. Nur die Runen- und Oberflächenstruktur
 rotiert; Era selbst wird weder gekippt noch perspektivisch gestaucht.
 
-Eras illustrative Eigenrotation läuft mit 5,6°/s und damit doppelt so schnell wie zuvor. Alle
-synchronen Sol-/Yol-Phasen verwenden exakt dieselbe Winkelgeschwindigkeit; ihre Kopplung an Era
-bleibt deshalb trotz der Verdopplung erhalten.
+Im sechsminütigen Erklärmodus läuft Eras illustrative Eigenrotation mit 5,6°/s. Im linearen
+Prüfmodus dreht sich Era dagegen kanonisch exakt 360° pro Um, also bei 1× um 72° pro realer
+Sekunde. Alle synchronen Sol-/Yol-Phasen verwenden dort exakt 360°/Um; ihr tatsächlicher polarer
+Richtungswinkel bleibt relativ zur rotierenden Oberfläche konstant. Eine auf der Umlaufbahn
+stehende Sonne erhält dagegen 0°/Um im Weltkoordinatensystem. Gleichlauf und weltfester
+Stillstand sind damit getrennte Zustände.
 
 Die hochauflösende Himmelskarte kombiniert Sternenstaub, Tiefenwolken, entfernte Ringwelten,
 Kartengitter und Sektormarkierungen mit Eras Flüssen, Eisfeldern, Gebirgsketten und kleinen
@@ -71,7 +83,9 @@ Polstand bleibt er als kleiner Polring sichtbar; bei 30° und 60° wächst er en
 außen. Eine blockige Beobachtermarke verbindet Ring und gewählte Blickrichtung.
 
 Die Ellipsen von Sol und Yol sind schematische Bahnformen in einer gemeinsamen zweidimensionalen
-Ebene. Sie sind kein perspektivischer Effekt. Eine Horizontphase verändert daher niemals Höhe
+Ebene. Sie sind kein perspektivischer Effekt. Im Prüfmodus bezeichnet der Sonnenwinkel den
+tatsächlichen Richtungsstrahl; der Schnitt dieses Strahls mit der Ellipse liefert den Weltpunkt.
+Eine Horizontphase verändert daher niemals Höhe
 oder Form der Orbits. Phasen beeinflussen Bewegungsrichtung, Geschwindigkeit und Intensität;
 derselbe Weltpunkt behält beim reinen Phasenwechsel dieselbe Horizontprojektion. Jede Bahn besteht
 aus drei mit `geometricPrecision` gerenderten
@@ -135,7 +149,10 @@ das Gesamtbild ohne eine einzige Pixelabweichung wieder zusammen. Tag und Nacht 
 verwenden exakt dieselbe Alphamaske, sodass beim Themewechsel keine Kulissenkante springt. Alle
 Motive besitzen einen breiten, flachen Fernhorizont ohne falsche Gebirgswand. In der Nacht werden
 Sterne transparent vor `hd1`, Sol, Yol und ZEHS
-in der Mitte und eine sehr transparente Wolkenebene vor den Himmelskörpern gezeichnet. Im hellen
+in der Mitte und eine sehr transparente Wolkenebene vor den Himmelskörpern gezeichnet. Zusätzlich
+zu den 72 Panorama-PNGs liegen acht richtungsgenaue Wolken-Overlays vor: vier sparsame Varianten
+für die polare Eiswelt und vier etwas dichtere Varianten für das gemäßigte Biom. Die Wüste besitzt
+bewusst keine Wolkenebene. Im hellen
 Theme sind sämtliche dekorativen Sterne und Konstellationen vollständig ausgeblendet. Dadurch
 verschwinden die bewegten Körper sichtbar hinter nahen Gebäuden, Bögen und Gelände von `hd2`, statt
 nur über einem flachen Panorama zu schweben. Im Horizontbild selbst bleiben Sol, Yol und ZEHS
@@ -173,8 +190,10 @@ Jede Breitenstufe besitzt vier vollständige, zur Auswahl passende Pixelpanorame
 | 60° · Wüste | Dünen und Observatoriumsruinen | Oase und Sandsteinstadt | Salzebene und Stufenruinen | Canyon und Felsenstadt |
 
 Die Biome wechseln Gelände, Himmel und Horizontfarben. Das Nacht-Theme blendet die gemeinsame
-Sternenebene, beide Themes eine sehr zurückhaltende Wolkenebene per Screen-Compositing ohne Blur
-ein. Die astronomischen Positionen und Messwerte bleiben beim Themewechsel unverändert.
+Sternenebene ein. In Polar und Gemäßigt wählen beide Themes zusätzlich anhand von Biom und
+Blickrichtung eines von acht unterschiedlichen Wolkenmustern per Screen-Compositing ohne Blur;
+Polar bleibt dabei deutlich wolkenärmer als Gemäßigt. Bei 60° Wüste bleibt der Himmel wolkenfrei.
+Die astronomischen Positionen und Messwerte bleiben beim Themewechsel unverändert.
 
 Bei 30° und 60° baut sich nach einer kurzen sichtbaren Verweildauer ein zusätzlicher
 Einstrahlungseffekt auf; am Polstand bei 0° bleibt er immer aus. Sol allein hellt das Panorama
@@ -182,9 +201,12 @@ zunehmend warm auf. Yol allein färbt es in einem klareren Blau und erhält eine
 beide sichtbar, mischen sich warme und kalte Farbe mit einem stärkeren Glitzern. S-Intensität,
 Verweildauer und die relative Bewegung zu Era bestimmen die Stärke: exakt synchrone, scheinbar
 ortsfeste Läufe wirken am stärksten. 60° verwendet eine höhere Breitenverstärkung als 30°. Diese
-Regel gilt unverändert im Tag- und Nacht-Theme. Eine 200-ms-Hüllkurve führt den Effekt über jede
-Phasengrenze weiter, solange der projizierte Körper sichtbar bleibt; ein Phasenname setzt nichts
-zurück. Beim Untergang fällt die gespeicherte Wirkung mit einer langsamen 9-Sekunden-Zeitkonstante
+Regel gilt unverändert im Tag- und Nacht-Theme. Im Erklärmodus wird die Hüllkurve weiterhin in
+200-ms-Schritten vorbereitet. Der 64-Stunden-Prüfmodus schreibt sie während der Wiedergabe
+inkrementell fort und rekonstruiert sie nach einem Sprung nur aus einem begrenzten, deterministischen
+Rückblickfenster; dadurch entstehen nicht mehr als eine Million Vorberechnungsschritte pro Ansicht.
+Die Hüllkurve läuft über jede Phasengrenze weiter, solange der projizierte Körper sichtbar bleibt;
+ein Phasenname setzt nichts zurück. Beim Untergang fällt die gespeicherte Wirkung mit einer langsamen 9-Sekunden-Zeitkonstante
 ab, statt hart auf null zu springen. Während der Konvektion entsteht keine neue Einstrahlung, eine
 noch vorhandene Wirkung klingt jedoch ebenfalls weich aus. Warme und kühle Felder sowie das
 spektrale Rauschen werden hochauflösend und kontinuierlich statt als grobe Pixelkreuze gerendert.
@@ -236,10 +258,39 @@ Vergleichsminuten Dunkelphase. Die tatsächliche Dauer und Intensität beider Ph
 wechselnden Positionen von Sol und Yol abweichen. Ein Konvektionszyklus entspricht 69.120
 irdischen Vergleichsstunden beziehungsweise 2.880 Tagen (ungefähr 7,9 Jahre).
 
-Eine lineare Abbildung würde der Konvektion selbst in einer sechsminütigen Chronik nur rund zwei
-Sekunden geben. Die Simulation nutzt deshalb eine semantische, stückweise Zeitabbildung und
-reserviert 32 Sekunden für die Konvektion. Die aktuelle Era-Zeit wird innerhalb jedes Abschnitts
-weiterhin korrekt zwischen dessen Um-Grenzen interpoliert.
+| Era-Einheit | Um | kanonischer irdischer Vergleich | Prüfzeit bei 1× |
+| --- | ---: | ---: | ---: |
+| 1 Um | 1 | 1 Stunde 30 Minuten | 0:05 |
+| 1 Tan | 16 | 24 Stunden | 1:20 |
+| 1 Dir | 128 | 8 Tage | 10:40 |
+| 1 Mohn | 4.608 | 288 Tage | 6:24:00 |
+| 1 Konvektionszyklus | 46.080 | 2.880 Tage | 64:00:00 |
+
+Die Anwendung hält zwei Zeitprofile bewusst auseinander:
+
+| Zeitprofil | Weltzeit bei 1× | vollständiger Zyklus | Konvektion |
+| --- | --- | ---: | ---: |
+| 6-Minuten-Zeitfahrt · Erklärmodus | semantisch, abschnittsweise komprimiert | 6:00 | didaktisch vergrößert auf 0:32 |
+| 5 s/Um · Prüfmodus | linear, 0,2 Um pro Sekunde | 64:00:00 = 2 Tage 16 Stunden | 0:33:20 |
+
+Im Prüfmodus ergeben fünf Sekunden genau 1 Um und eine vollständige Era-Rotation. Nach sechs
+Minuten sind erst 72 Um beziehungsweise 0,15625 % des Zyklus vergangen. Die letzten 400 Um sind
+bereits Teil der 46.080 Um: Die Konvektion beginnt nach 45.680 Um bei `63:26:40` und endet
+zusammen mit dem Zyklus bei `64:00:00`. Sol und Yol sind in dieser gesamten Spanne in Orbit und
+Horizont unsichtbar; Era und Weltzeit laufen weiter. Die Darstellung erfindet kein Zusammenlaufen,
+Zusammenstoßen oder Verschmelzen der Sonnen.
+
+Eine lineare Abbildung würde der Konvektion in der sechsminütigen Chronik nur rund drei Sekunden
+geben. Der Erklärmodus nutzt deshalb weiterhin seine semantische, stückweise Zeitabbildung und
+reserviert 32 Sekunden für die Konvektion. Diese Vorschauzeit ist ausdrücklich weder
+Sonnenwinkel noch Strahlungsintensität. Der lokale Kalenderwert in der Oberfläche heißt
+**Zyklusfortschritt** und wird ausschließlich aus den vergangenen Um geteilt durch 46.080
+berechnet.
+
+Kalender, Era-Rotation, Sol, Yol, Orbit und Horizont entstehen pro Bild aus genau demselben
+Snapshot. Die Animation addiert keinen festen Winkel pro Frame: `requestAnimationFrame` dient
+nur zum Rendern, während ein monotoner Zeitstempelanker die verstrichene Moduszeit bestimmt.
+Browserdrosselung oder unterschiedliche Bildraten verlieren daher keine Weltzeit.
 
 Die konkrete Phasenfolge ist kein kanonisches historisches Datum. Sie dient als deterministische
 Beispielsimulation.
@@ -248,10 +299,13 @@ Beispielsimulation.
 
 `app.js` normalisiert den Seed und bildet ihn mit FNV-1a auf einen 32-Bit-Wert ab. Ein
 Mulberry32-Generator erzeugt den Ereignisplan. Separate gehashte Zufallsströme bestimmen
-Bewegungsparameter und S-Int, sodass derselbe Seed und dieselbe Darstellungszeit denselben
-Zustand liefern. Blickrichtung und Breitenstufe sind kein Bestandteil dieser Zufallsströme.
-Synchrone Vorlagen bilden die Ausnahme bei der Geschwindigkeit: Sol und Yol übernehmen dort
-deterministisch Eras feste 5,6°/s, statt einen zufälligen Geschwindigkeitswert zu erhalten.
+Bewegungsparameter und S-Int, sodass derselbe Root-Seed, Zyklusindex und dieselbe Weltzeit
+denselben Zustand liefern. Blickrichtung und Breitenstufe sind kein Bestandteil dieser
+Zufallsströme. Im Erklärmodus übernehmen synchrone Vorlagen Eras illustrative 5,6°/s; im
+Prüfmodus überschreibt ihre verbindliche Semantik die Modellwerte mit exakt 360°/Um. Die
+bisherigen Bereiche langsamer und asynchroner Läufe werden dort als illustrative Verhältnisse
+zur früheren 5,6°/s-Referenz migriert. Bezeichnungen wie Tan- oder Dir-Lauf schreiben dadurch
+weiterhin keine unbestätigte exakte Umlaufdauer fest.
 
 Der Ereignisplan enthält:
 
@@ -260,11 +314,13 @@ Der Ereignisplan enthält:
 3. besonders häufig wechselnde Phasen als Meta-Regime;
 4. eine feste Konvektion über die letzten 400 Um.
 
-Die Bewegung wird analytisch aus `Seed + Abschnitt + Darstellungszeit` berechnet. Sie hängt
+Die Bewegung wird analytisch aus `Seed + Zyklus + Abschnitt + Moduszeit` berechnet. Sie hängt
 nicht von der Bildrate, der Blickrichtung oder dem vorherigen Navigationsweg ab. Jeder Abschnitt
-übernimmt Winkel, Radialposition und Intensität vom exakten Ende seines Vorgängers. Beim
-automatischen Vollzykluswechsel werden zusätzlich die finalen Sol-/Yol-Werte und Eras
-Rotationswinkel an den neuen Seed übergeben.
+übernimmt Winkel, Radialposition und Intensität vom exakten Ende seines Vorgängers. Folgezyklen
+werden höchstens einmal erzeugt und in einem In-Memory-Register gehalten. Ihr Seed wird
+reproduzierbar aus Root-Seed und Zyklusindex abgeleitet; die finalen Sol-/Yol-Werte und Eras
+Rotation schließen ohne Sprung an. Nur der lokale Zyklusfortschritt beginnt wieder bei null, die
+absolute Weltzeit läuft weiter.
 
 ## Pixeltechnik und Barrierefreiheit
 
@@ -297,27 +353,34 @@ Textdatei.txt               kanonische Lore- und Zeitreferenz
 assets/fonts/               lokal eingebettete, offen lizenzierte Chronikschrift
 assets/images/              Astral-Wallpaper, Himmelskörper und 72 Tag-/Nacht-PNGs der zwölf 3:1-Horizontszenen
 tests/smoke.cjs             Fake-DOM-, Interaktions-, Kontinuitäts- und Geometrievertrag
+tests/time-mode-contract.cjs exakter 5-s/Um-, 64-h-, Synchronitäts- und Timeline-Zoom-Vertrag
 tests/visual-contract.cjs   statischer HD-, Ebenen-, Theme- und Gestaltungsvertrag
 tests/zehs-latitude-contract.cjs eigener Regressionstest für die umgekehrte ZEHS-Breitenkurve
 ```
 
 ## Tests
 
-Die drei Tests benötigen nur eine vorhandene Node.js-Laufzeit und keine zusätzlichen Pakete:
+Die vier Tests benötigen nur eine vorhandene Node.js-Laufzeit und keine zusätzlichen Pakete:
 
 ```bash
 node tests/smoke.cjs
+node tests/time-mode-contract.cjs
 node tests/visual-contract.cjs
 node tests/zehs-latitude-contract.cjs
 ```
 
 Der Smoke-Test prüft unter anderem alle 18 Vorlagen, Seed-Reproduzierbarkeit, die sechsminütige
-Zeitfassung, Theme-Speicherung, Auto-Neuwürfeln, Kompass- und Breitensteuerung per Maus und
+Zeitfassung, Theme-Speicherung, automatische Anschlusszyklen, Kompass- und Breitensteuerung per Maus und
 Tastatur, Zustandsinvarianz bei Projektionswechseln, die invertierte ZEHS-Breitenhöhe, die
 synchrone 5,6°/s-Kopplung, die vollständige Sol-/Yol-Einstrahlungsmatrix, jede erzeugte
 Phasengrenze und mindestens 200 Geometriesnapshots. Dabei werden Winkel, Radialwerte,
 Horizontpunkte und die kontinuierliche Einstrahlungshüllkurve in allen Blickrichtungen und Breiten sowie die
 positionsgleiche Übergabe von Sol, Yol, ZEHS und Eras Rotation an den nächsten Vollzyklus geprüft.
+
+Der Zeitmodus-Vertrag prüft zusätzlich 5 Sekunden = 1 Um = 360° Era-Rotation, 72 Um nach sechs
+Minuten, die Grenzen `63:26:40` und `64:00:00`, die 400-Um-Konvektion, rAF-Zeitanker ohne
+Framekappung, polare Ellipsensynchronität, weltfesten Stillstand, Phasen- und Zyklusstetigkeit,
+reproduzierbare Folgeseeds, Moduswechsel am selben Um-Stand sowie alle drei Timeline-Zoomstufen.
 
 Der eigenständige ZEHS-Vertrag prüft die exakte Gegenkurve zu Sol und Yol sowie die Reihenfolge
 0° am höchsten, 30° mittig und 60° am flachsten in allen vier Horizontblickrichtungen.

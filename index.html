@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Interaktive, auf sechs Minuten komprimierte Darstellung der Zeitzyklen von Sol und Yol auf Era."
+      content="Interaktive Zeitzyklen von Sol und Yol auf Era: sechsminütiger Erklärmodus und linearer 5-Sekunden-pro-Um-Prüfmodus."
     />
     <meta id="theme-color" name="theme-color" content="#070b1a" />
     <title>Era – Zeitzyklen von Sol und Yol</title>
@@ -98,7 +98,7 @@
             <h1><span class="title-main">Zeitzyklen</span><span class="title-orbit">von Sol und Yol</span></h1>
             <p class="subtitle">
               Betritt das Observatorium von Era und verfolge 46.080 Um als lebendige Astralchronik.
-              Die Bahnen von Sol und Yol verdichten sich zu einer sechsminütigen Astralchronik.
+              Wähle zwischen der sechsminütigen Zeitfahrt und einer linearen 5-s/Um-Prüfung.
             </p>
             <div class="hero-runes" aria-label="Merkmale der Astralchronik">
               <span><i aria-hidden="true"></i>Live-Orbit</span>
@@ -113,9 +113,16 @@
             <span><small>Erscheinungsbild</small><strong id="theme-label">Dunkle Chronik</strong></span>
           </button>
           <div class="header-facts" aria-label="Kanonische Eckdaten">
-            <div><svg aria-hidden="true"><use href="#icon-grand-cycle"></use></svg><strong>10</strong><span>Mohn pro Konvektionszyklus</span></div>
-            <div><svg aria-hidden="true"><use href="#icon-convection-time"></use></svg><strong>400</strong><span>Um Konvektion</span></div>
-            <div><svg aria-hidden="true"><use href="#icon-presentation"></use></svg><strong>6:00</strong><span>Minuten Astralchronik</span></div>
+            <div class="header-fact"><svg aria-hidden="true"><use href="#icon-grand-cycle"></use></svg><strong>10</strong><span>Mohn pro Konvektionszyklus</span></div>
+            <div class="header-fact"><svg aria-hidden="true"><use href="#icon-convection-time"></use></svg><strong>400</strong><span>Um Konvektion</span></div>
+            <label class="header-fact header-time-mode" for="time-mode">
+              <svg aria-hidden="true"><use href="#icon-presentation"></use></svg>
+              <span>Zeitmodus</span>
+              <select id="time-mode" class="time-mode-select" aria-label="Zeitmodus der Astralchronik">
+                <option value="chronicle">6:00 · Erklärmodus</option>
+                <option value="inspection">5 s/Um · 64 Stunden</option>
+              </select>
+            </label>
           </div>
         </div>
       </header>
@@ -585,7 +592,14 @@
                     <image class="celestial-artwork body-artwork horizon-body-artwork" href="assets/images/yol-star-hd.png" x="-32" y="-32" width="64" height="64" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
                   </g>
 
-                  <image class="horizon-atmosphere horizon-clouds-artwork" href="assets/images/horizon-clouds-pixel-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-atmosphere horizon-clouds-artwork horizon-clouds-polar horizon-clouds-north" href="assets/images/horizon-clouds-polar-north-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-atmosphere horizon-clouds-artwork horizon-clouds-polar horizon-clouds-east" href="assets/images/horizon-clouds-polar-east-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-atmosphere horizon-clouds-artwork horizon-clouds-polar horizon-clouds-south" href="assets/images/horizon-clouds-polar-south-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-atmosphere horizon-clouds-artwork horizon-clouds-polar horizon-clouds-west" href="assets/images/horizon-clouds-polar-west-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-atmosphere horizon-clouds-artwork horizon-clouds-temperate horizon-clouds-north" href="assets/images/horizon-clouds-temperate-north-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-atmosphere horizon-clouds-artwork horizon-clouds-temperate horizon-clouds-east" href="assets/images/horizon-clouds-temperate-east-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-atmosphere horizon-clouds-artwork horizon-clouds-temperate horizon-clouds-south" href="assets/images/horizon-clouds-temperate-south-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+                  <image class="horizon-atmosphere horizon-clouds-artwork horizon-clouds-temperate horizon-clouds-west" href="assets/images/horizon-clouds-temperate-west-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
 
                   <image class="horizon-artwork horizon-artwork-night horizon-artwork-front horizon-artwork-polar horizon-artwork-north" href="assets/images/horizon-polar-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
                   <image class="horizon-artwork horizon-artwork-night horizon-artwork-front horizon-artwork-temperate horizon-artwork-north" href="assets/images/horizon-temperate-hd2.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
@@ -711,7 +725,7 @@
                 <strong><span id="yol-intensity">S-Int 5,0</span> · <span id="yol-speed">0°/s</span></strong>
               </div>
               <div class="readout">
-                <span>Darstellungszeit</span>
+                <span id="presentation-label">Darstellungszeit</span>
                 <strong id="presentation-time">0:00 / 6:00</strong>
               </div>
             </div>
@@ -753,7 +767,8 @@
                 <div><dt>Phasen im Szenario</dt><dd id="phase-count">—</dd></div>
                 <div><dt>Wiederholungen</dt><dd id="repeat-count">—</dd></div>
                 <div><dt>Aktueller Abschnitt</dt><dd id="segment-range">—</dd></div>
-                <div><dt>Zeitabbildung</dt><dd>semantisch komprimiert</dd></div>
+                <div><dt>Zyklusfortschritt</dt><dd id="cycle-progress">0,00000 %</dd></div>
+                <div><dt>Zeitabbildung</dt><dd id="time-mapping">semantisch komprimiert</dd></div>
               </dl>
 
               <p class="algorithm-caption">
@@ -799,14 +814,22 @@
               <div class="section-seal" aria-hidden="true"><svg><use href="#icon-timeline"></use></svg><span>04</span></div>
               <div>
                 <p class="panel-index">04 · KONVEKTIONSZYKLUS-CHRONIK</p>
-                <h2 id="timeline-title">Sechs-Minuten-Zeitpfad</h2>
+                <h2 id="timeline-title">Sechs-Minuten-Zeitpfad · Erklärmodus</h2>
               </div>
             </div>
-            <p>
+            <p id="timeline-summary">
               Abschnittsbreiten zeigen die Erklärzeit, nicht das reale Verhältnis der Um. Die
               Konvektion erhält in der sechsminütigen Chronik 32 Sekunden.
             </p>
           </div>
+
+          <nav id="timeline-zoom-controls" class="timeline-zoom-controls" aria-label="Zyklus- und Zoomnavigation" hidden>
+            <button id="previous-cycle" class="button button-quiet timeline-cycle-button" type="button">Voriger Zyklus</button>
+            <button id="timeline-zoom-out" class="button button-quiet timeline-zoom-button" type="button" aria-label="Zeitpfad herauszoomen">−</button>
+            <strong id="timeline-zoom-level" aria-live="polite">Zyklus</strong>
+            <button id="timeline-zoom-in" class="button button-quiet timeline-zoom-button" type="button" aria-label="Zeitpfad hineinzoomen">+</button>
+            <button id="next-cycle" class="button button-quiet timeline-cycle-button" type="button">Nächster Zyklus</button>
+          </nav>
 
           <div id="phase-track" class="phase-track" aria-label="Klickbare Abschnitte des erzeugten Zyklus"></div>
 
@@ -827,9 +850,9 @@
               <svg id="play-icon" class="button-icon" aria-hidden="true"><use id="play-icon-use" href="#icon-play"></use></svg>
               <span id="play-label">Abspielen</span>
             </button>
-            <button id="auto-cycle" class="button auto-cycle-toggle" type="button" aria-pressed="false" aria-label="Nach jeder Konvektion automatisch neu würfeln und weiterlaufen" title="Automatisches Neuwürfeln nach der Konvektion einschalten">
+            <button id="auto-cycle" class="button auto-cycle-toggle" type="button" aria-pressed="false" aria-label="Nach jeder Konvektion automatisch mit dem nächsten Zyklus weiterlaufen" title="Automatischen Anschlusszyklus einschalten">
               <svg class="button-icon" aria-hidden="true"><use href="#icon-auto-cycle"></use></svg>
-              <span class="sr-only">Automatisch neu würfeln und weiterlaufen</span>
+              <span class="sr-only">Automatisch mit dem nächsten Zyklus weiterlaufen</span>
             </button>
             <button id="restart" class="button button-quiet" type="button"><svg class="button-icon" aria-hidden="true"><use href="#icon-restart"></use></svg>Zum Anfang</button>
             <label class="inline-field" for="playback-rate">
@@ -873,10 +896,11 @@
             </article>
             <article>
               <svg class="explanation-icon" aria-hidden="true"><use href="#icon-compression"></use></svg>
-              <h3>Bewusste Zeitverzerrung</h3>
+              <h3>Zwei Zeitmodi</h3>
               <p>
-                Die kurzen 400 Um der Konvektion würden linear kaum sichtbar. Für Verständlichkeit
-                erhält sie 32 Sekunden in der sechsminütigen Zeitfassung.
+                Der Erklärmodus zeigt den ganzen Zyklus in sechs Minuten und gibt der Konvektion
+                32 Sekunden. Im linearen Prüfmodus dauert jedes Um exakt fünf Sekunden; der gesamte
+                Zyklus läuft dort 64 Stunden.
               </p>
             </article>
           </div>
