@@ -24,7 +24,7 @@ neue kanonische Orbitalphysik.
 | [`index.html`](../../index.html) | Zeitmodus-Dropdown, Anzeigen und Timeline-Navigation |
 | [`tests/time-mode-contract.cjs`](../../tests/time-mode-contract.cjs) | Linearitäts-, Synchronitäts-, Grenz- und Zoomvertrag |
 | [`tests/smoke.cjs`](../../tests/smoke.cjs) | Sechs-Minuten-Modus, Seed-Reproduktion und gemeinsame Geometrie |
-| [`tests/moon-contract.cjs`](../../tests/moon-contract.cjs) | 3D-Polbahnen, Entfernung, Paarführung und 300er-Ausrichtung |
+| [`tests/moon-contract.cjs`](../../tests/moon-contract.cjs) | zwei Sichtpassagen, getrennte 3D-Polbahnen und 300er-Ausrichtung |
 
 ## 2. Kanonische Konstanten
 
@@ -122,7 +122,7 @@ Koordinatensysteme und Blickrichtungen.
 Kor und Kor’s Shard erweitern denselben Snapshot um absolute 3D-Weltpunkte.
 Die Nordpolkarte verwendet deren `{x, y}`-Anteil und Bahntiefe; der Horizont
 projiziert `{x, y, z}` gegen Oberflächennormale, Blickrichtung und Breitenstufe.
-Keine Ansicht berechnet einen zweiten Mondzustand.
+Keine Ansicht berechnet einen zweiten, von der gemeinsamen Weltzeit gelösten Zustand.
 
 `Zyklusfortschritt` wird nur aus Um berechnet. Er wird nicht aus
 Darstellungssekunden, Sonnenwinkel oder `S-Int` abgeleitet.
@@ -168,24 +168,29 @@ nicht bloß denselben Fortschritt eines ungeeigneten Ellipsenparameters.
 
 ### 7.1 Kor und Kor’s Shard
 
-`getMoonOrbitState()` löst für beide Monde getrennt eine stark elliptische
+`getMoonOrbitState()` löst für beide Welten getrennt eine stark elliptische
 Kepler-Bahn aus `absoluteWorldUm`. Die Hauptachse liegt auf Eras Nord-Süd-
 Achse. Daher besitzt der Zustand echte Koordinaten `{x, y, z}`, während die
 direkte Nordpolkarte nur eine schmale, nahezu kantenständige Bahn zeigt.
 
-Das Webmodell nutzt 301 Umläufe auf 300 Zyklen. Nähefenster wandern dadurch
-zwischen den Zyklen, beide Körper bleiben mit leicht verschiedenen Parametern
-als enges Paar beieinander und erreichen im 300. Zyklus gemeinsam die
-Nordpolausrichtung. Der gewählte Modellpunkt Um 45.880 liegt innerhalb der
-Konvektion, ist jedoch kein neu festgelegter kanonischer Einzelzeitpunkt.
+Das Webmodell nutzt zwei vollständige Sichtpassagen pro Konvektionszyklus.
+Jeder Körper taucht dadurch im Horizontverlauf zweimal auf und verschwindet
+zweimal; in der Draufsicht durchquert er entsprechend innerhalb eines Zyklus
+zweimal den vorderen und zweimal den verdeckten Bahnabschnitt. Getrennte
+Halbachsen, Exzentrizitäten, Bahnknoten und
+deterministische Phasenversätze verhindern eine dauerhafte Synchronisierung.
+Beide Pläne erreichen erst im 300. Zyklus gemeinsam die Nordpolausrichtung. Der
+gewählte Modellpunkt Um 45.880 liegt innerhalb der Konvektion, ist jedoch kein
+neu festgelegter kanonischer Einzelzeitpunkt. Auch die Zweifachpassage ist eine
+Darstellungsregel und keine neue kanonische Umlaufzeit.
 
 Die scheinbare Größe folgt der Entfernung. Im Horizont kommt ein stetiger
-Höhenfaktor hinzu, sodass die Monde schon beim Untergang fast punktklein und
+Höhenfaktor hinzu, sodass die Weltkörper schon beim Untergang fast punktklein und
 transparent werden. Sol und Yol erhalten dort ebenfalls einen Größenfaktor
 aus ihrem vorhandenen Ellipsenabstand. Keiner dieser Faktoren verändert
 Weltposition, Kalender oder `S-Int`.
 
-Die Konvektion blendet nur Sol und Yol aus. Beide Monde werden normal
+Die Konvektion blendet nur Sol und Yol aus. Beide Kor-Welten werden normal
 weiterberechnet und bleiben sichtbar, sofern Entfernung, Era-Verdeckung und
 lokale Horizontebene dies zulassen.
 
@@ -269,10 +274,10 @@ Interaktionen, gemeinsame Orbit-/Horizontgeometrie und seedstabile
 Szenarioerzeugung.
 
 `tests/moon-contract.cjs` prüft zusätzlich getrennte 3D-Zustände,
-Paarabstand, Nähefenster in aufeinanderfolgenden Zyklen, Kepler-
-Geschwindigkeit, entfernungsabhängige Größe und Deckkraft, den fast
-unsichtbaren Untergang, stetige Zyklusgrenzen und die 300er-Ausrichtung
-während der Konvektion.
+Phasen und Bahnformen, je zwei Sicht-, Nähe-, Horizont- und
+Verdeckungsintervalle pro Zyklus, Kepler-Geschwindigkeit,
+entfernungsabhängige Größe und Deckkraft, den fast unsichtbaren Untergang,
+stetige Zyklusgrenzen und die 300er-Ausrichtung während der Konvektion.
 
 ## 12. Technische Grenzen
 

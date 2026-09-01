@@ -6,8 +6,8 @@ Welt im tiefen Sternenlicht beziehungsweise im hellen Astralmorgen. Harte Pixelr
 versetzte Schatten, Messingakzente und klare Instrumentenflächen halten beide Fassungen lesbar.
 
 Die kosmologische Hauptansicht zeigt Era exakt von oben auf den Nordpol. Sol und Yol bewegen
-sich auf vollständig sichtbaren, schematisch elliptischen Bahnen. Kor und Kor’s Shard bleiben
-als getrennt berechnetes Mondpaar auf großen, stark elliptischen Polbahnen eng beieinander.
+sich auf vollständig sichtbaren, schematisch elliptischen Bahnen. Kor und Kor’s Shard erscheinen
+als zwei eigenständige Welten der Ether-Entität Kor auf getrennten, stark elliptischen Polbahnen.
 Ein zweites Pixelpanorama projiziert denselben 3D-Zustand als lokalen Horizontverlauf nach
 Norden, Osten, Süden oder Westen. Beide Ansichten stammen aus demselben deterministischen
 Simulationssnapshot.
@@ -84,18 +84,20 @@ Observatorien. Dunkle Chronik und Helles Pergament verwenden dafür jeweils eige
 Himmels-, Planeten- und Instrumentenfarben.
 
 Kor und Kor’s Shard verwenden getrennte 3D-Zustände `{x, y, z}`, unterschiedliche illustrative
-Halbachsen, Exzentrizitäten und leicht versetzte Bahnknoten. Sie werden dennoch als enges Paar
-geführt. Die polare Bahn liegt ungefähr 90° zur Sol-/Yol-Ebene und erscheint in der direkten
-Nordpolansicht deshalb als schmale Durchmesserbahn statt als zusätzlicher breiter Ring. Volle
-Linien markieren den nordwärts vor Era liegenden Abschnitt; gestrichelte Linien den rückwärtigen
-Abschnitt. Rückwärtige Mondkörper werden hinter Era verdeckt. Die konkrete Bahnparametrisierung
-ist ein reproduzierbares Anschauungsmodell und kein neuer Kanonwert.
+Halbachsen, Exzentrizitäten, Bahnknoten und Phasenpläne. Kor’s Shard folgt Kor deshalb weder
+grafisch noch zeitlich als synchrones Bruchstück. Die polaren Bahnen liegen ungefähr 90° zur
+Sol-/Yol-Ebene und erscheinen in der direkten Nordpolansicht als zwei schmale
+Durchmesserbahnen statt als zusätzliche breite Ringe. Volle Linien markieren nordwärts vor Era
+liegende Abschnitte; gestrichelte Linien die rückwärtigen Abschnitte. Rückwärtige Weltkörper
+werden hinter Era verdeckt. Die konkrete Bahnparametrisierung ist ein reproduzierbares
+Anschauungsmodell und kein neuer Kanonwert.
 
 Die analytische Kepler-Lösung macht beide Körper nahe Era schneller und in großer Entfernung
-langsamer. Ein 301-zu-300-Modell verschiebt ihre Nähefenster von Zyklus zu Zyklus und richtet
-beide im 300. Zyklus bei Um 45.880 gleichzeitig nordwärts aus. Diese Lage ist eine
-Darstellungsentscheidung innerhalb der bestätigten 400-Um-Konvektion, kein festgeschriebener
-kanonischer Einzelzeitpunkt.
+langsamer. Im Webmodell absolviert jeder Körper pro Konvektionszyklus zwei Sichtpassagen und
+zwei Verdeckungen. Getrennte Phasenversätze lassen diese Auftritte unabhängig voneinander
+wandern und richten beide erst im 300. Zyklus bei Um 45.880 gleichzeitig nordwärts aus. Die
+Zweifachpassage und dieser einzelne Prüfpunkt sind Darstellungsentscheidungen, keine neu
+festgeschriebenen kanonischen Umlaufzeiten.
 
 Ein cyanfarbener Breitenring zeigt den gewählten Beobachterkreis direkt auf Era. Beim bisherigen
 Polstand bleibt er als kleiner Polring sichtbar; bei 30° und 60° wächst er entsprechend nach
@@ -377,7 +379,7 @@ stehen in [docs/README.md](docs/README.md). Der Einstieg in sämtliche
 Zeitdokumente erfolgt über den
 [Index der Zeitdarstellung](docs/00-zeitdarstellung/index.md).
 Der eigene [Kor-/Kor’s-Shard-Vertrag](docs/00-kosmologie/KOR-UND-KORS-SHARD.md)
-trennt bestätigte Mondlogik von den illustrativen Web-Bahnparametern.
+trennt den Kanon der beiden Welten von den illustrativen Web-Bahnparametern.
 
 ## Dateien
 
@@ -397,7 +399,7 @@ tests/smoke.cjs             Fake-DOM-, Interaktions-, Kontinuitäts- und Geometr
 tests/time-mode-contract.cjs exakter 5-s/Um-, 64-h-, Synchronitäts- und Timeline-Zoom-Vertrag
 tests/visual-contract.cjs   statischer HD-, Ebenen-, Theme- und Gestaltungsvertrag
 tests/zehs-latitude-contract.cjs eigener Regressionstest für die umgekehrte ZEHS-Breitenkurve
-tests/moon-contract.cjs      3D-Polbahn-, Paar-, Entfernungs- und 300er-Ereignisvertrag
+tests/moon-contract.cjs      Zweifachpassage, getrennte 3D-Polbahnen und 300er-Ereignisvertrag
 ```
 
 ## Tests
@@ -428,10 +430,11 @@ reproduzierbare Folgeseeds, Moduswechsel am selben Um-Stand sowie alle drei Time
 Der eigenständige ZEHS-Vertrag prüft die exakte Gegenkurve zu Sol und Yol sowie die Reihenfolge
 0° am höchsten, 30° mittig und 60° am flachsten in allen vier Horizontblickrichtungen.
 
-Der Mondvertrag prüft getrennte kontinuierliche 3D-Zustände, die enge Paarführung, je ein
-verschobenes Nähefenster pro Zyklus, schnellere Periapsisbewegung, entfernungsabhängige Größe,
-den fast unsichtbaren Horizontuntergang, stetige Zyklusgrenzen und die gemeinsame
-Nordpolausrichtung in der Konvektion des 300. Zyklus.
+Der Kor-Vertrag prüft getrennte kontinuierliche 3D-Zustände und Phasen sowie je zwei
+Sichtpassagen, Nähefenster, Horizontauftritte und Era-Verdeckungen pro Zyklus. Hinzu kommen
+schnellere Periapsisbewegung, entfernungsabhängige Größe, der fast unsichtbare
+Horizontuntergang, stetige Zyklusgrenzen und die gemeinsame Nordpolausrichtung in der
+Konvektion des 300. Zyklus.
 
 Der visuelle Vertrag liest HTML, CSS und JavaScript statisch und dekodiert die RGBA-PNGs ohne
 Zusatzpaket. Er untersagt unter anderem `backdrop-filter`, Gauß-Weichzeichnung, Pillenradien, alte
@@ -449,5 +452,5 @@ hochaufgelösten Schimmer und den gemeinsamen Geometrievertrag.
 - ZEHS bleibt ein visueller Referenzpunkt; 1 Um bezeichnet eine vollständige Era-Rotation.
 - Während der Konvektion sind Sol und Yol unsichtbar. `S-Int 0` wird nicht verwendet, da die
   dokumentierte Skala bei 1 beginnt.
-- Kor und Kor’s Shard sind ein eigenes illustratives Mondbahnmodell, aber keine zusätzlichen
+- Kor und Kor’s Shard sind ein eigenes illustratives Weltbahnmodell, aber keine zusätzlichen
   Sol-/Yol-Phasenvorlagen und keine Quelle neuer kanonischer Orbitalzahlen.

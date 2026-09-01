@@ -633,6 +633,7 @@ for (const name of [
   "solveEccentricAnomaly",
   "getMoonOrbitState",
   "getMoonMapPoint",
+  "isMoonOccludedByEra",
   "getViewBasis",
   "projectOrbitPointToHorizon",
   "getMoonObserverBasis",
@@ -686,11 +687,13 @@ requireMatch("index.html", /<dt>Namensbezug<\/dt><dd>Zehsen<\/dd>/i, "ZEHS dokum
 requireMatch("app.js", /distanceAu\s*:\s*40\b/, "ZEHS-Entfernung gehört zum zentralen Parametervertrag");
 requireMatch("app.js", /rotationReference\s*:\s*["'][^"']*vollständige Rotation Eras/i, "ZEHS dokumentiert den Rotationsbezug");
 requireMatch("index.html", /id=["']kor-body["'][\s\S]*?kor-moon-hd\.png[\s\S]*?id=["']kors-shard-body["'][\s\S]*?kors-shard-hd\.png/i, "Kor und Kor’s Shard besitzen getrennte HD-Kartenkörper");
-requireMatch("index.html", /id=["']horizon-kor-body["'][\s\S]*?kor-moon-hd\.png[\s\S]*?id=["']horizon-kors-shard-body["'][\s\S]*?kors-shard-hd\.png/i, "beide Monde besitzen getrennte unbeschriftete Horizontkörper");
+requireMatch("index.html", /id=["']horizon-kor-body["'][\s\S]*?kor-moon-hd\.png[\s\S]*?id=["']horizon-kors-shard-body["'][\s\S]*?kors-shard-hd\.png/i, "beide Kor-Welten besitzen getrennte unbeschriftete Horizontkörper");
 requireMatch("index.html", /id=["']kor-orbit-rear["'][\s\S]*?id=["']kors-shard-orbit-rear["'][\s\S]*?id=["']kor-orbit-front["'][\s\S]*?id=["']kors-shard-orbit-front["']/i, "beide Polbahnen unterscheiden Vorder- und Rückseite");
 requireMatch("styles.css", /\.moon-orbit-rear\s*\{[^}]*stroke-dasharray[^}]*opacity/is, "rückwärtige Polbahnen sind gestrichelt und zurückgenommen");
-requireMatch("app.js", /function\s+solveEccentricAnomaly[\s\S]*?eccentricity\s*\*\s*Math\.sin\(anomaly\)/i, "Mondpositionen folgen einer kontinuierlichen elliptischen Kepler-Lösung");
-requireMatch("app.js", /worldPosition\s*=\s*Object\.freeze\(\{[\s\S]*?x:[\s\S]*?y:[\s\S]*?z:/i, "Mondzustände besitzen echte 3D-Weltkoordinaten");
+requireMatch("app.js", /function\s+solveEccentricAnomaly[\s\S]*?eccentricity\s*\*\s*Math\.sin\(anomaly\)/i, "Kor-Weltpositionen folgen einer kontinuierlichen elliptischen Kepler-Lösung");
+requireMatch("app.js", /worldPosition\s*=\s*Object\.freeze\(\{[\s\S]*?x:[\s\S]*?y:[\s\S]*?z:/i, "Kor-Weltzustände besitzen echte 3D-Weltkoordinaten");
+requireMatch("app.js", /orbitalPassesPerCycle\s*:\s*2\b/i, "beide Kor-Welten besitzen zwei Sichtpassagen pro Zyklus");
+requireMatch("app.js", /initialPhaseOffsetRadians\s*:\s*-?[\d.]+[\s\S]*?initialPhaseOffsetRadians\s*:\s*-?[\d.]+/i, "beide Kor-Welten besitzen getrennte Phasenpläne");
 requireMatch("app.js", /alignmentCycleNumber\s*:\s*300[\s\S]*?alignmentCycleUm\s*:\s*config\.regularUm\s*\+\s*config\.convectionDurationUm\s*\/\s*2/i, "300er-Ausrichtung liegt in der Mitte der dokumentierten Konvektion");
 requireMatch("app.js", /setBodyElementState\([\s\S]*?visualScale:\s*horizonProjection\.sol\.apparentScale[\s\S]*?visualScale:\s*horizonProjection\.yol\.apparentScale/i, "Sol und Yol werden im Horizont aus der Bahnentfernung skaliert");
 requireMatch("index.html", /id=["']cycle-jump-input["'][^>]*max=["']300["'][\s\S]*?id=["']moon-alignment-jump["']/i, "Prüfmodus besitzt direkte Zyklus- und 300er-Navigation");

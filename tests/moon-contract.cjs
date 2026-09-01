@@ -7,15 +7,23 @@ require("./smoke.cjs");
 const contract = global.ERA_CYCLE_CONTRACT;
 const config = global.ERA_PHASES.config;
 const model = contract.MOON_ORBIT_MODEL;
-const moonNames = ["kor", "korsShard"];
+const worldNames = ["kor", "korsShard"];
 
-assert.ok(Object.isFrozen(model), "Mondbahnmodell ist read-only");
+assert.ok(Object.isFrozen(model), "Bahnmodell der Kor-Welten ist read-only");
 assert.equal(model.supercycleLength, 300, "Nordpolausrichtung verwendet den 300-Zyklen-Vertrag");
 assert.equal(model.alignmentCycleNumber, 300, "Zyklus 300 ist explizit adressierbar");
+assert.equal(model.orbitalPassesPerCycle, 2, "jeder Weltkörper besitzt zwei vollständige Sichtpassagen pro Zyklus");
 assert.match(model.modelStatus, /Illustratives Bahnmodell/, "offene Orbitalzahlen werden nicht als Kanon ausgegeben");
-assert.equal(model.bodies.kor.name, "Kor", "großer Mondrest ist verbindlich benannt");
+assert.equal(model.bodies.kor.name, "Kor", "größere Welt ist verbindlich benannt");
 assert.equal(model.bodies.korsShard.name, "Kor's Shard", "Code verwendet die vereinbarte ASCII-Schreibweise");
-assert.notDeepEqual(model.bodies.kor, model.bodies.korsShard, "beide Monde besitzen getrennte Bahnparameter");
+assert.notDeepEqual(model.bodies.kor, model.bodies.korsShard, "beide Welten besitzen getrennte Bahnparameter");
+assert.notEqual(model.bodies.kor.nodeDegrees, model.bodies.korsShard.nodeDegrees, "die Polbahnen besitzen getrennte Bahnknoten");
+assert.notEqual(model.bodies.kor.eccentricity, model.bodies.korsShard.eccentricity, "die Polbahnen besitzen getrennte Exzentrizitäten");
+assert.notEqual(
+  model.bodies.kor.initialPhaseOffsetRadians,
+  model.bodies.korsShard.initialPhaseOffsetRadians,
+  "Kor's Shard ist nicht an Kors Bahnphase gekoppelt",
+);
 
 function separation(first, second) {
   return Math.hypot(
@@ -25,33 +33,66 @@ function separation(first, second) {
   );
 }
 
-function nearestSampleInCycle(cycleIndex, bodyName) {
-  let nearest = null;
-  const samples = 1024;
-  for (let index = 0; index <= samples; index += 1) {
-    const cycleUm = (config.totalUm * index) / samples;
-    const state = contract.getMoonOrbitState(
-      cycleIndex * config.totalUm + cycleUm,
-      bodyName,
-    );
-    if (!nearest || state.distance < nearest.state.distance) {
-      nearest = { cycleUm, state };
-    }
+function countCircularTransitions(flags, target) {
+  let transitions = 0;
+  for (let index = 0; index < flags.length; index += 1) {
+    const previous = flags[(index - 1 + flags.length) % flags.length];
+    if (flags[index] === target && previous !== target) transitions += 1;
   }
-  return nearest;
+  return transitions;
 }
 
-for (const bodyName of moonNames) {
-  for (let cycleIndex = 0; cycleIndex < 6; cycleIndex += 1) {
-    const nearest = nearestSampleInCycle(cycleIndex, bodyName);
-    assert.ok(nearest.state.nearFactor > 0.97, `${bodyName}, Zyklus ${cycleIndex + 1}: besitzt ein Nähefenster`);
+function sampleCycle(cycleIndex, bodyName, samples = 4096) {
+  const states = [];
+  for (let index = 0; index < samples; index += 1) {
+    states.push(contract.getMoonOrbitState(
+      (cycleIndex + index / samples) * config.totalUm,
+      bodyName,
+    ));
+  }
+  return states;
+}
+
+const representativeCycles = [0, 149, 299, 449, 599];
+
+for (const bodyName of worldNames) {
+  for (const cycleIndex of representativeCycles) {
+    const states = sampleCycle(cycleIndex, bodyName);
+    const front = states.map((state) => state.depth === "front");
+    const near = states.map((state) => state.nearFactor > 0.9);
+    const hiddenByEra = states.map((state) => contract.isMoonOccludedByEra(
+      state,
+      contract.getMoonMapPoint(state, bodyName),
+      bodyName,
+    ));
+    const horizonVisible = states.map((state) =>
+      contract.projectMoonToHorizon(state, "north", 0, 0).visible,
+    );
+
+    for (const [label, flags] of [
+      ["Polpassage", front],
+      ["Nähefenster", near],
+      ["Era-Verdeckung", hiddenByEra],
+      ["Horizontauftritt", horizonVisible],
+    ]) {
+      assert.equal(
+        countCircularTransitions(flags, true),
+        2,
+        `${bodyName}, Zyklus ${cycleIndex + 1}: ${label} beginnt genau zweimal`,
+      );
+      assert.equal(
+        countCircularTransitions(flags, false),
+        2,
+        `${bodyName}, Zyklus ${cycleIndex + 1}: ${label} endet genau zweimal`,
+      );
+    }
   }
 
-  const firstNear = nearestSampleInCycle(0, bodyName);
-  const secondNear = nearestSampleInCycle(1, bodyName);
+  const earlyPhase = contract.getMoonOrbitState(config.totalUm / 3, bodyName);
+  const laterPhase = contract.getMoonOrbitState(100 * config.totalUm + config.totalUm / 3, bodyName);
   assert.ok(
-    Math.abs(firstNear.cycleUm - secondNear.cycleUm) > 40,
-    `${bodyName}: Nähefenster verschiebt sich zwischen Anschlusszyklen`,
+    Math.abs(earlyPhase.phaseOffset - laterPhase.phaseOffset) > 0.1,
+    `${bodyName}: der eigene Phasenplan verschiebt die Passagen zwischen Zyklen`,
   );
 
   const beforeBoundary = contract.getMoonOrbitState(config.totalUm - 0.0001, bodyName);
@@ -62,29 +103,30 @@ for (const bodyName of moonNames) {
   );
 }
 
+let asynchronousSamples = 0;
 for (let sample = 0; sample <= 64; sample += 1) {
   const absoluteWorldUm = (config.totalUm * sample) / 64;
   const kor = contract.getMoonOrbitState(absoluteWorldUm, "kor");
   const shard = contract.getMoonOrbitState(absoluteWorldUm, "korsShard");
   assert.notEqual(kor.worldPosition, shard.worldPosition, "beide Körper behalten getrennte 3D-Zustände");
-  assert.ok(
-    separation(kor.worldPosition, shard.worldPosition) < 50,
-    `Paarabstand bleibt klein gegenüber der großen Ellipsenbahn, Stichprobe ${sample}`,
-  );
-  for (const moon of [kor, shard]) {
-    assert.ok(Number.isFinite(moon.worldPosition.x), "Mond-X ist endlich");
-    assert.ok(Number.isFinite(moon.worldPosition.y), "Mond-Y ist endlich");
-    assert.ok(Number.isFinite(moon.worldPosition.z), "Mond-Z ist endlich");
-    assert.ok(moon.distance >= moon.minimumDistance, "Entfernung unterschreitet die illustrative Periapsis nicht");
-    assert.ok(moon.distance <= moon.maximumDistance + 1e-7, "Entfernung überschreitet die illustrative Apoapsis nicht");
+  if (kor.depth !== shard.depth || separation(kor.worldPosition, shard.worldPosition) > 100) {
+    asynchronousSamples += 1;
+  }
+  for (const world of [kor, shard]) {
+    assert.ok(Number.isFinite(world.worldPosition.x), "Welt-X ist endlich");
+    assert.ok(Number.isFinite(world.worldPosition.y), "Welt-Y ist endlich");
+    assert.ok(Number.isFinite(world.worldPosition.z), "Welt-Z ist endlich");
+    assert.ok(world.distance >= world.minimumDistance, "Entfernung unterschreitet die illustrative Periapsis nicht");
+    assert.ok(world.distance <= world.maximumDistance + 1e-7, "Entfernung überschreitet die illustrative Apoapsis nicht");
   }
 }
+assert.ok(asynchronousSamples > 48, "Kor und Kor's Shard laufen sichtbar unabhängig statt als synchrones Paar");
 
 const alignmentAbsoluteUm =
   (model.alignmentCycleNumber - 1) * config.totalUm + model.alignmentCycleUm;
-for (const bodyName of moonNames) {
+for (const bodyName of worldNames) {
   const aligned = contract.getMoonOrbitState(alignmentAbsoluteUm, bodyName);
-  const far = contract.getMoonOrbitState(alignmentAbsoluteUm + config.totalUm / 2, bodyName);
+  const far = contract.getMoonOrbitState(alignmentAbsoluteUm + config.totalUm / 4, bodyName);
   assert.equal(aligned.alignmentCycle, true, `${bodyName}: 300. Zyklus ist als Ausrichtungszyklus markiert`);
   assert.equal(aligned.northAlignment, true, `${bodyName}: steht während der 300er-Konvektion exakt nordwärts`);
   assert.ok(aligned.worldPosition.z > 0, `${bodyName}: Nordpolausrichtung besitzt positive Poltiefe`);
@@ -99,6 +141,7 @@ const cycle150 = contract.getMoonOrbitState(
   "kor",
 );
 assert.equal(cycle150.alignmentCycle, false, "Zyklus 150 erfindet kein gleichwertiges Sonderereignis");
+assert.equal(cycle150.northAlignment, false, "Zyklus 150 erfindet keine exakte Nordpolausrichtung");
 
 let settingSample = null;
 for (let offsetUm = 0; offsetUm < 4000; offsetUm += 1) {
@@ -117,7 +160,7 @@ contract.setTimeMode("inspection", { announce: false });
 contract.selectCycle(299, { cycleUm: model.alignmentCycleUm });
 const alignmentFrame = contract.getLastRenderFrame();
 assert.equal(alignmentFrame.snapshot.template.id, "convection", "300er-Ausrichtung liegt innerhalb der Konvektion");
-for (const bodyName of moonNames) {
+for (const bodyName of worldNames) {
   assert.deepEqual(
     alignmentFrame.worldPoints[bodyName],
     alignmentFrame.snapshot[bodyName].worldPosition,
@@ -143,7 +186,7 @@ assert.equal(
 
 if (require.main === module) {
   console.log(JSON.stringify({
-    moons: moonNames.length,
+    worlds: worldNames.length,
     alignmentCycle: model.alignmentCycleNumber,
     alignmentCycleUm: model.alignmentCycleUm,
     korSettingScale: settingSample.projection.visualScale,

@@ -113,7 +113,7 @@
   const MOON_ORBIT_MODEL = Object.freeze({
     modelStatus: "Illustratives Bahnmodell · keine kanonischen Orbitalzahlen",
     supercycleLength: 300,
-    revolutionsPerSupercycle: 301,
+    orbitalPassesPerCycle: 2,
     alignmentCycleNumber: 300,
     alignmentCycleUm: config.regularUm + config.convectionDurationUm / 2,
     bodies: Object.freeze({
@@ -123,7 +123,8 @@
         semiMajor: 420,
         eccentricity: 0.78,
         nodeDegrees: 22,
-        phaseCouplingRadians: 0,
+        initialPhaseOffsetRadians: -0.55,
+        postAlignmentPhaseAmplitudeRadians: 0.55,
         minimumVisualScale: 0.1,
         maximumVisualScale: 1.14,
         distanceExponent: 0.92,
@@ -133,10 +134,11 @@
       korsShard: Object.freeze({
         id: "korsShard",
         name: "Kor's Shard",
-        semiMajor: 438,
-        eccentricity: 0.79,
-        nodeDegrees: 25,
-        phaseCouplingRadians: 0.018,
+        semiMajor: 365,
+        eccentricity: 0.72,
+        nodeDegrees: 112,
+        initialPhaseOffsetRadians: 1.05,
+        postAlignmentPhaseAmplitudeRadians: -0.95,
         minimumVisualScale: 0.09,
         maximumVisualScale: 1.06,
         distanceExponent: 0.94,
@@ -569,19 +571,44 @@
 
   function getMoonOrbitState(absoluteWorldUm, bodyName) {
     const parameters = MOON_ORBIT_MODEL.bodies[bodyName];
-    if (!parameters) throw new Error(`Unbekannter Mondkörper: ${bodyName}`);
+    if (!parameters) throw new Error(`Unbekannter Weltkörper: ${bodyName}`);
     const worldUm = Number.isFinite(Number(absoluteWorldUm)) ? Number(absoluteWorldUm) : 0;
     const alignmentAbsoluteUm =
       (MOON_ORBIT_MODEL.alignmentCycleNumber - 1) * config.totalUm +
       MOON_ORBIT_MODEL.alignmentCycleUm;
     const supercycleUm = config.totalUm * MOON_ORBIT_MODEL.supercycleLength;
-    const meanMotion =
-      (Math.PI * 2 * MOON_ORBIT_MODEL.revolutionsPerSupercycle) / supercycleUm;
-    const supercycleAngle =
-      ((worldUm - alignmentAbsoluteUm) / supercycleUm) * Math.PI * 2;
-    const coupledOffset = parameters.phaseCouplingRadians * Math.sin(supercycleAngle);
+    const fullTurn = Math.PI * 2;
+    const baseMeanMotion =
+      (fullTurn * MOON_ORBIT_MODEL.orbitalPassesPerCycle) / config.totalUm;
+    let phaseOffset;
+    let phaseOffsetVelocity;
+
+    if (worldUm <= alignmentAbsoluteUm) {
+      const alignmentProgress = clamp(worldUm / alignmentAbsoluteUm, 0, 1);
+      const easedAlignment = smoothstep(alignmentProgress);
+      phaseOffset =
+        parameters.initialPhaseOffsetRadians * (1 - easedAlignment);
+      phaseOffsetVelocity = alignmentAbsoluteUm > 0
+        ? parameters.initialPhaseOffsetRadians *
+          (-6 * alignmentProgress * (1 - alignmentProgress)) /
+          alignmentAbsoluteUm
+        : 0;
+    } else {
+      const supercycleAngle =
+        ((worldUm - alignmentAbsoluteUm) / supercycleUm) * fullTurn;
+      phaseOffset =
+        parameters.postAlignmentPhaseAmplitudeRadians *
+        (1 - Math.cos(supercycleAngle));
+      phaseOffsetVelocity =
+        parameters.postAlignmentPhaseAmplitudeRadians *
+        Math.sin(supercycleAngle) *
+        fullTurn /
+        supercycleUm;
+    }
+
+    const instantaneousMeanMotion = baseMeanMotion + phaseOffsetVelocity;
     const meanAnomaly = normalizeRadians(
-      (worldUm - alignmentAbsoluteUm) * meanMotion + coupledOffset,
+      (worldUm - alignmentAbsoluteUm) * baseMeanMotion + phaseOffset,
     );
     const eccentricAnomaly = solveEccentricAnomaly(
       meanAnomaly,
@@ -622,7 +649,7 @@
       Math.cos(eccentricAnomaly) - parameters.eccentricity,
     );
     const trueAngularVelocityPerUm =
-      (meanMotion * Math.sqrt(1 - parameters.eccentricity ** 2)) /
+      (instantaneousMeanMotion * Math.sqrt(1 - parameters.eccentricity ** 2)) /
       (1 - parameters.eccentricity * Math.cos(eccentricAnomaly)) ** 2;
     const cycleIndex = Math.max(0, Math.floor(worldUm / config.totalUm));
     const cycleUm = ((worldUm % config.totalUm) + config.totalUm) % config.totalUm;
@@ -642,6 +669,9 @@
       meanAnomaly,
       eccentricAnomaly,
       trueAnomaly,
+      phaseOffset,
+      meanMotionPerUm: instantaneousMeanMotion,
+      orbitalPassesPerCycle: MOON_ORBIT_MODEL.orbitalPassesPerCycle,
       trueAngularVelocityPerUm,
       depth: worldPosition.z >= 0 ? "front" : "rear",
       visible: true,
@@ -1919,6 +1949,11 @@
       (parameters.baseVisualRadius * visualScale).toFixed(3),
     );
     element.setAttribute("data-orbit-plane", moonState.orbitPlane);
+    element.setAttribute(
+      "data-orbit-passes-per-cycle",
+      String(moonState.orbitalPassesPerCycle),
+    );
+    element.setAttribute("data-phase-offset", moonState.phaseOffset.toFixed(6));
     element.setAttribute("data-model-status", moonState.modelStatus);
     element.setAttribute("aria-hidden", String(!visible));
     element.style.opacity = opacity.toFixed(4);
@@ -2399,7 +2434,7 @@
     elements.convectionMessage.hidden = !isConvection;
     elements.orbitDescription.textContent = isConvection
       ? "Nordpol-Draufsicht während der Konvektion: Sol und Yol sind nicht sichtbar. Kor und Kor’s Shard laufen ohne Rücksetzung auf ihren Polbahnen weiter; ZEHS bleibt als ungefähr 40 AU entfernter Referenzpunkt kartiert."
-      : `${snapshot.template.label}: schematische Sol-/Yol-Orbits und die kantenständigen Polbahnen von Kor und Kor’s Shard aus derselben Weltzeit. Gestrichelte Mondbahnen liegen rückwärtig, volle Linien nordwärts vor Era. ZEHS bleibt als annähernd fester Referenzpunkt markiert.`;
+      : `${snapshot.template.label}: schematische Sol-/Yol-Orbits und die getrennten, kantenständigen Polbahnen von Kor und Kor’s Shard aus derselben Weltzeit. Gestrichelte Bahnabschnitte liegen rückwärtig, volle nordwärts vor Era. ZEHS bleibt als annähernd fester Referenzpunkt markiert.`;
   }
 
   function updateHorizonGeometry(frame) {
@@ -2555,8 +2590,8 @@
           } dem lokalen Horizont.`;
       const zehsText = `ZEHS liegt ${zehsVisible ? "als heller Punkt über" : "unter"} dem lokalen Horizont und sinkt als nordsternartiger Referenzpunkt von 0° nach 60° flacher.`;
       const moonText = `Kor und Kor’s Shard sind ${
-        korVisible || korsShardVisible ? "auf ihrer gemeinsamen Polpassage sichtbar" : "außerhalb dieser lokalen Sichtlinie"
-      }; ihre Größe und Deckkraft folgen kontinuierlich Entfernung und Horizonthöhe.`;
+        korVisible || korsShardVisible ? "auf ihren eigenständigen Polpassagen sichtbar" : "außerhalb dieser lokalen Sichtlinie"
+      }; beide Weltkörper besitzen getrennte Bahnphasen, ihre Größe und Deckkraft folgen kontinuierlich Entfernung und Horizonthöhe.`;
       const irradianceText = horizonIrradiance.mode === "dual"
         ? "Die länger anhaltende gemeinsame Einstrahlung mischt warmes Sol- und kühles Yol-Licht mit starkem Schimmer."
         : horizonIrradiance.mode === "sol"
@@ -3532,6 +3567,7 @@
     solveEccentricAnomaly,
     getMoonOrbitState,
     getMoonMapPoint,
+    isMoonOccludedByEra,
     getViewBasis,
     projectOrbitPointToHorizon,
     getMoonObserverBasis,
