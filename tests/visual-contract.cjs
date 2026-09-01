@@ -16,18 +16,6 @@ const sources = Object.fromEntries(
 const artworkSpecs = [
   { file: "astral-map-dark-hd.png", minWidth: 1400, minHeight: 1000 },
   { file: "astral-map-light-hd.png", minWidth: 1400, minHeight: 1000 },
-  { file: "horizon-polar-hd1.png", minWidth: 1600, minHeight: 700, alpha: true },
-  { file: "horizon-polar-hd2.png", minWidth: 1600, minHeight: 700, alpha: true },
-  { file: "horizon-polar-day-hd1.png", minWidth: 1600, minHeight: 700, alpha: true },
-  { file: "horizon-polar-day-hd2.png", minWidth: 1600, minHeight: 700, alpha: true },
-  { file: "horizon-temperate-hd1.png", minWidth: 1600, minHeight: 700, alpha: true },
-  { file: "horizon-temperate-hd2.png", minWidth: 1600, minHeight: 700, alpha: true },
-  { file: "horizon-temperate-day-hd1.png", minWidth: 1600, minHeight: 700, alpha: true },
-  { file: "horizon-temperate-day-hd2.png", minWidth: 1600, minHeight: 700, alpha: true },
-  { file: "horizon-desert-hd1.png", minWidth: 2100, minHeight: 700, alpha: true },
-  { file: "horizon-desert-hd2.png", minWidth: 2100, minHeight: 700, alpha: true },
-  { file: "horizon-desert-day-hd1.png", minWidth: 2100, minHeight: 700, alpha: true },
-  { file: "horizon-desert-day-hd2.png", minWidth: 2100, minHeight: 700, alpha: true },
   { file: "horizon-clouds-pixel-hd.png", minWidth: 2100, minHeight: 700, alpha: true },
   { file: "horizon-stars-pixel-hd.png", minWidth: 2100, minHeight: 700, minBytes: 180_000, alpha: true },
   { file: "horizon-convection-hd.png", minWidth: 2100, minHeight: 700, alpha: true },
@@ -39,18 +27,35 @@ const artworkSpecs = [
 ];
 
 const directionalBiomes = Object.freeze({
-  polar: Object.freeze({ minWidth: 1600, minHeight: 700 }),
-  temperate: Object.freeze({ minWidth: 1600, minHeight: 700 }),
-  desert: Object.freeze({ minWidth: 2100, minHeight: 700 }),
+  polar: Object.freeze({ exactWidth: 2172, exactHeight: 724 }),
+  temperate: Object.freeze({ exactWidth: 2172, exactHeight: 724 }),
+  desert: Object.freeze({ exactWidth: 2172, exactHeight: 724 }),
 });
 const panoramaDirections = Object.freeze(["north", "east", "south", "west"]);
+const panoramaThemes = Object.freeze(["night", "day"]);
+
+function horizonArtworkFile(biome, direction, theme, layer) {
+  const directionPart = direction === "north" ? "" : `-${direction}`;
+  const themePart = theme === "day" ? "-day" : "";
+  return `horizon-${biome}${directionPart}${themePart}-${layer}.png`;
+}
+
 for (const [biome, dimensions] of Object.entries(directionalBiomes)) {
-  for (const direction of panoramaDirections.slice(1)) {
-    for (const themePart of ["", "day-"]) {
+  for (const direction of panoramaDirections) {
+    for (const theme of panoramaThemes) {
+      artworkSpecs.push({
+        file: horizonArtworkFile(biome, direction, theme, "hd"),
+        ...dimensions,
+        minWidth: dimensions.exactWidth,
+        minHeight: dimensions.exactHeight,
+        runtime: false,
+      });
       for (const layer of ["hd1", "hd2"]) {
         artworkSpecs.push({
-          file: `horizon-${biome}-${direction}-${themePart}${layer}.png`,
+          file: horizonArtworkFile(biome, direction, theme, layer),
           ...dimensions,
+          minWidth: dimensions.exactWidth,
+          minHeight: dimensions.exactHeight,
           alpha: true,
         });
       }
@@ -64,6 +69,8 @@ for (const spec of artworkSpecs) {
   assert.equal(data.toString("ascii", 1, 4), "PNG", `${spec.file}: gültige PNG-Signatur`);
   assert.ok(data.readUInt32BE(16) >= spec.minWidth, `${spec.file}: ausreichende native Breite`);
   assert.ok(data.readUInt32BE(20) >= spec.minHeight, `${spec.file}: ausreichende native Höhe`);
+  if (spec.exactWidth) assert.equal(data.readUInt32BE(16), spec.exactWidth, `${spec.file}: exakte 3:1-Breite`);
+  if (spec.exactHeight) assert.equal(data.readUInt32BE(20), spec.exactHeight, `${spec.file}: exakte 3:1-Höhe`);
   assert.ok(data.byteLength > (spec.minBytes || 400_000), `${spec.file}: kein niedrig aufgelöster Platzhalter`);
   if (spec.alpha) assert.equal(data[25], 6, `${spec.file}: besitzt einen echten RGBA-Alphakanal`);
 }
@@ -77,11 +84,12 @@ function paethPredictor(left, up, upperLeft) {
   return upDistance <= upperLeftDistance ? up : upperLeft;
 }
 
-function readRgbaPngAlpha(file) {
+function readPngPixels(file) {
   const data = fs.readFileSync(path.join(root, "assets", "images", file));
   const idatChunks = [];
   let width = 0;
   let height = 0;
+  let colorType = 0;
   let offset = 8;
   while (offset < data.length) {
     const length = data.readUInt32BE(offset);
@@ -90,9 +98,10 @@ function readRgbaPngAlpha(file) {
     if (type === "IHDR") {
       width = chunk.readUInt32BE(0);
       height = chunk.readUInt32BE(4);
-      assert.equal(chunk[8], 8, `${file}: Alphavertrag unterstützt 8-Bit-PNG`);
-      assert.equal(chunk[9], 6, `${file}: Alphavertrag erwartet RGBA`);
-      assert.equal(chunk[12], 0, `${file}: Alphavertrag erwartet ein nicht-interlaced PNG`);
+      colorType = chunk[9];
+      assert.equal(chunk[8], 8, `${file}: Ebenenvertrag unterstützt 8-Bit-PNG`);
+      assert.ok(colorType === 2 || colorType === 6, `${file}: Ebenenvertrag erwartet RGB oder RGBA`);
+      assert.equal(chunk[12], 0, `${file}: Ebenenvertrag erwartet ein nicht-interlaced PNG`);
     } else if (type === "IDAT") {
       idatChunks.push(chunk);
     } else if (type === "IEND") {
@@ -101,7 +110,7 @@ function readRgbaPngAlpha(file) {
     offset += length + 12;
   }
 
-  const bytesPerPixel = 4;
+  const bytesPerPixel = colorType === 6 ? 4 : 3;
   const stride = width * bytesPerPixel;
   const compressedRows = zlib.inflateSync(Buffer.concat(idatChunks));
   const pixels = Buffer.alloc(stride * height);
@@ -135,35 +144,86 @@ function readRgbaPngAlpha(file) {
     }
   }
 
-  const alpha = Buffer.alloc(width * height);
+  const rgb = Buffer.alloc(width * height * 3);
+  const alpha = Buffer.alloc(width * height, 255);
   for (let pixel = 0; pixel < width * height; pixel += 1) {
-    alpha[pixel] = pixels[pixel * bytesPerPixel + 3];
+    const source = pixel * bytesPerPixel;
+    const target = pixel * 3;
+    rgb[target] = pixels[source];
+    rgb[target + 1] = pixels[source + 1];
+    rgb[target + 2] = pixels[source + 2];
+    if (bytesPerPixel === 4) alpha[pixel] = pixels[source + 3];
   }
-  return { width, height, alpha };
-}
-
-function horizonArtworkFile(biome, direction, theme, layer) {
-  const directionPart = direction === "north" ? "" : `-${direction}`;
-  const themePart = theme === "day" ? "-day" : "";
-  return `horizon-${biome}${directionPart}${themePart}-${layer}.png`;
+  return { width, height, colorType, rgb, alpha };
 }
 
 for (const biome of Object.keys(directionalBiomes)) {
   for (const direction of panoramaDirections) {
-    for (const layer of ["hd1", "hd2"]) {
-      const nightFile = horizonArtworkFile(biome, direction, "night", layer);
-      const dayFile = horizonArtworkFile(biome, direction, "day", layer);
-      const night = readRgbaPngAlpha(nightFile);
-      const day = readRgbaPngAlpha(dayFile);
-      const north = readRgbaPngAlpha(horizonArtworkFile(biome, "north", "night", layer));
-      assert.equal(day.width, night.width, `${biome}/${direction}/${layer}: Tag und Nacht besitzen dieselbe Breite`);
-      assert.equal(day.height, night.height, `${biome}/${direction}/${layer}: Tag und Nacht besitzen dieselbe Höhe`);
-      assert.ok(day.alpha.equals(night.alpha), `${biome}/${direction}/${layer}: Tag und Nacht besitzen exakt dieselbe Alphamaske`);
-      assert.ok(
-        night.alpha.equals(north.alpha),
-        `${biome}/${direction}/${layer}: Richtungsvariante behält die geprüfte Ebenenkante ohne Gebirgslücke`,
-      );
+    const palettes = {};
+    for (const theme of panoramaThemes) {
+      const original = readPngPixels(horizonArtworkFile(biome, direction, theme, "hd"));
+      const horizon = readPngPixels(horizonArtworkFile(biome, direction, theme, "hd1"));
+      const foreground = readPngPixels(horizonArtworkFile(biome, direction, theme, "hd2"));
+      palettes[theme] = { original, horizon, foreground };
+
+      assert.equal(original.width, original.height * 3, `${biome}/${direction}/${theme}: Original ist ein echtes 3:1-Panorama`);
+      assert.equal(horizon.width, original.width, `${biome}/${direction}/${theme}: Horizont besitzt Originalbreite`);
+      assert.equal(horizon.height, original.height, `${biome}/${direction}/${theme}: Horizont besitzt Originalhöhe`);
+      assert.equal(foreground.width, original.width, `${biome}/${direction}/${theme}: Vordergrund besitzt Originalbreite`);
+      assert.equal(foreground.height, original.height, `${biome}/${direction}/${theme}: Vordergrund besitzt Originalhöhe`);
+      assert.equal(original.colorType, 2, `${biome}/${direction}/${theme}: kombiniertes Original bleibt RGB`);
+      assert.equal(horizon.colorType, 6, `${biome}/${direction}/${theme}: Horizont besitzt echte RGBA-Transparenz`);
+      assert.equal(foreground.colorType, 6, `${biome}/${direction}/${theme}: Vordergrund besitzt echte RGBA-Transparenz`);
+      assert.ok(horizon.rgb.equals(original.rgb), `${biome}/${direction}/${theme}: hd1 verwendet ausschließlich Originalpixel`);
+      assert.ok(foreground.rgb.equals(original.rgb), `${biome}/${direction}/${theme}: hd2 verwendet ausschließlich Originalpixel`);
+
+      let foregroundPixels = 0;
+      let foregroundPixelsTopThird = 0;
+      let hardPixelEdges = true;
+      let complementaryLayers = true;
+      const topThirdHeight = Math.floor(original.height / 3);
+      for (let pixel = 0; pixel < original.width * original.height; pixel += 1) {
+        const horizonAlpha = horizon.alpha[pixel];
+        const foregroundAlpha = foreground.alpha[pixel];
+        if (
+          (horizonAlpha !== 0 && horizonAlpha !== 255) ||
+          (foregroundAlpha !== 0 && foregroundAlpha !== 255)
+        ) hardPixelEdges = false;
+        if (horizonAlpha + foregroundAlpha !== 255) complementaryLayers = false;
+        if (foregroundAlpha === 255) {
+          foregroundPixels += 1;
+          if (Math.floor(pixel / original.width) < topThirdHeight) foregroundPixelsTopThird += 1;
+        }
+      }
+      assert.ok(hardPixelEdges, `${biome}/${direction}/${theme}: Ebenenkanten bleiben harte Pixelkanten`);
+      assert.ok(complementaryLayers, `${biome}/${direction}/${theme}: hd1 und hd2 teilen jeden Originalpixel verlustfrei`);
+      const foregroundRatio = foregroundPixels / (original.width * original.height);
+      const foregroundTopRatio = foregroundPixelsTopThird / (original.width * topThirdHeight);
+      assert.ok(foregroundRatio > 0.05 && foregroundRatio < 0.55, `${biome}/${direction}/${theme}: Vordergrund bleibt eine gezielte Tiefenebene`);
+      assert.ok(foregroundTopRatio < 0.01, `${biome}/${direction}/${theme}: keine falsche Bergwand ragt in das obere Panoramadrittel`);
     }
+
+    assert.ok(
+      palettes.day.horizon.alpha.equals(palettes.night.horizon.alpha),
+      `${biome}/${direction}: Tag und Nacht verwenden dieselbe Horizontmaske`,
+    );
+    assert.ok(
+      palettes.day.foreground.alpha.equals(palettes.night.foreground.alpha),
+      `${biome}/${direction}: Tag und Nacht verwenden dieselbe Vordergrundmaske`,
+    );
+    let changedPixels = 0;
+    for (let pixel = 0; pixel < palettes.day.original.width * palettes.day.original.height; pixel += 1) {
+      const rgbOffset = pixel * 3;
+      if (
+        palettes.day.original.rgb[rgbOffset] !== palettes.night.original.rgb[rgbOffset] ||
+        palettes.day.original.rgb[rgbOffset + 1] !== palettes.night.original.rgb[rgbOffset + 1] ||
+        palettes.day.original.rgb[rgbOffset + 2] !== palettes.night.original.rgb[rgbOffset + 2]
+      ) changedPixels += 1;
+    }
+    assert.ok(
+      changedPixels > palettes.day.original.width * palettes.day.original.height * 0.5,
+      `${biome}/${direction}: Tag und Nacht sind eigenständige Farbpaletten derselben Szene`,
+    );
   }
 }
 
@@ -236,7 +296,7 @@ assert.match(horizonTag, /\bshape-rendering\s*=\s*["']crispEdges["']/i, "Horizon
 assert.match(orbitTag, /\baria-labelledby\s*=/i, "Orbitansicht besitzt zugänglichen Titel und Beschreibung");
 assert.match(horizonTag, /\baria-labelledby\s*=/i, "Horizontansicht besitzt zugänglichen Titel und Beschreibung");
 assert.match(horizonTag, /\bdata-biome\s*=\s*["']polar["']/i, "Horizont startet mit der polaren Eiswelt");
-assert.match(horizonTag, /\bdata-direction\s*=\s*["']north["']/i, "Horizont startet mit dem bisherigen Nordpanorama");
+assert.match(horizonTag, /\bdata-direction\s*=\s*["']north["']/i, "Horizont startet mit dem neuen Nordpanorama");
 assert.match(horizonTag, /\bdata-panorama\s*=\s*["']polar-north["']/i, "Horizont protokolliert die aktive Panorama-ID");
 requireMatch("index.html", /\bstroke-linecap\s*=\s*["']square["']/i, "blockige SVG-Linien verwenden square linecaps");
 requireMatch("index.html", /\bstroke-linejoin\s*=\s*["']miter["']/i, "blockige SVG-Linien verwenden miter joins");
@@ -354,6 +414,7 @@ for (const className of [
 }
 
 for (const asset of artworkSpecs) {
+  if (asset.runtime === false) continue;
   requireMatch(
     "index.html",
     new RegExp(`assets/images/${asset.file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i"),
@@ -373,7 +434,7 @@ requireMatch(
 const panoramaArtworkTags = [
   ...sources["index.html"].matchAll(/<image\b[^>]*\bclass=["'][^"']*\bhorizon-artwork\b[^"']*["'][^>]*>/gi),
 ];
-assert.equal(panoramaArtworkTags.length, 48, "vier Richtungen, drei Biome, zwei Themes und zwei Ebenen ergeben exakt 48 Panoramabilder");
+assert.equal(panoramaArtworkTags.length, 48, "vier Richtungen, drei Biome, zwei Theme-Slots und zwei Ebenen ergeben exakt 48 Panoramaslots");
 
 for (const biome of Object.keys(directionalBiomes)) {
   requireMatch(
@@ -390,6 +451,17 @@ for (const biome of Object.keys(directionalBiomes)) {
           "index.html",
           new RegExp(`class=["'][^"']*horizon-artwork-${theme}[^"']*horizon-artwork-${layerClass}[^"']*horizon-artwork-${biome}[^"']*horizon-artwork-${direction}[^"']*["'][^>]*href=["']assets/images/${file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["']`, "i"),
           `${biome}/${direction}/${theme}/${layer}: richtige Mehrfachebene ist eingebunden`,
+        );
+        const matchingTags = [
+          ...sources["index.html"].matchAll(
+            new RegExp(`<image\\b[^>]*href=["']assets/images/${file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["'][^>]*>`, "gi"),
+          ),
+        ];
+        assert.equal(matchingTags.length, 1, `${biome}/${direction}/${theme}/${layer}: jede Palette besitzt genau einen eigenen Slot`);
+        assert.match(
+          matchingTags[0][0],
+          /\bwidth=["']840["'][^>]*\bheight=["']280["']/i,
+          `${biome}/${direction}/${theme}/${layer}: 3:1-Layer wird ohne Richtungsbeschnitt gerendert`,
         );
       }
     }
@@ -437,8 +509,10 @@ requireMatch("styles.css", /\.horizon-shimmer-b\s*\{[^}]*animation\s*:\s*horizon
 reject("styles.css", /\.horizon-shimmer-(?:a|b)\s*\{[^}]*animation\s*:[^;]*steps\s*\(/is, "Einstrahlung verwendet keine pixeligen Animationsschritte");
 requireMatch("styles.css", /--irradiance-warm\s*:\s*0[\s\S]*--irradiance-cool\s*:\s*0[\s\S]*--irradiance-shimmer\s*:\s*0/i, "Einstrahlung startet visuell vollständig deaktiviert");
 requireMatch("app.js", /latitudeStrength:\s*Object\.freeze\(\{\s*0:\s*0,\s*30:\s*0\.64,\s*60:\s*1\s*\}\)/i, "Einstrahlung ist am Pol aus und bei 60 Grad stärker als bei 30 Grad");
-requireMatch("app.js", /delayMs\s*:\s*2200[\s\S]*buildupMs\s*:\s*12000[\s\S]*sampleMs\s*:\s*200[\s\S]*continuityThresholdPx\s*:\s*12/i, "Einstrahlung baut sich fein abgetastet nach anhaltender Sichtbarkeit auf");
-requireMatch("app.js", /function\s+buildIrradianceTimeline[\s\S]*?continuous[\s\S]*?previous\[bodyName\]\.dwellMs\s*\+\s*IRRADIANCE_MODEL\.sampleMs/i, "sichtbare Verweildauer wird unabhängig von Phasenlabels fortgeschrieben");
+requireMatch("app.js", /delayMs\s*:\s*2200[\s\S]*buildupMs\s*:\s*12000[\s\S]*decayMs\s*:\s*9000[\s\S]*sampleMs\s*:\s*200/i, "Einstrahlung besitzt fein abgetasteten langsamen Aufbau und Abbau");
+requireMatch("app.js", /function\s+buildIrradianceTimeline[\s\S]*?previous\[bodyName\]\.dwellMs\s*\+\s*elapsedMs[\s\S]*?buildupRetention[\s\S]*?Math\.exp\(-elapsedMs\s*\/\s*IRRADIANCE_MODEL\.decayMs\)/i, "sichtbare Phasen führen die Hüllkurve fort und Untergänge bauen sie langsam ab");
+requireMatch("index.html", /id=["']horizon-cool-field["'][\s\S]*?#347cff[\s\S]*?#203de8/i, "Yols Einstrahlungsfeld verwendet die klarere blaue Palette");
+requireMatch("app.js", /--irradiance-cool[\s\S]*?horizonIrradiance\.cool\s*\*\s*0\.42/i, "Yols blauer Effekt wird leicht verstärkt");
 requireMatch("app.js", /data-irradiance-mode[\s\S]*--irradiance-warm[\s\S]*--irradiance-cool[\s\S]*--irradiance-shimmer/i, "der berechnete Einstrahlungszustand steuert die Live-Grafik");
 requireMatch("index.html", /id=["']convection-field["'][^>]*orbit-convection-hd\.png/i, "Orbit-Konvektion verwendet eine hochauflösende RGBA-Textur");
 requireMatch("index.html", /id=["']horizon-convection-field["'][^>]*horizon-convection-hd\.png/i, "Horizont-Konvektion verwendet eine hochauflösende RGBA-Textur");
@@ -446,8 +520,6 @@ reject("index.html", /class=["'][^"']*(?:convection-band|convection-shard|horizo
 requireMatch("styles.css", /\.convection-artwork\s*\{[^}]*image-rendering\s*:\s*auto\b[^}]*mix-blend-mode\s*:\s*screen\b/is, "HD-Konvektion wird detailreich und transparent eingeblendet");
 requireMatch("styles.css", /#horizon-view\[data-biome\]\s+\.biome-sky[\s\S]*?display\s*:\s*none/i, "alte biome-spezifische SVG-Himmel bleiben hinter den HD-Ebenen deaktiviert");
 requireMatch("index.html", /class=["']horizon-sky-base["']\s+width=["']840["']\s+height=["']252["']/, "freigestellte Horizontbereiche besitzen eine ruhige Grundfläche");
-requireMatch("index.html", /horizon-polar-hd1\.png[^>]*height=["']400["']/, "polare Hintergrundkante überlappt den Vordergrund ohne Spalt");
-requireMatch("index.html", /horizon-temperate-hd1\.png[^>]*height=["']460["']/, "gemäßigte Hintergrundkante überlappt den Vordergrund ohne Spalt");
 reject("index.html", /class=["'][^"']*horizon-sky-band\b/i, "alte Farbbänder scheinen nicht durch transparente Pixel hindurch");
 requireMatch("styles.css", /--radius-md\s*:\s*10px\b/i, "grafische Felder verwenden einen konsistenten sanften Radius");
 

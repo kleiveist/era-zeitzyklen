@@ -38,8 +38,9 @@ Laufzeitabhängigkeiten.
   beendeten Konvektion automatisch einen neuen Seed und startet den nächsten Zyklus. Sol, Yol
   und Eras letzter Rotationswinkel werden dabei ohne Positionssprung übernommen.
 - 1×, 1,5×, 2× und 4× verändern nur das Wiedergabetempo; das Zeitmodell bleibt gleich.
-- **Helles Pergament / Dunkle Chronik** wechselt das vollständige Pixel-Fantasy-Farbsystem und
-  die eigenen Tag-/Nachtpanoramen aller drei Biome und vier Blickrichtungen.
+- **Helles Pergament / Dunkle Chronik** wechselt das vollständige Pixel-Fantasy-Farbsystem. Jede
+  der zwölf Biom-/Richtungsszenen besitzt eine eigene Tag- und Nachtpalette als verlustfrei
+  getrenntes 3:1-Panorama.
 - Der Pixelkompass schaltet den Horizontblick zwischen **N**, **O**, **S** und **W** um.
 - Die Breitensteuerung verschiebt den Beobachter um **0°**, **30°** oder **60°** vom Nordpol in Richtung Äquator.
 
@@ -116,15 +117,27 @@ Era-Rotation ist als 1 Um beziehungsweise 90 irdische Vergleichsminuten definier
 ## Horizontverlauf
 
 Der Horizontverlauf ist eine getrennte, hochauflösende Pixelart-Grafik mit echter Tiefenstaffelung.
-Für jedes Biom, jede Blickrichtung und jede Tagesfassung liegt `hd1` hinter den Himmelskörpern und
-`hd2` davor. Das dunkle Theme verwendet 24 Nacht-, das helle Theme 24 eigenständige Tag-Ebenen.
-Alle Tag-/Nacht-Paare besitzen pixelgenau dieselben Alphamasken und schließen deshalb an denselben
-Gelände- und Gebirgskanten. Norden bleibt jeweils das bisherige Motiv; Osten, Süden und Westen
-besitzen eigenständige Städte, Siedlungen, Häfen, Schluchten oder Ruinen. In der Nacht werden
+Für Polar, Gemäßigt und Wüste liegen in Norden, Osten, Süden und Westen zwölf nativ
+2172 × 724 Pixel große 3:1-Szenen vor. Auch Norden wurde vollständig neu aufgebaut. Jede Szene
+besitzt eine eigenständige Tag- und Nachtpalette; jede Palette besteht exakt aus diesen drei
+Dateien:
+
+```text
+horizon-<landschaft>[-<richtung>][-day]-hd.png   vollständiges Original
+horizon-<landschaft>[-<richtung>][-day]-hd1.png  Horizont und Fernsicht hinter Sol/Yol
+horizon-<landschaft>[-<richtung>][-day]-hd2.png  transparenter Vordergrund vor Sol/Yol
+```
+
+Bei Norden entfällt der Richtungszusatz, bei der Nachtpalette der Zusatz `-day`. Damit umfasst der
+Horizontbestand 12 Szenen × 2 Paletten × 3 Dateien, also 72 PNGs. `hd1` und `hd2` enthalten
+ausschließlich Pixel ihres jeweiligen Originals; ihre harten, komplementären Alphamasken setzen
+das Gesamtbild ohne eine einzige Pixelabweichung wieder zusammen. Tag und Nacht derselben Szene
+verwenden exakt dieselbe Alphamaske, sodass beim Themewechsel keine Kulissenkante springt. Alle
+Motive besitzen einen breiten, flachen Fernhorizont ohne falsche Gebirgswand. In der Nacht werden
 Sterne transparent vor `hd1`, Sol, Yol und ZEHS
 in der Mitte und eine sehr transparente Wolkenebene vor den Himmelskörpern gezeichnet. Im hellen
 Theme sind sämtliche dekorativen Sterne und Konstellationen vollständig ausgeblendet. Dadurch
-verschwinden die bewegten Körper sichtbar hinter Bergen, Gebäuden und Gelände von `hd2`, statt
+verschwinden die bewegten Körper sichtbar hinter nahen Gebäuden, Bögen und Gelände von `hd2`, statt
 nur über einem flachen Panorama zu schweben. Die Seitenbezeichnungen lauten:
 
 | Blickrichtung | links | rechts |
@@ -159,15 +172,16 @@ ein. Die astronomischen Positionen und Messwerte bleiben beim Themewechsel unver
 
 Bei 30° und 60° baut sich nach einer kurzen sichtbaren Verweildauer ein zusätzlicher
 Einstrahlungseffekt auf; am Polstand bei 0° bleibt er immer aus. Sol allein hellt das Panorama
-zunehmend warm auf. Yol allein färbt es zunehmend blau und erhält einen magischen Schimmer. Sind
+zunehmend warm auf. Yol allein färbt es in einem klareren Blau und erhält einen magischen Schimmer. Sind
 beide sichtbar, mischen sich warme und kalte Farbe mit einem stärkeren Glitzern. S-Intensität,
 Verweildauer und die relative Bewegung zu Era bestimmen die Stärke: exakt synchrone, scheinbar
 ortsfeste Läufe wirken am stärksten. 60° verwendet eine höhere Breitenverstärkung als 30°. Diese
-Regel gilt unverändert im Tag- und Nacht-Theme und wird bei der Konvektion vollständig deaktiviert.
-Eine 200-ms-Verlaufsspur zählt die sichtbare Verweildauer über Phasengrenzen hinweg weiter, solange
-der projizierte Körper sichtbar und räumlich stetig bleibt. Ein bloßer Phasenname setzt den Effekt
-daher nicht zurück. Warme und kühle Felder sowie das spektrale Rauschen werden hochauflösend und
-kontinuierlich statt als grobe Pixelkreuze gerendert.
+Regel gilt unverändert im Tag- und Nacht-Theme. Eine 200-ms-Hüllkurve führt den Effekt über jede
+Phasengrenze weiter, solange der projizierte Körper sichtbar bleibt; ein Phasenname setzt nichts
+zurück. Beim Untergang fällt die gespeicherte Wirkung mit einer langsamen 9-Sekunden-Zeitkonstante
+ab, statt hart auf null zu springen. Während der Konvektion entsteht keine neue Einstrahlung, eine
+noch vorhandene Wirkung klingt jedoch ebenfalls weich aus. Warme und kühle Felder sowie das
+spektrale Rauschen werden hochauflösend und kontinuierlich statt als grobe Pixelkreuze gerendert.
 
 Die Daten fließen in einer festen Reihenfolge:
 
@@ -177,8 +191,8 @@ getSnapshot(ms)
   → unveränderte Nordpol-Orbitansicht
   → Projektion derselben Punkte in den gewählten Horizontblick
   → additive Höhenkorrektur für Sol/Yol, invertierte Breitenkorrektur für ZEHS
-  → phasenübergreifende Verweildauerspur aus Sichtbarkeit und räumlicher Kontinuität
-  → deterministischer Einstrahlungsaufbau aus Verweildauer, S-Int und relativer Bewegung
+  → phasenübergreifende Hüllkurve aus Sichtbarkeit, langsamem Aufbau und langsamem Abbau
+  → deterministische Einstrahlung aus Hüllkurve, S-Int und relativer Bewegung
 ```
 
 Der Vorwärtsanteil eines Weltpunkts bestimmt Sichtbarkeit und Höhe, sein Rechtsanteil die
@@ -275,7 +289,7 @@ phases.js                   kanonische Phasenvorlagen plus illustrative Werteber
 app.js                      Seed, Zeitmodell, Geometrie, Projektion, Animation und Interaktion
 Textdatei.txt               kanonische Lore- und Zeitreferenz
 assets/fonts/               lokal eingebettete, offen lizenzierte Chronikschrift
-assets/images/              Astral-Wallpaper, Himmelskörper und 48 richtungsgenaue HD-Horizontebenen
+assets/images/              Astral-Wallpaper, Himmelskörper und 72 Tag-/Nacht-PNGs der zwölf 3:1-Horizontszenen
 tests/smoke.cjs             Fake-DOM-, Interaktions-, Kontinuitäts- und Geometrievertrag
 tests/visual-contract.cjs   statischer HD-, Ebenen-, Theme- und Gestaltungsvertrag
 tests/zehs-latitude-contract.cjs eigener Regressionstest für die umgekehrte ZEHS-Breitenkurve
@@ -296,7 +310,7 @@ Zeitfassung, Theme-Speicherung, Auto-Neuwürfeln, Kompass- und Breitensteuerung 
 Tastatur, Zustandsinvarianz bei Projektionswechseln, die invertierte ZEHS-Breitenhöhe, die
 synchrone 5,6°/s-Kopplung, die vollständige Sol-/Yol-Einstrahlungsmatrix, jede erzeugte
 Phasengrenze und mindestens 200 Geometriesnapshots. Dabei werden Winkel, Radialwerte,
-Horizontpunkte und Einstrahlungsverweildauer in allen Blickrichtungen und Breiten sowie die
+Horizontpunkte und die kontinuierliche Einstrahlungshüllkurve in allen Blickrichtungen und Breiten sowie die
 positionsgleiche Übergabe von Sol, Yol, ZEHS und Eras Rotation an den nächsten Vollzyklus geprüft.
 
 Der eigenständige ZEHS-Vertrag prüft die exakte Gegenkurve zu Sol und Yol sowie die Reihenfolge
@@ -305,9 +319,10 @@ Der eigenständige ZEHS-Vertrag prüft die exakte Gegenkurve zu Sol und Yol sowi
 Der visuelle Vertrag liest HTML, CSS und JavaScript statisch und dekodiert die RGBA-PNGs ohne
 Zusatzpaket. Er untersagt unter anderem `backdrop-filter`, Gauß-Weichzeichnung, Pillenradien, alte
 SVG-Verläufe, orbitale Richtungspfeile und die frühere horizontabhängige Skalierung orbitaler
-Y-Radien. Außerdem prüft er die präzisen Vektorbahnen, alle 48 richtungsgenauen Tag-/Nacht-Ebenen,
-vollständig sternfreie Tagespanoramen, pixelidentische Alphamasken, die feste
-Horizontebenen-Reihenfolge, den hochauflösenden Schimmer und den gemeinsamen Geometrievertrag.
+Y-Radien. Außerdem prüft er die präzisen Vektorbahnen, alle 48 Laufzeit-Panoramaslots, sämtliche
+24 kombinierten 3:1-Originale samt 48 RGBA-Ebenen, ihre pixelgenaue Rekonstruktion, identische
+Tag-/Nacht-Masken, eigenständige Tagespaletten, die feste Horizontebenen-Reihenfolge, den
+hochaufgelösten Schimmer und den gemeinsamen Geometrievertrag.
 
 ## Grenzen der Darstellung
 

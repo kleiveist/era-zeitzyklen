@@ -391,7 +391,8 @@ assert.deepEqual(
 );
 assert.ok(contract.IRRADIANCE_MODEL.delayMs > 0, "Einstrahlung beginnt erst nach einer Verweildauer");
 assert.equal(contract.IRRADIANCE_MODEL.sampleMs, 200, "Einstrahlung wird fein genug für einen glatten Verlauf abgetastet");
-assert.ok(contract.IRRADIANCE_MODEL.continuityThresholdPx > 0, "räumliche Kontinuität besitzt eine positive Toleranz");
+assert.ok(contract.IRRADIANCE_MODEL.buildupMs > contract.IRRADIANCE_MODEL.delayMs, "Einstrahlung baut sich langsam auf");
+assert.ok(contract.IRRADIANCE_MODEL.decayMs > 0, "Einstrahlung besitzt einen langsamen Abbau statt eines Rücksetzens");
 assert.equal(contract.HORIZON_PROJECTION_SCALE.celestial, 0.76, "alle Sol-/Yol-Phasen verwenden dieselbe Horizonthöhe");
 
 const stableIrradianceSnapshot = {
@@ -449,7 +450,7 @@ const crossPhaseIrradianceBefore = contract.getHorizonIrradiance(
   },
   bothVisibleProjection,
   60,
-  { solDwellMs: 10000, yolDwellMs: 10000 },
+  { solDwellMs: 10000, yolDwellMs: 10000, solEnvelope: 0.45, yolEnvelope: 0.45 },
 );
 const crossPhaseIrradianceAfter = contract.getHorizonIrradiance(
   {
@@ -460,7 +461,7 @@ const crossPhaseIrradianceAfter = contract.getHorizonIrradiance(
   },
   bothVisibleProjection,
   60,
-  { solDwellMs: 10200, yolDwellMs: 10200 },
+  { solDwellMs: 10200, yolDwellMs: 10200, solEnvelope: 0.46, yolEnvelope: 0.46 },
 );
 assert.ok(
   crossPhaseIrradianceAfter.solDwellMs > crossPhaseIrradianceBefore.solDwellMs,
@@ -473,6 +474,23 @@ assert.ok(
 assert.ok(
   crossPhaseIrradianceAfter.shimmer >= crossPhaseIrradianceBefore.shimmer,
   "der Schimmer addiert sich über eine unveränderte Phasengrenze weiter",
+);
+
+const settingIrradianceBefore = contract.getHorizonIrradiance(
+  stableIrradianceSnapshot,
+  { sol: { visible: true }, yol: { visible: false } },
+  60,
+  { solDwellMs: 12000, yolDwellMs: 0, solEnvelope: 0.6, yolEnvelope: 0 },
+);
+const settingIrradianceAfter = contract.getHorizonIrradiance(
+  stableIrradianceSnapshot,
+  { sol: { visible: false }, yol: { visible: false } },
+  60,
+  { solDwellMs: 0, yolDwellMs: 0, solEnvelope: 0.58, yolEnvelope: 0 },
+);
+assert.ok(
+  settingIrradianceAfter.sol > 0 && settingIrradianceAfter.sol < settingIrradianceBefore.sol,
+  "Sols Effekt bleibt beim Untergang erhalten und fällt ohne harten Cut ab",
 );
 
 const solOnlyIrradiance = contract.getHorizonIrradiance(
@@ -980,20 +998,20 @@ for (const direction of ["north", "east", "south", "west"]) {
           latitude,
           bodyName,
         );
-        const sampleDistance = Math.hypot(
-          before.projection.x - after.projection.x,
-          before.projection.y - after.projection.y,
-        );
         const dwellProperty = `${bodyName}DwellMs`;
+        const envelopeProperty = `${bodyName}Envelope`;
         if (
           before.visible &&
           after.visible &&
-          sampleDistance <= contract.IRRADIANCE_MODEL.continuityThresholdPx &&
-          historyBefore[dwellProperty] >= sampleMs
+          historyBefore[envelopeProperty] > 0
         ) {
           assert.ok(
             historyAfter[dwellProperty] >= historyBefore[dwellProperty],
             `${segmentIndex}/${bodyName}/${direction}/${latitude}: Verweildauer addiert sich über die Phasengrenze`,
+          );
+          assert.ok(
+            historyAfter[envelopeProperty] >= historyBefore[envelopeProperty],
+            `${segmentIndex}/${bodyName}/${direction}/${latitude}: Effekt wächst über die sichtbare Phasengrenze ohne Rücksetzen weiter`,
           );
           carriedIrradianceBoundaries += 1;
         }
@@ -1005,6 +1023,42 @@ assert.ok(
   carriedIrradianceBoundaries > 0,
   "reale Phasengrenzen mit unveränderter Sichtposition führen Einstrahlung weiter",
 );
+
+let smoothIrradianceSettings = 0;
+for (const direction of ["north", "east", "south", "west"]) {
+  for (const latitude of [30, 60]) {
+    for (
+      let afterSampleMs = contract.IRRADIANCE_MODEL.sampleMs;
+      afterSampleMs <= ERA_PHASES.config.presentationMs;
+      afterSampleMs += contract.IRRADIANCE_MODEL.sampleMs
+    ) {
+      const beforeSampleMs = afterSampleMs - contract.IRRADIANCE_MODEL.sampleMs;
+      const beforeHistory = contract.getIrradianceDwellAt(beforeSampleMs, direction, latitude);
+      const afterHistory = contract.getIrradianceDwellAt(afterSampleMs, direction, latitude);
+      for (const bodyName of ["sol", "yol"]) {
+        const before = projectedBodySample(beforeSampleMs, direction, latitude, bodyName);
+        const after = projectedBodySample(afterSampleMs, direction, latitude, bodyName);
+        const envelopeProperty = `${bodyName}Envelope`;
+        if (
+          before.visible &&
+          !after.visible &&
+          beforeHistory[envelopeProperty] > 0.01
+        ) {
+          assert.ok(
+            afterHistory[envelopeProperty] > 0,
+            `${bodyName}/${direction}/${latitude}: Untergang setzt den Effekt nicht auf null`,
+          );
+          assert.ok(
+            afterHistory[envelopeProperty] < beforeHistory[envelopeProperty],
+            `${bodyName}/${direction}/${latitude}: Untergang startet den langsamen Effektabbau`,
+          );
+          smoothIrradianceSettings += 1;
+        }
+      }
+    }
+  }
+}
+assert.ok(smoothIrradianceSettings > 0, "reale Sol-/Yol-Untergänge besitzen einen langsamen Effektabbau");
 
 const autoCycleButton = elementFor("#auto-cycle");
 autoCycleButton.emit("click");
