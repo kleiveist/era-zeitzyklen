@@ -1,4 +1,4 @@
-# Era – Zeitzyklen von Sol und Yol
+# Era – Zeitzyklen von Sol, Yol, Kor und Kor’s Shard
 
 Eine eigenständige HTML/CSS/JavaScript-Visualisierung der Zeitzyklen auf Era als modernes
 Pixel-Fantasy-Observatorium. Zwei hochauflösende, motivgleiche Astronomie-Wallpaper zeigen die
@@ -6,9 +6,11 @@ Welt im tiefen Sternenlicht beziehungsweise im hellen Astralmorgen. Harte Pixelr
 versetzte Schatten, Messingakzente und klare Instrumentenflächen halten beide Fassungen lesbar.
 
 Die kosmologische Hauptansicht zeigt Era exakt von oben auf den Nordpol. Sol und Yol bewegen
-sich auf vollständig sichtbaren, schematisch elliptischen Bahnen. Ein zweites Pixelpanorama
-projiziert denselben Zustand als lokalen Horizontverlauf nach Norden, Osten, Süden oder Westen.
-Beide Ansichten stammen aus demselben deterministischen Simulationssnapshot.
+sich auf vollständig sichtbaren, schematisch elliptischen Bahnen. Kor und Kor’s Shard bleiben
+als getrennt berechnetes Mondpaar auf großen, stark elliptischen Polbahnen eng beieinander.
+Ein zweites Pixelpanorama projiziert denselben 3D-Zustand als lokalen Horizontverlauf nach
+Norden, Osten, Süden oder Westen. Beide Ansichten stammen aus demselben deterministischen
+Simulationssnapshot.
 
 Der 46.080-Um-Konvektionszyklus kann entweder als sechsminütige Zeitfahrt erklärt oder mit
 exakt fünf realen Sekunden pro Um über 64 Stunden linear geprüft werden. Alle 18
@@ -46,6 +48,9 @@ Laufzeitabhängigkeiten.
   **Abschnitt**. Rauszoomen zeigt alle bereits geladenen Zyklen, die Zyklusansicht zeigt genau
   einen linearen 46.080-Um-Zyklus und die Detailansicht ein großes, fortschreitend gefülltes
   Phasen- oder Konvektionssiegel.
+- Ebenfalls nur im Prüfmodus öffnet die **Zyklusnummer** direkt einen der ersten 300 Zyklen.
+  **300er-Nordpolausrichtung** springt ohne Wartezeit in die gemeinsame Kor-/Kor’s-Shard-
+  Ausrichtung innerhalb der Konvektion des 300. Zyklus.
 - 1×, 1,5×, 2× und 4× verändern nur das Wiedergabetempo; das Zeitmodell bleibt gleich.
 - **Helles Pergament / Dunkle Chronik** wechselt das vollständige Pixel-Fantasy-Farbsystem. Jede
   der zwölf Biom-/Richtungsszenen besitzt eine eigene Tag- und Nachtpalette als verlustfrei
@@ -77,6 +82,20 @@ Die hochauflösende Himmelskarte kombiniert Sternenstaub, Tiefenwolken, entfernt
 Kartengitter und Sektormarkierungen mit Eras Flüssen, Eisfeldern, Gebirgsketten und kleinen
 Observatorien. Dunkle Chronik und Helles Pergament verwenden dafür jeweils eigenständige
 Himmels-, Planeten- und Instrumentenfarben.
+
+Kor und Kor’s Shard verwenden getrennte 3D-Zustände `{x, y, z}`, unterschiedliche illustrative
+Halbachsen, Exzentrizitäten und leicht versetzte Bahnknoten. Sie werden dennoch als enges Paar
+geführt. Die polare Bahn liegt ungefähr 90° zur Sol-/Yol-Ebene und erscheint in der direkten
+Nordpolansicht deshalb als schmale Durchmesserbahn statt als zusätzlicher breiter Ring. Volle
+Linien markieren den nordwärts vor Era liegenden Abschnitt; gestrichelte Linien den rückwärtigen
+Abschnitt. Rückwärtige Mondkörper werden hinter Era verdeckt. Die konkrete Bahnparametrisierung
+ist ein reproduzierbares Anschauungsmodell und kein neuer Kanonwert.
+
+Die analytische Kepler-Lösung macht beide Körper nahe Era schneller und in großer Entfernung
+langsamer. Ein 301-zu-300-Modell verschiebt ihre Nähefenster von Zyklus zu Zyklus und richtet
+beide im 300. Zyklus bei Um 45.880 gleichzeitig nordwärts aus. Diese Lage ist eine
+Darstellungsentscheidung innerhalb der bestätigten 400-Um-Konvektion, kein festgeschriebener
+kanonischer Einzelzeitpunkt.
 
 Ein cyanfarbener Breitenring zeigt den gewählten Beobachterkreis direkt auf Era. Beim bisherigen
 Polstand bleibt er als kleiner Polring sichtbar; bei 30° und 60° wächst er entsprechend nach
@@ -155,7 +174,8 @@ für die polare Eiswelt und vier etwas dichtere Varianten für das gemäßigte B
 bewusst keine Wolkenebene. Im hellen
 Theme sind sämtliche dekorativen Sterne und Konstellationen vollständig ausgeblendet. Dadurch
 verschwinden die bewegten Körper sichtbar hinter nahen Gebäuden, Bögen und Gelände von `hd2`, statt
-nur über einem flachen Panorama zu schweben. Im Horizontbild selbst bleiben Sol, Yol und ZEHS
+nur über einem flachen Panorama zu schweben. Im Horizontbild selbst bleiben Sol, Yol, Kor,
+Kor’s Shard und ZEHS
 unbeschriftet; ihre Namen sind bereits im astralen Weltzustand zu sehen. Die drei Nordpanoramen
 erhalten ausschließlich im dunklen Theme einen eigenen Helligkeitsausgleich, damit Polar,
 Gemäßigt und Wüste zu den übrigen Blickrichtungen passen. Die Seitenbezeichnungen lauten:
@@ -273,6 +293,13 @@ Die Anwendung hält zwei Zeitprofile bewusst auseinander:
 | 6-Minuten-Zeitfahrt · Erklärmodus | semantisch, abschnittsweise komprimiert | 6:00 | didaktisch vergrößert auf 0:32 |
 | 5 s/Um · Prüfmodus | linear, 0,2 Um pro Sekunde | 64:00:00 = 2 Tage 16 Stunden | 0:33:20 |
 
+Die ausführlichen Verträge stehen als eigenständige Dokumente bereit:
+
+- [Prüfmodus mit 5 Sekunden pro Um](docs/00-zeitdarstellung/pruefmodus-5-sekunden-pro-um.md)
+- [Erklärmodus als Sechs-Minuten-Zeitfahrt](docs/00-zeitdarstellung/erklaermodus-sechs-minuten.md)
+- [Zeitbeispiel für beide Darstellungsmodi](docs/00-zeitdarstellung/zeitbeispiel-beide-zeitmodi.md)
+- [Technische Umsetzung der Zeitmodi](docs/00-zeitdarstellung/technische-umsetzung-zeitmodi.md)
+
 Im Prüfmodus ergeben fünf Sekunden genau 1 Um und eine vollständige Era-Rotation. Nach sechs
 Minuten sind erst 72 Um beziehungsweise 0,15625 % des Zyklus vergangen. Die letzten 400 Um sind
 bereits Teil der 46.080 Um: Die Konvektion beginnt nach 45.680 Um bei `63:26:40` und endet
@@ -287,8 +314,8 @@ Sonnenwinkel noch Strahlungsintensität. Der lokale Kalenderwert in der Oberflä
 **Zyklusfortschritt** und wird ausschließlich aus den vergangenen Um geteilt durch 46.080
 berechnet.
 
-Kalender, Era-Rotation, Sol, Yol, Orbit und Horizont entstehen pro Bild aus genau demselben
-Snapshot. Die Animation addiert keinen festen Winkel pro Frame: `requestAnimationFrame` dient
+Kalender, Era-Rotation, Sol, Yol, Kor, Kor’s Shard, Orbit und Horizont entstehen pro Bild aus
+genau demselben Snapshot. Die Animation addiert keinen festen Winkel pro Frame: `requestAnimationFrame` dient
 nur zum Rendern, während ein monotoner Zeitstempelanker die verstrichene Moduszeit bestimmt.
 Browserdrosselung oder unterschiedliche Bildraten verlieren daher keine Weltzeit.
 
@@ -341,6 +368,17 @@ respektiert. Das Layout ordnet Phasenbibliothek, Kosmologie und Instrumententafe
 Bildschirmen nebeneinander und auf kleinen Displays ohne horizontalen Seiten-Scroll logisch
 untereinander an.
 
+## Dokumentation
+
+Der [Dokumentationsindex](docs/index.md) trennt Kosmologie, kanonische
+Zeitrechnung, Webseitendarstellung, technische Umsetzung und vorgeschlagenes
+Gameplay-Balancing. Hinweise zu Statuswerten, Quellenhierarchie und Pflege
+stehen in [docs/README.md](docs/README.md). Der Einstieg in sämtliche
+Zeitdokumente erfolgt über den
+[Index der Zeitdarstellung](docs/00-zeitdarstellung/index.md).
+Der eigene [Kor-/Kor’s-Shard-Vertrag](docs/00-kosmologie/KOR-UND-KORS-SHARD.md)
+trennt bestätigte Mondlogik von den illustrativen Web-Bahnparametern.
+
 ## Dateien
 
 ```text
@@ -350,23 +388,28 @@ favicon.svg                 lokales Pixel-Siegel für den Browser-Tab
 phases.js                   kanonische Phasenvorlagen plus illustrative Wertebereiche
 app.js                      Seed, Zeitmodell, Geometrie, Projektion, Animation und Interaktion
 Textdatei.txt               kanonische Lore- und Zeitreferenz
+docs/index.md               Einstieg in Kosmologie und Zeitdarstellung
+docs/README.md              Dokumentklassen, Quellenhierarchie und Pflegeregeln
+docs/00-zeitdarstellung/    getrennte Kanon-, Beispiel-, Modus- und Technikdokumente
 assets/fonts/               lokal eingebettete, offen lizenzierte Chronikschrift
-assets/images/              Astral-Wallpaper, Himmelskörper und 72 Tag-/Nacht-PNGs der zwölf 3:1-Horizontszenen
+assets/images/              Astral-Wallpaper, Himmelskörper-Assets, 72 Panorama-PNGs und acht Wolken-Overlays
 tests/smoke.cjs             Fake-DOM-, Interaktions-, Kontinuitäts- und Geometrievertrag
 tests/time-mode-contract.cjs exakter 5-s/Um-, 64-h-, Synchronitäts- und Timeline-Zoom-Vertrag
 tests/visual-contract.cjs   statischer HD-, Ebenen-, Theme- und Gestaltungsvertrag
 tests/zehs-latitude-contract.cjs eigener Regressionstest für die umgekehrte ZEHS-Breitenkurve
+tests/moon-contract.cjs      3D-Polbahn-, Paar-, Entfernungs- und 300er-Ereignisvertrag
 ```
 
 ## Tests
 
-Die vier Tests benötigen nur eine vorhandene Node.js-Laufzeit und keine zusätzlichen Pakete:
+Die fünf Tests benötigen nur eine vorhandene Node.js-Laufzeit und keine zusätzlichen Pakete:
 
 ```bash
 node tests/smoke.cjs
 node tests/time-mode-contract.cjs
 node tests/visual-contract.cjs
 node tests/zehs-latitude-contract.cjs
+node tests/moon-contract.cjs
 ```
 
 Der Smoke-Test prüft unter anderem alle 18 Vorlagen, Seed-Reproduzierbarkeit, die sechsminütige
@@ -385,6 +428,11 @@ reproduzierbare Folgeseeds, Moduswechsel am selben Um-Stand sowie alle drei Time
 Der eigenständige ZEHS-Vertrag prüft die exakte Gegenkurve zu Sol und Yol sowie die Reihenfolge
 0° am höchsten, 30° mittig und 60° am flachsten in allen vier Horizontblickrichtungen.
 
+Der Mondvertrag prüft getrennte kontinuierliche 3D-Zustände, die enge Paarführung, je ein
+verschobenes Nähefenster pro Zyklus, schnellere Periapsisbewegung, entfernungsabhängige Größe,
+den fast unsichtbaren Horizontuntergang, stetige Zyklusgrenzen und die gemeinsame
+Nordpolausrichtung in der Konvektion des 300. Zyklus.
+
 Der visuelle Vertrag liest HTML, CSS und JavaScript statisch und dekodiert die RGBA-PNGs ohne
 Zusatzpaket. Er untersagt unter anderem `backdrop-filter`, Gauß-Weichzeichnung, Pillenradien, alte
 SVG-Verläufe, orbitale Richtungspfeile und die frühere horizontabhängige Skalierung orbitaler
@@ -401,5 +449,5 @@ hochaufgelösten Schimmer und den gemeinsamen Geometrievertrag.
 - ZEHS bleibt ein visueller Referenzpunkt; 1 Um bezeichnet eine vollständige Era-Rotation.
 - Während der Konvektion sind Sol und Yol unsichtbar. `S-Int 0` wird nicht verwendet, da die
   dokumentierte Skala bei 1 beginnt.
-- Polare Besonderheiten sind Lore-Kontext, aber kein eigener Sonnenlauf und daher nicht als
-  zusätzliche Phasenvorlage modelliert.
+- Kor und Kor’s Shard sind ein eigenes illustratives Mondbahnmodell, aber keine zusätzlichen
+  Sol-/Yol-Phasenvorlagen und keine Quelle neuer kanonischer Orbitalzahlen.

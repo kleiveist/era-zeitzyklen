@@ -110,6 +110,41 @@
     modelStatus: "Weltenlogik · schematische Darstellung",
     worldPoint: Object.freeze({ x: 756, y: 68 }),
   });
+  const MOON_ORBIT_MODEL = Object.freeze({
+    modelStatus: "Illustratives Bahnmodell · keine kanonischen Orbitalzahlen",
+    supercycleLength: 300,
+    revolutionsPerSupercycle: 301,
+    alignmentCycleNumber: 300,
+    alignmentCycleUm: config.regularUm + config.convectionDurationUm / 2,
+    bodies: Object.freeze({
+      kor: Object.freeze({
+        id: "kor",
+        name: "Kor",
+        semiMajor: 420,
+        eccentricity: 0.78,
+        nodeDegrees: 22,
+        phaseCouplingRadians: 0,
+        minimumVisualScale: 0.1,
+        maximumVisualScale: 1.14,
+        distanceExponent: 0.92,
+        baseVisualRadius: 39,
+        mapNudge: Object.freeze({ x: -7, y: 5 }),
+      }),
+      korsShard: Object.freeze({
+        id: "korsShard",
+        name: "Kor's Shard",
+        semiMajor: 438,
+        eccentricity: 0.79,
+        nodeDegrees: 25,
+        phaseCouplingRadians: 0.018,
+        minimumVisualScale: 0.09,
+        maximumVisualScale: 1.06,
+        distanceExponent: 0.94,
+        baseVisualRadius: 29,
+        mapNudge: Object.freeze({ x: 8, y: -5 }),
+      }),
+    }),
+  });
   const HORIZON_PROJECTION_SCALE = Object.freeze({
     celestial: 0.76,
     zehs: 0.88,
@@ -137,8 +172,14 @@
     orbitDescription: document.querySelector("#orbit-description"),
     orbitSolTracks: document.querySelectorAll(".orbit-sol-track"),
     orbitYolTracks: document.querySelectorAll(".orbit-yol-track"),
+    korOrbitRear: document.querySelector("#kor-orbit-rear"),
+    korOrbitFront: document.querySelector("#kor-orbit-front"),
+    korsShardOrbitRear: document.querySelector("#kors-shard-orbit-rear"),
+    korsShardOrbitFront: document.querySelector("#kors-shard-orbit-front"),
     solBody: document.querySelector("#sol-body"),
     yolBody: document.querySelector("#yol-body"),
+    korBody: document.querySelector("#kor-body"),
+    korsShardBody: document.querySelector("#kors-shard-body"),
     solDisc: document.querySelector("#sol-disc"),
     yolDisc: document.querySelector("#yol-disc"),
     solHalo: document.querySelector("#sol-halo"),
@@ -174,6 +215,8 @@
     horizonDescription: document.querySelector("#horizon-description"),
     horizonSolBody: document.querySelector("#horizon-sol-body"),
     horizonYolBody: document.querySelector("#horizon-yol-body"),
+    horizonKorBody: document.querySelector("#horizon-kor-body"),
+    horizonKorsShardBody: document.querySelector("#horizon-kors-shard-body"),
     horizonZehsStar: document.querySelector("#horizon-zehs-star"),
     horizonLeftLabel: document.querySelector("#horizon-left-label"),
     horizonCenterLabel: document.querySelector("#horizon-center-label"),
@@ -210,6 +253,9 @@
     timelineZoomLevel: document.querySelector("#timeline-zoom-level"),
     previousCycle: document.querySelector("#previous-cycle"),
     nextCycle: document.querySelector("#next-cycle"),
+    cycleJumpInput: document.querySelector("#cycle-jump-input"),
+    cycleJump: document.querySelector("#cycle-jump"),
+    moonAlignmentJump: document.querySelector("#moon-alignment-jump"),
     timeSlider: document.querySelector("#time-slider"),
     playToggle: document.querySelector("#play-toggle"),
     playIcon: document.querySelector("#play-icon"),
@@ -487,11 +533,150 @@
     return clamp(Math.ceil(clamp(safeIntensity, 1, 10) / 2), 1, 5);
   }
 
-  function getBodyVisualRadius(intensity, bodyName) {
+  function getBodyVisualRadius(intensity, bodyName, visualScale = 1) {
     if (intensity === null || intensity === undefined) return 0;
     const tier = getIntensityTier(intensity);
     const baseRadius = bodyName === "yol" ? 13 : 14;
-    return Math.min(ORBIT_GEOMETRY.maxVisualBodyRadius, baseRadius + tier * 4);
+    const scale = clamp(Number(visualScale) || 1, 0.01, 2);
+    return Math.min(
+      ORBIT_GEOMETRY.maxVisualBodyRadius * scale,
+      (baseRadius + tier * 4) * scale,
+    );
+  }
+
+  function normalizeRadians(value) {
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) return 0;
+    const fullTurn = Math.PI * 2;
+    return ((numericValue + Math.PI) % fullTurn + fullTurn) % fullTurn - Math.PI;
+  }
+
+  function solveEccentricAnomaly(meanAnomaly, eccentricity) {
+    const mean = normalizeRadians(meanAnomaly);
+    const safeEccentricity = clamp(Number(eccentricity) || 0, 0, 0.95);
+    let anomaly = safeEccentricity < 0.8
+      ? mean
+      : mean === 0
+        ? 0
+        : Math.sign(mean) * Math.PI;
+    for (let iteration = 0; iteration < 10; iteration += 1) {
+      const residual = anomaly - safeEccentricity * Math.sin(anomaly) - mean;
+      const derivative = 1 - safeEccentricity * Math.cos(anomaly);
+      anomaly -= residual / Math.max(0.000001, derivative);
+    }
+    return anomaly;
+  }
+
+  function getMoonOrbitState(absoluteWorldUm, bodyName) {
+    const parameters = MOON_ORBIT_MODEL.bodies[bodyName];
+    if (!parameters) throw new Error(`Unbekannter Mondkörper: ${bodyName}`);
+    const worldUm = Number.isFinite(Number(absoluteWorldUm)) ? Number(absoluteWorldUm) : 0;
+    const alignmentAbsoluteUm =
+      (MOON_ORBIT_MODEL.alignmentCycleNumber - 1) * config.totalUm +
+      MOON_ORBIT_MODEL.alignmentCycleUm;
+    const supercycleUm = config.totalUm * MOON_ORBIT_MODEL.supercycleLength;
+    const meanMotion =
+      (Math.PI * 2 * MOON_ORBIT_MODEL.revolutionsPerSupercycle) / supercycleUm;
+    const supercycleAngle =
+      ((worldUm - alignmentAbsoluteUm) / supercycleUm) * Math.PI * 2;
+    const coupledOffset = parameters.phaseCouplingRadians * Math.sin(supercycleAngle);
+    const meanAnomaly = normalizeRadians(
+      (worldUm - alignmentAbsoluteUm) * meanMotion + coupledOffset,
+    );
+    const eccentricAnomaly = solveEccentricAnomaly(
+      meanAnomaly,
+      parameters.eccentricity,
+    );
+    const semiMinor =
+      parameters.semiMajor * Math.sqrt(1 - parameters.eccentricity ** 2);
+    const nodeRadians = (parameters.nodeDegrees * Math.PI) / 180;
+    const transverseDistance = semiMinor * Math.sin(eccentricAnomaly);
+    const polarDistance =
+      parameters.semiMajor *
+      (Math.cos(eccentricAnomaly) - parameters.eccentricity);
+    const worldPosition = Object.freeze({
+      x: transverseDistance * Math.cos(nodeRadians),
+      y: transverseDistance * Math.sin(nodeRadians),
+      z: polarDistance,
+    });
+    const distance = Math.hypot(
+      worldPosition.x,
+      worldPosition.y,
+      worldPosition.z,
+    );
+    const minimumDistance = parameters.semiMajor * (1 - parameters.eccentricity);
+    const maximumDistance = parameters.semiMajor * (1 + parameters.eccentricity);
+    const distanceNormalized = clamp(
+      (distance - minimumDistance) / (maximumDistance - minimumDistance),
+      0,
+      1,
+    );
+    const apparentScale = clamp(
+      parameters.maximumVisualScale *
+        Math.pow(minimumDistance / Math.max(minimumDistance, distance), parameters.distanceExponent),
+      parameters.minimumVisualScale,
+      parameters.maximumVisualScale,
+    );
+    const trueAnomaly = Math.atan2(
+      Math.sqrt(1 - parameters.eccentricity ** 2) * Math.sin(eccentricAnomaly),
+      Math.cos(eccentricAnomaly) - parameters.eccentricity,
+    );
+    const trueAngularVelocityPerUm =
+      (meanMotion * Math.sqrt(1 - parameters.eccentricity ** 2)) /
+      (1 - parameters.eccentricity * Math.cos(eccentricAnomaly)) ** 2;
+    const cycleIndex = Math.max(0, Math.floor(worldUm / config.totalUm));
+    const cycleUm = ((worldUm % config.totalUm) + config.totalUm) % config.totalUm;
+    const alignmentCycle = (cycleIndex + 1) % MOON_ORBIT_MODEL.supercycleLength === 0;
+
+    return Object.freeze({
+      id: parameters.id,
+      name: parameters.name,
+      orbitPlane: "polar",
+      worldPosition,
+      distance,
+      minimumDistance,
+      maximumDistance,
+      distanceNormalized,
+      nearFactor: 1 - distanceNormalized,
+      apparentScale,
+      meanAnomaly,
+      eccentricAnomaly,
+      trueAnomaly,
+      trueAngularVelocityPerUm,
+      depth: worldPosition.z >= 0 ? "front" : "rear",
+      visible: true,
+      cycleIndex,
+      cycleUm,
+      alignmentCycle,
+      northAlignment:
+        worldPosition.z > 0 && Math.hypot(worldPosition.x, worldPosition.y) < 0.001,
+      modelStatus: MOON_ORBIT_MODEL.modelStatus,
+    });
+  }
+
+  function getCelestialDistanceScale(distanceNormalized) {
+    return interpolate(1.25, 0.55, smoothstep(distanceNormalized));
+  }
+
+  function getMoonMapPoint(moonState, bodyName) {
+    const parameters = MOON_ORBIT_MODEL.bodies[bodyName];
+    const position = moonState?.worldPosition || { x: 0, y: 0, z: 0 };
+    const rawX = ORBIT_GEOMETRY.centerX + Number(position.x || 0);
+    const rawY = ORBIT_GEOMETRY.centerY + Number(position.y || 0);
+    const projectedDistance = Math.hypot(
+      rawX - ORBIT_GEOMETRY.centerX,
+      rawY - ORBIT_GEOMETRY.centerY,
+    );
+    const nudgeStrength = 1 - smoothstep(projectedDistance / 52);
+    return Object.freeze({
+      x: rawX + parameters.mapNudge.x * nudgeStrength,
+      y: rawY + parameters.mapNudge.y * nudgeStrength,
+      projectedDistance,
+      depth: moonState.depth,
+      distance: moonState.distance,
+      distanceNormalized: moonState.distanceNormalized,
+      apparentScale: moonState.apparentScale,
+    });
   }
 
   function ensureOrbitClearance(point, visualRadius) {
@@ -565,14 +750,36 @@
       -orbit.maxRadialOffset,
       orbit.maxRadialOffset,
     );
-    const point = {
+    const physicalPoint = {
       x: ORBIT_GEOMETRY.centerX + baseX + (baseX / baseDistance) * radialOffset,
       y: ORBIT_GEOMETRY.centerY + baseY + (baseY / baseDistance) * radialOffset,
     };
-    return ensureOrbitClearance(
-      point,
+    const distance = Math.hypot(
+      physicalPoint.x - ORBIT_GEOMETRY.centerX,
+      physicalPoint.y - ORBIT_GEOMETRY.centerY,
+    );
+    const minimumDistance = Math.max(
+      1,
+      Math.min(orbit.radiusX, orbit.radiusY) - orbit.maxRadialOffset,
+    );
+    const maximumDistance = Math.max(orbit.radiusX, orbit.radiusY) + orbit.maxRadialOffset;
+    const distanceNormalized = clamp(
+      (distance - minimumDistance) / (maximumDistance - minimumDistance),
+      0,
+      1,
+    );
+    const clearedPoint = ensureOrbitClearance(
+      physicalPoint,
       getBodyVisualRadius(bodySnapshot.intensity, bodyName),
     );
+    return Object.freeze({
+      ...clearedPoint,
+      distance,
+      minimumDistance,
+      maximumDistance,
+      distanceNormalized,
+      apparentScale: getCelestialDistanceScale(distanceNormalized),
+    });
   }
 
   function getViewBasis(directionId, eraRotationDegrees) {
@@ -632,6 +839,138 @@
       ),
       latitudeLift,
       heightScale,
+      distance: Number.isFinite(Number(point?.distance)) ? Number(point.distance) : distance,
+      distanceNormalized: clamp(Number(point?.distanceNormalized) || 0, 0, 1),
+      apparentScale: clamp(Number(point?.apparentScale) || 1, 0.05, 2),
+    });
+  }
+
+  function getMoonObserverBasis(directionId, eraRotationDegrees, latitudeDegrees) {
+    const direction = HORIZON_DIRECTIONS[directionId] || HORIZON_DIRECTIONS.north;
+    const colatitude =
+      (normalizeHorizonLatitude(latitudeDegrees) * Math.PI) / 180;
+    const longitude = (normalizeDegrees(eraRotationDegrees) * Math.PI) / 180;
+    const surfaceNormal = Object.freeze({
+      x: Math.sin(colatitude) * Math.cos(longitude),
+      y: Math.sin(colatitude) * Math.sin(longitude),
+      z: Math.cos(colatitude),
+    });
+    const north = Object.freeze({
+      x: -Math.cos(colatitude) * Math.cos(longitude),
+      y: -Math.cos(colatitude) * Math.sin(longitude),
+      z: Math.sin(colatitude),
+    });
+    const east = Object.freeze({
+      x: -Math.sin(longitude),
+      y: Math.cos(longitude),
+      z: 0,
+    });
+    const heading = direction.id === "east"
+      ? east
+      : direction.id === "south"
+        ? Object.freeze({ x: -north.x, y: -north.y, z: -north.z })
+        : direction.id === "west"
+          ? Object.freeze({ x: -east.x, y: -east.y, z: 0 })
+          : north;
+    const right = Object.freeze({
+      x: heading.y * surfaceNormal.z - heading.z * surfaceNormal.y,
+      y: heading.z * surfaceNormal.x - heading.x * surfaceNormal.z,
+      z: heading.x * surfaceNormal.y - heading.y * surfaceNormal.x,
+    });
+    return Object.freeze({ direction, surfaceNormal, heading, right });
+  }
+
+  function projectMoonToHorizon(
+    moonState,
+    directionId,
+    eraRotationDegrees,
+    latitudeDegrees,
+  ) {
+    const position = moonState?.worldPosition || { x: 0, y: 0, z: -1 };
+    const distance = Math.max(
+      0.000001,
+      Math.hypot(position.x, position.y, position.z),
+    );
+    const direction = {
+      x: position.x / distance,
+      y: position.y / distance,
+      z: position.z / distance,
+    };
+    const basis = getMoonObserverBasis(
+      directionId,
+      eraRotationDegrees,
+      latitudeDegrees,
+    );
+    const altitude = clamp(
+      direction.x * basis.surfaceNormal.x +
+        direction.y * basis.surfaceNormal.y +
+        direction.z * basis.surfaceNormal.z,
+      -1,
+      1,
+    );
+    const forward = clamp(
+      direction.x * basis.heading.x +
+        direction.y * basis.heading.y +
+        direction.z * basis.heading.z,
+      -1,
+      1,
+    );
+    const right = clamp(
+      direction.x * basis.right.x +
+        direction.y * basis.right.y +
+        direction.z * basis.right.z,
+      -1,
+      1,
+    );
+    const horizontalMagnitude = Math.hypot(forward, right);
+    const facingVisible = horizontalMagnitude < 0.02 || forward >= -0.000001;
+    const aboveHorizon = altitude >= -0.000001;
+    const visible = Boolean(moonState?.visible) && aboveHorizon && facingVisible;
+    const horizonFade = smoothstep(clamp((altitude + 0.004) / 0.2, 0, 1));
+    const altitudeHeight =
+      Math.pow(Math.max(0, altitude), 0.72) * HORIZON_GEOMETRY.maxSkyHeight;
+    const sideAmount = horizontalMagnitude > 0.000001
+      ? clamp(right / horizontalMagnitude, -1, 1)
+      : 0;
+    const visualScale = clamp(
+      moonState.apparentScale * interpolate(0.04, 1, horizonFade),
+      0.02,
+      MOON_ORBIT_MODEL.bodies[moonState.id].maximumVisualScale,
+    );
+    const distanceOpacity = smoothstep(
+      1 - clamp(moonState.distanceNormalized, 0, 1),
+    );
+    const opacity = clamp(
+      interpolate(0.06, 1, distanceOpacity) * interpolate(0.08, 1, horizonFade),
+      0.01,
+      1,
+    );
+
+    return Object.freeze({
+      x: clamp(
+        HORIZON_GEOMETRY.centerX + sideAmount * HORIZON_GEOMETRY.usableHalfWidth,
+        0,
+        HORIZON_GEOMETRY.width,
+      ),
+      y: clamp(
+        HORIZON_GEOMETRY.horizonY - altitudeHeight,
+        0,
+        HORIZON_GEOMETRY.height,
+      ),
+      visible,
+      aboveHorizon,
+      facingVisible,
+      altitude,
+      forward,
+      right,
+      height: altitudeHeight,
+      latitudeDegrees: normalizeHorizonLatitude(latitudeDegrees),
+      distance: moonState.distance,
+      distanceNormalized: moonState.distanceNormalized,
+      apparentScale: moonState.apparentScale,
+      visualScale,
+      opacity,
+      horizonFade,
     });
   }
 
@@ -1453,6 +1792,8 @@
       };
     }
 
+    const absoluteWorldUm = cycleIndex * config.totalUm + cycleUm;
+
     return {
       ms: boundedMs,
       timeMode,
@@ -1463,11 +1804,13 @@
       template,
       progress,
       cycleUm,
-      absoluteWorldUm: cycleIndex * config.totalUm + cycleUm,
+      absoluteWorldUm,
       cycleProgress: cycleUm / config.totalUm,
       positionMs,
       sol: bodySnapshot("sol"),
       yol: bodySnapshot("yol"),
+      kor: getMoonOrbitState(absoluteWorldUm, "kor"),
+      korsShard: getMoonOrbitState(absoluteWorldUm, "korsShard"),
     };
   }
 
@@ -1504,12 +1847,20 @@
     return `${segment.umStart.toLocaleString("de-DE")}–${segment.umEnd.toLocaleString("de-DE")} Um · ${duration.toLocaleString("de-DE")} Um`;
   }
 
-  function setBodyElementState(element, bodySnapshot, bodyName, point, visible) {
+  function setBodyElementState(
+    element,
+    bodySnapshot,
+    bodyName,
+    point,
+    visible,
+    options = {},
+  ) {
     if (!element) return;
     const intensityTier = getIntensityTier(bodySnapshot.intensity);
+    const visualScale = clamp(Number(options.visualScale) || 1, 0.02, 2);
     element.setAttribute(
       "transform",
-      `translate(${Math.round(point.x)} ${Math.round(point.y)})`,
+      `translate(${point.x.toFixed(2)} ${point.y.toFixed(2)}) scale(${visualScale.toFixed(4)})`,
     );
     element.setAttribute("data-intensity-tier", String(intensityTier));
     element.setAttribute("data-source-angle", normalizeDegrees(bodySnapshot.angle).toFixed(3));
@@ -1518,10 +1869,59 @@
     element.setAttribute("data-world-y", point.y.toFixed(3));
     element.setAttribute(
       "data-visual-radius",
-      getBodyVisualRadius(bodySnapshot.intensity, bodyName).toFixed(3),
+      getBodyVisualRadius(bodySnapshot.intensity, bodyName, visualScale).toFixed(3),
+    );
+    element.setAttribute("data-apparent-scale", visualScale.toFixed(4));
+    element.setAttribute(
+      "data-distance-normalized",
+      clamp(Number(point?.distanceNormalized) || 0, 0, 1).toFixed(6),
     );
     element.setAttribute("aria-hidden", String(!visible));
     element.style.opacity = visible ? "1" : "0";
+    element.style.visibility = visible ? "visible" : "hidden";
+  }
+
+  function setMoonElementState(
+    element,
+    moonState,
+    bodyName,
+    point,
+    visible,
+    options = {},
+  ) {
+    if (!element) return;
+    const parameters = MOON_ORBIT_MODEL.bodies[bodyName];
+    const visualScale = clamp(
+      Number(options.visualScale) || moonState.apparentScale,
+      0.01,
+      parameters.maximumVisualScale,
+    );
+    const opacity = visible
+      ? clamp(Number(options.opacity) || 0.01, 0.01, 1)
+      : 0;
+    element.setAttribute(
+      "transform",
+      `translate(${point.x.toFixed(2)} ${point.y.toFixed(2)}) scale(${visualScale.toFixed(4)})`,
+    );
+    element.setAttribute("data-body", bodyName);
+    element.setAttribute("data-depth", moonState.depth);
+    element.setAttribute("data-world-x", moonState.worldPosition.x.toFixed(6));
+    element.setAttribute("data-world-y", moonState.worldPosition.y.toFixed(6));
+    element.setAttribute("data-world-z", moonState.worldPosition.z.toFixed(6));
+    element.setAttribute("data-distance", moonState.distance.toFixed(6));
+    element.setAttribute(
+      "data-distance-normalized",
+      moonState.distanceNormalized.toFixed(6),
+    );
+    element.setAttribute("data-apparent-scale", visualScale.toFixed(4));
+    element.setAttribute(
+      "data-visual-radius",
+      (parameters.baseVisualRadius * visualScale).toFixed(3),
+    );
+    element.setAttribute("data-orbit-plane", moonState.orbitPlane);
+    element.setAttribute("data-model-status", moonState.modelStatus);
+    element.setAttribute("aria-hidden", String(!visible));
+    element.style.opacity = opacity.toFixed(4);
     element.style.visibility = visible ? "visible" : "hidden";
   }
 
@@ -1561,6 +1961,66 @@
     );
   }
 
+  function buildMoonOrbitPath(bodyName, depth) {
+    const parameters = MOON_ORBIT_MODEL.bodies[bodyName];
+    const semiMinor =
+      parameters.semiMajor * Math.sqrt(1 - parameters.eccentricity ** 2);
+    const nodeRadians = (parameters.nodeDegrees * Math.PI) / 180;
+    const commands = [];
+    let drawing = false;
+    const steps = 160;
+    for (let index = 0; index <= steps; index += 1) {
+      const eccentricAnomaly = (index / steps) * Math.PI * 2;
+      const transverseDistance = semiMinor * Math.sin(eccentricAnomaly);
+      const polarDistance =
+        parameters.semiMajor *
+        (Math.cos(eccentricAnomaly) - parameters.eccentricity);
+      const matchesDepth = depth === "front"
+        ? polarDistance >= 0
+        : polarDistance < 0;
+      if (!matchesDepth) {
+        drawing = false;
+        continue;
+      }
+      const x =
+        ORBIT_GEOMETRY.centerX + transverseDistance * Math.cos(nodeRadians);
+      const y =
+        ORBIT_GEOMETRY.centerY + transverseDistance * Math.sin(nodeRadians);
+      commands.push(`${drawing ? "L" : "M"}${x.toFixed(2)} ${y.toFixed(2)}`);
+      drawing = true;
+    }
+    return commands.join(" ");
+  }
+
+  function updateMoonOrbitPaths() {
+    const paths = [
+      [elements.korOrbitRear, "kor", "rear"],
+      [elements.korOrbitFront, "kor", "front"],
+      [elements.korsShardOrbitRear, "korsShard", "rear"],
+      [elements.korsShardOrbitFront, "korsShard", "front"],
+    ];
+    for (const [element, bodyName, depth] of paths) {
+      if (!element) continue;
+      element.setAttribute("d", buildMoonOrbitPath(bodyName, depth));
+      element.setAttribute("data-depth", depth);
+      element.setAttribute("data-model-status", MOON_ORBIT_MODEL.modelStatus);
+    }
+  }
+
+  function getMoonMapOpacity(moonState) {
+    const distanceStrength = smoothstep(1 - moonState.distanceNormalized);
+    const depthStrength = moonState.depth === "rear" ? 0.44 : 1;
+    return clamp(interpolate(0.11, 1, distanceStrength) * depthStrength, 0.04, 1);
+  }
+
+  function isMoonOccludedByEra(moonState, mapPoint, bodyName) {
+    if (moonState.depth !== "rear") return false;
+    const parameters = MOON_ORBIT_MODEL.bodies[bodyName];
+    const projectedRadius =
+      parameters.baseVisualRadius * moonState.apparentScale * 0.42;
+    return mapPoint.projectedDistance < ORBIT_GEOMETRY.eraRadius + projectedRadius;
+  }
+
   function createFrameProjection(point, viewBasis, snapshot, bodyName) {
     const projection = projectOrbitPointToHorizon(
       point,
@@ -1578,7 +2038,13 @@
     const worldPoints = Object.freeze({
       sol: Object.freeze(getOrbitPoint(snapshot, "sol")),
       yol: Object.freeze(getOrbitPoint(snapshot, "yol")),
+      kor: snapshot.kor.worldPosition,
+      korsShard: snapshot.korsShard.worldPosition,
       zehs: ZEHS_PARAMETERS.worldPoint,
+    });
+    const moonMapPoints = Object.freeze({
+      kor: getMoonMapPoint(snapshot.kor, "kor"),
+      korsShard: getMoonMapPoint(snapshot.korsShard, "korsShard"),
     });
     const eraRotationDegrees = getEraRotationDegrees(
       snapshot.ms,
@@ -1593,6 +2059,18 @@
     const horizonProjection = Object.freeze({
       sol: createFrameProjection(worldPoints.sol, viewBasis, snapshot, "sol"),
       yol: createFrameProjection(worldPoints.yol, viewBasis, snapshot, "yol"),
+      kor: projectMoonToHorizon(
+        snapshot.kor,
+        state.horizonDirection,
+        eraRotationDegrees,
+        state.horizonLatitude,
+      ),
+      korsShard: projectMoonToHorizon(
+        snapshot.korsShard,
+        state.horizonDirection,
+        eraRotationDegrees,
+        state.horizonLatitude,
+      ),
       zehs: projectOrbitPointToHorizon(
         worldPoints.zehs,
         viewBasis,
@@ -1608,6 +2086,7 @@
     return Object.freeze({
       snapshot,
       worldPoints,
+      moonMapPoints,
       eraRotationDegrees,
       viewBasis,
       horizonLatitude: state.horizonLatitude,
@@ -1621,6 +2100,18 @@
     const horizonProjection = Object.freeze({
       sol: createFrameProjection(frame.worldPoints.sol, viewBasis, frame.snapshot, "sol"),
       yol: createFrameProjection(frame.worldPoints.yol, viewBasis, frame.snapshot, "yol"),
+      kor: projectMoonToHorizon(
+        frame.snapshot.kor,
+        state.horizonDirection,
+        frame.eraRotationDegrees,
+        state.horizonLatitude,
+      ),
+      korsShard: projectMoonToHorizon(
+        frame.snapshot.korsShard,
+        state.horizonDirection,
+        frame.eraRotationDegrees,
+        state.horizonLatitude,
+      ),
       zehs: projectOrbitPointToHorizon(
         frame.worldPoints.zehs,
         viewBasis,
@@ -1631,6 +2122,7 @@
     return Object.freeze({
       snapshot: frame.snapshot,
       worldPoints: frame.worldPoints,
+      moonMapPoints: frame.moonMapPoints,
       eraRotationDegrees: frame.eraRotationDegrees,
       viewBasis,
       horizonLatitude: state.horizonLatitude,
@@ -1825,8 +2317,9 @@
   }
 
   function updateOrbitGeometry(frame) {
-    const { snapshot, worldPoints } = frame;
+    const { snapshot, worldPoints, moonMapPoints } = frame;
     const isConvection = snapshot.template.motion === "convection";
+    updateMoonOrbitPaths();
     elements.orbitSolTracks.forEach((track) => {
       track.setAttribute("cx", String(ORBIT_GEOMETRY.centerX));
       track.setAttribute("cy", String(ORBIT_GEOMETRY.centerY));
@@ -1853,6 +2346,38 @@
       worldPoints.yol,
       snapshot.yol.visible && !isConvection,
     );
+    const korMapVisible = !isMoonOccludedByEra(
+      snapshot.kor,
+      moonMapPoints.kor,
+      "kor",
+    );
+    const korsShardMapVisible = !isMoonOccludedByEra(
+      snapshot.korsShard,
+      moonMapPoints.korsShard,
+      "korsShard",
+    );
+    setMoonElementState(
+      elements.korBody,
+      snapshot.kor,
+      "kor",
+      moonMapPoints.kor,
+      korMapVisible,
+      {
+        visualScale: snapshot.kor.apparentScale,
+        opacity: getMoonMapOpacity(snapshot.kor),
+      },
+    );
+    setMoonElementState(
+      elements.korsShardBody,
+      snapshot.korsShard,
+      "korsShard",
+      moonMapPoints.korsShard,
+      korsShardMapVisible,
+      {
+        visualScale: snapshot.korsShard.apparentScale,
+        opacity: getMoonMapOpacity(snapshot.korsShard),
+      },
+    );
     setZehsElementState(elements.zehsBody, worldPoints.zehs, true);
     if (elements.zehsBody) {
       elements.zehsBody.setAttribute("data-world-x", worldPoints.zehs.x.toFixed(3));
@@ -1867,10 +2392,14 @@
       "data-horizon-biome",
       HORIZON_LATITUDES[state.horizonLatitude].biome,
     );
+    elements.orbitView.setAttribute(
+      "data-moon-alignment-cycle",
+      String(snapshot.kor.alignmentCycle && snapshot.korsShard.alignmentCycle),
+    );
     elements.convectionMessage.hidden = !isConvection;
     elements.orbitDescription.textContent = isConvection
-      ? "Nordpol-Draufsicht während der Konvektion: Sol und Yol sind nicht sichtbar; ferne Splitterwelten treten hervor. ZEHS bleibt als ungefähr 40 AU entfernter Referenzpunkt kartiert."
-      : `${snapshot.template.label}: vollständige schematische Orbits aus der Nordpol-Draufsicht. ZEHS ist als ungefähr 40 AU entfernter, annähernd fester Referenzpunkt markiert. Blickpfeil und Schnittlinie kennzeichnen die gewählte Horizontprojektion.`;
+      ? "Nordpol-Draufsicht während der Konvektion: Sol und Yol sind nicht sichtbar. Kor und Kor’s Shard laufen ohne Rücksetzung auf ihren Polbahnen weiter; ZEHS bleibt als ungefähr 40 AU entfernter Referenzpunkt kartiert."
+      : `${snapshot.template.label}: schematische Sol-/Yol-Orbits und die kantenständigen Polbahnen von Kor und Kor’s Shard aus derselben Weltzeit. Gestrichelte Mondbahnen liegen rückwärtig, volle Linien nordwärts vor Era. ZEHS bleibt als annähernd fester Referenzpunkt markiert.`;
   }
 
   function updateHorizonGeometry(frame) {
@@ -1878,6 +2407,8 @@
     const isConvection = snapshot.template.motion === "convection";
     const solVisible = snapshot.sol.visible && horizonProjection.sol.visible && !isConvection;
     const yolVisible = snapshot.yol.visible && horizonProjection.yol.visible && !isConvection;
+    const korVisible = horizonProjection.kor.visible;
+    const korsShardVisible = horizonProjection.korsShard.visible;
     const zehsVisible = horizonProjection.zehs.visible;
     setBodyElementState(
       elements.horizonSolBody,
@@ -1885,6 +2416,7 @@
       "sol",
       horizonProjection.sol,
       solVisible,
+      { visualScale: horizonProjection.sol.apparentScale },
     );
     setBodyElementState(
       elements.horizonYolBody,
@@ -1892,6 +2424,44 @@
       "yol",
       horizonProjection.yol,
       yolVisible,
+      { visualScale: horizonProjection.yol.apparentScale },
+    );
+    const moonScreenSeparation = Math.hypot(
+      horizonProjection.kor.x - horizonProjection.korsShard.x,
+      horizonProjection.kor.y - horizonProjection.korsShard.y,
+    );
+    const moonNudgeStrength = 1 - smoothstep(moonScreenSeparation / 54);
+    const korHorizonPoint = {
+      ...horizonProjection.kor,
+      x: horizonProjection.kor.x - 7 * moonNudgeStrength,
+      y: horizonProjection.kor.y + 3 * moonNudgeStrength,
+    };
+    const korsShardHorizonPoint = {
+      ...horizonProjection.korsShard,
+      x: horizonProjection.korsShard.x + 8 * moonNudgeStrength,
+      y: horizonProjection.korsShard.y - 4 * moonNudgeStrength,
+    };
+    setMoonElementState(
+      elements.horizonKorBody,
+      snapshot.kor,
+      "kor",
+      korHorizonPoint,
+      korVisible,
+      {
+        visualScale: horizonProjection.kor.visualScale,
+        opacity: horizonProjection.kor.opacity,
+      },
+    );
+    setMoonElementState(
+      elements.horizonKorsShardBody,
+      snapshot.korsShard,
+      "korsShard",
+      korsShardHorizonPoint,
+      korsShardVisible,
+      {
+        visualScale: horizonProjection.korsShard.visualScale,
+        opacity: horizonProjection.korsShard.opacity,
+      },
     );
     setZehsElementState(elements.horizonZehsStar, horizonProjection.zehs, zehsVisible);
     if (elements.horizonSolBody) {
@@ -1905,6 +2475,14 @@
       elements.horizonYolBody.setAttribute("data-world-y", worldPoints.yol.y.toFixed(3));
       elements.horizonYolBody.setAttribute("data-forward", horizonProjection.yol.forward.toFixed(6));
       elements.horizonYolBody.setAttribute("data-latitude-lift", horizonProjection.yol.latitudeLift.toFixed(3));
+    }
+    if (elements.horizonKorBody) {
+      elements.horizonKorBody.setAttribute("data-altitude", horizonProjection.kor.altitude.toFixed(6));
+      elements.horizonKorBody.setAttribute("data-horizon-fade", horizonProjection.kor.horizonFade.toFixed(6));
+    }
+    if (elements.horizonKorsShardBody) {
+      elements.horizonKorsShardBody.setAttribute("data-altitude", horizonProjection.korsShard.altitude.toFixed(6));
+      elements.horizonKorsShardBody.setAttribute("data-horizon-fade", horizonProjection.korsShard.horizonFade.toFixed(6));
     }
     if (elements.horizonZehsStar) {
       elements.horizonZehsStar.setAttribute("data-world-x", worldPoints.zehs.x.toFixed(3));
@@ -1944,6 +2522,8 @@
       elements.horizonView.setAttribute("data-irradiance-mode", horizonIrradiance.mode);
       elements.horizonView.setAttribute("data-sol-exposure", horizonIrradiance.sol.toFixed(3));
       elements.horizonView.setAttribute("data-yol-exposure", horizonIrradiance.yol.toFixed(3));
+      elements.horizonView.setAttribute("data-kor-visible", String(korVisible));
+      elements.horizonView.setAttribute("data-kors-shard-visible", String(korsShardVisible));
       elements.horizonView.style.setProperty(
         "--irradiance-warm",
         (horizonIrradiance.warm * 0.34).toFixed(3),
@@ -1974,6 +2554,9 @@
             yolVisible ? "vor" : "hinter"
           } dem lokalen Horizont.`;
       const zehsText = `ZEHS liegt ${zehsVisible ? "als heller Punkt über" : "unter"} dem lokalen Horizont und sinkt als nordsternartiger Referenzpunkt von 0° nach 60° flacher.`;
+      const moonText = `Kor und Kor’s Shard sind ${
+        korVisible || korsShardVisible ? "auf ihrer gemeinsamen Polpassage sichtbar" : "außerhalb dieser lokalen Sichtlinie"
+      }; ihre Größe und Deckkraft folgen kontinuierlich Entfernung und Horizonthöhe.`;
       const irradianceText = horizonIrradiance.mode === "dual"
         ? "Die länger anhaltende gemeinsame Einstrahlung mischt warmes Sol- und kühles Yol-Licht mit starkem Schimmer."
         : horizonIrradiance.mode === "sol"
@@ -1983,7 +2566,7 @@
             : latitude.degrees === 0
               ? "Am Polstand entsteht kein zusätzlicher Einstrahlungseffekt."
               : "Noch hat sich keine anhaltende Einstrahlung aufgebaut.";
-      elements.horizonDescription.textContent = `Schematischer Horizont durch die ${latitude.name} bei Blick nach ${direction.name} und ${latitude.degrees} Grad Versatz vom Nordpol in Richtung Äquator. ${visibilityText} ${zehsText} ${irradianceText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht; der Äquator bei 90 Grad bleibt ausgeschlossen.`;
+      elements.horizonDescription.textContent = `Schematischer Horizont durch die ${latitude.name} bei Blick nach ${direction.name} und ${latitude.degrees} Grad Versatz vom Nordpol in Richtung Äquator. ${visibilityText} ${moonText} ${zehsText} ${irradianceText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht; der Äquator bei 90 Grad bleibt ausgeschlossen.`;
     }
   }
 
@@ -2332,6 +2915,9 @@
         : `Zyklus ${state.cycleIndex} öffnen`,
     );
     elements.nextCycle.setAttribute("aria-label", `Zyklus ${state.cycleIndex + 2} öffnen`);
+    if (document.activeElement !== elements.cycleJumpInput) {
+      elements.cycleJumpInput.value = String(state.cycleIndex + 1);
+    }
   }
 
   function setTimelineZoom(zoomId, options = {}) {
@@ -2376,6 +2962,36 @@
     buildTimeline();
     render(state.currentMs);
     announce(`Zyklus ${targetIndex + 1} geöffnet.`);
+  }
+
+  function jumpToRequestedCycle(options = {}) {
+    if (!isInspectionMode()) return;
+    const requestedCycle = clamp(
+      Math.floor(Number(elements.cycleJumpInput.value) || 1),
+      1,
+      MOON_ORBIT_MODEL.supercycleLength,
+    );
+    const targetCycleIndex = options.alignment
+      ? MOON_ORBIT_MODEL.alignmentCycleNumber - 1
+      : requestedCycle - 1;
+    const targetCycleUm = options.alignment
+      ? MOON_ORBIT_MODEL.alignmentCycleUm
+      : 0;
+    state.timelineZoom = options.alignment ? "detail" : "cycle";
+    selectCycle(targetCycleIndex, {
+      cycleUm: targetCycleUm,
+      rebuildTimeline: false,
+      render: false,
+    });
+    state.timelineDetailSegmentIndex = findSegment(state.currentMs).index;
+    elements.cycleJumpInput.value = String(targetCycleIndex + 1);
+    buildTimeline();
+    render(state.currentMs);
+    announce(
+      options.alignment
+        ? "Zyklus 300, gemeinsame Nordpolausrichtung von Kor und Kor’s Shard während der Konvektion."
+        : `Zyklus ${targetCycleIndex + 1} geöffnet.`,
+    );
   }
 
   function deriveCycleSeed(rootSeed, cycleIndex) {
@@ -2829,6 +3445,13 @@
     elements.timelineZoomIn.addEventListener("click", () => shiftTimelineZoom(1));
     elements.previousCycle.addEventListener("click", () => moveCycle(-1));
     elements.nextCycle.addEventListener("click", () => moveCycle(1));
+    elements.cycleJump.addEventListener("click", () => jumpToRequestedCycle());
+    elements.cycleJumpInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") jumpToRequestedCycle();
+    });
+    elements.moonAlignmentJump.addEventListener("click", () => {
+      jumpToRequestedCycle({ alignment: true });
+    });
     elements.jumpPhase.addEventListener("click", () => jumpToTemplate(elements.phaseSelect.value));
     elements.previousPhase.addEventListener("click", () => jumpBySegment(-1));
     elements.nextPhase.addEventListener("click", () => jumpBySegment(1));
@@ -2893,6 +3516,7 @@
     HORIZON_PROJECTION_SCALE,
     IRRADIANCE_MODEL,
     ZEHS_PARAMETERS,
+    MOON_ORBIT_MODEL,
     normalizeTimeMode,
     modeMsToCycleUm,
     cycleUmToModeMs,
@@ -2903,9 +3527,15 @@
     getEraRotationUnwrappedDegrees,
     getOrbitPoint,
     getBodyVisualRadius,
+    getCelestialDistanceScale,
     ensureOrbitClearance,
+    solveEccentricAnomaly,
+    getMoonOrbitState,
+    getMoonMapPoint,
     getViewBasis,
     projectOrbitPointToHorizon,
+    getMoonObserverBasis,
+    projectMoonToHorizon,
     getIrradianceDwellAt,
     getHorizonIrradiance,
     getSnapshot,

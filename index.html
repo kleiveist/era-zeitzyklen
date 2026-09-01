@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Interaktive Zeitzyklen von Sol und Yol auf Era: sechsminütiger Erklärmodus und linearer 5-Sekunden-pro-Um-Prüfmodus."
+      content="Interaktive Zeitzyklen von Sol, Yol, Kor und Kor’s Shard auf Era: sechsminütiger Erklärmodus und linearer 5-Sekunden-pro-Um-Prüfmodus."
     />
     <meta id="theme-color" name="theme-color" content="#070b1a" />
-    <title>Era – Zeitzyklen von Sol und Yol</title>
+    <title>Era – Zeitzyklen von Sol, Yol, Kor und Kor’s Shard</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <script>
       (() => {
@@ -95,7 +95,7 @@
           </div>
           <div class="brand-copy">
             <p class="eyebrow">ERA · ASTRALARCHIV VII · NORDPOL-OBSERVATORIUM</p>
-            <h1><span class="title-main">Zeitzyklen</span><span class="title-orbit">von Sol und Yol</span></h1>
+            <h1><span class="title-main">Zeitzyklen</span><span class="title-orbit">von Sol, Yol, Kor &amp; Kor’s Shard</span></h1>
             <p class="subtitle">
               Betritt das Observatorium von Era und verfolge 46.080 Um als lebendige Astralchronik.
               Wähle zwischen der sechsminütigen Zeitfahrt und einer linearen 5-s/Um-Prüfung.
@@ -203,11 +203,11 @@
                 stroke-linecap="square"
                 stroke-linejoin="miter"
               >
-                <title id="orbit-title">Orbitale Nordpol-Draufsicht auf Era, Sol und Yol</title>
+                <title id="orbit-title">Orbitale Nordpol-Draufsicht auf Era, Sol, Yol, Kor und Kor’s Shard</title>
                 <desc id="orbit-description">
-                  Era liegt im Zentrum. Die vollständigen schematischen Bahnen von Sol und Yol werden
-                  aus dem aktuellen Seed und derselben Zeit wie der Horizontverlauf berechnet. ZEHS
-                  steht als sehr heller Fernpunkt und annähernd fester Rotationsbezug außerhalb der lokalen Bahnen.
+                  Era liegt im Zentrum. Sol, Yol sowie die beiden zerstörten Monde Kor und Kor’s Shard
+                  werden aus derselben Weltzeit wie der Horizontverlauf berechnet. Die fast kantenständig
+                  sichtbaren Mondbahnen führen über Nord- und Südpol. ZEHS bleibt ein ferner Rotationsbezug.
                 </desc>
                 <defs>
                   <pattern id="orbit-grid-pattern" width="16" height="16" patternUnits="userSpaceOnUse">
@@ -342,6 +342,13 @@
                   <ellipse class="orbit-track orbit-track-detail orbit-yol-detail orbit-yol-track" cx="420" cy="260" rx="240" ry="158" pathLength="1000" />
                 </g>
 
+                <g class="moon-orbit-plane" aria-hidden="true" shape-rendering="geometricPrecision">
+                  <path id="kor-orbit-rear" class="moon-orbit moon-orbit-kor moon-orbit-rear" d="" />
+                  <path id="kors-shard-orbit-rear" class="moon-orbit moon-orbit-shard moon-orbit-rear" d="" />
+                  <path id="kor-orbit-front" class="moon-orbit moon-orbit-kor moon-orbit-front" d="" />
+                  <path id="kors-shard-orbit-front" class="moon-orbit moon-orbit-shard moon-orbit-front" d="" />
+                </g>
+
                 <image id="convection-field" class="convection-artwork convection-field" href="assets/images/orbit-convection-hd.png" x="0" y="0" width="840" height="520" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
 
                 <g id="era-group">
@@ -415,6 +422,18 @@
                   <g id="yol-disc"><use class="body-tier tier-1" href="#yol-tier-1-shape" /></g>
                   <image class="celestial-artwork body-artwork yol-artwork" href="assets/images/yol-star-hd.png" x="-38" y="-38" width="76" height="76" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
                   <text id="yol-label" x="0" y="50" text-anchor="middle">YOL</text>
+                </g>
+
+                <g id="kor-body" class="moon-body moon-body-kor" transform="translate(413 265)" aria-label="Kor, zerstörter Mond auf polarer Ellipsenbahn">
+                  <path class="moon-proximity-mark" d="M-44-10V-22H-32M44-10V-22H32M-44 10V22H-32M44 10V22H32" />
+                  <image class="celestial-artwork moon-artwork kor-artwork" href="assets/images/kor-moon-hd.png" x="-46" y="-46" width="92" height="92" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
+                  <text class="moon-label" x="0" y="59" text-anchor="middle">KOR</text>
+                </g>
+
+                <g id="kors-shard-body" class="moon-body moon-body-shard" transform="translate(428 255)" aria-label="Kor’s Shard, eigenständiger zerstörter Mond auf polarer Ellipsenbahn">
+                  <path class="moon-proximity-mark" d="M-32-8V-16H-24M32-8V-16H24M-32 8V16H-24M32 8V16H24" />
+                  <image class="celestial-artwork moon-artwork shard-artwork" href="assets/images/kors-shard-hd.png" x="-35" y="-35" width="70" height="70" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
+                  <text class="moon-label moon-label-shard" x="0" y="47" text-anchor="middle">KOR’S SHARD</text>
                 </g>
 
                 <g
@@ -495,7 +514,7 @@
                 >
                   <title id="horizon-svg-title">Horizontverlauf mit Blick nach Norden</title>
                   <desc id="horizon-description">
-                    Gestaffelte Projektion derselben Sol-, Yol- und ZEHS-Positionen zwischen fernem Himmel, transparenten Pixelwolken und dem Vordergrund der gewählten Landschaft.
+                    Gestaffelte Projektion derselben Sol-, Yol-, Kor-, Kor’s-Shard- und ZEHS-Positionen zwischen fernem Himmel, transparenten Pixelwolken und dem Vordergrund der gewählten Landschaft.
                   </desc>
 
                   <defs>
@@ -590,6 +609,12 @@
                     <g class="body-halo yol-halo"><use class="body-tier tier-5" href="#yol-tier-5-shape" /><use class="body-tier tier-4" href="#yol-tier-4-shape" /><use class="body-tier tier-3" href="#yol-tier-3-shape" /><use class="body-tier tier-2" href="#yol-tier-2-shape" /></g>
                     <use class="body-tier tier-1" href="#yol-tier-1-shape" />
                     <image class="celestial-artwork body-artwork horizon-body-artwork" href="assets/images/yol-star-hd.png" x="-32" y="-32" width="64" height="64" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
+                  </g>
+                  <g id="horizon-kor-body" class="moon-body moon-body-kor horizon-moon" transform="translate(405 76)" aria-label="Kor am lokalen Horizont">
+                    <image class="celestial-artwork moon-artwork horizon-moon-artwork" href="assets/images/kor-moon-hd.png" x="-42" y="-42" width="84" height="84" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
+                  </g>
+                  <g id="horizon-kors-shard-body" class="moon-body moon-body-shard horizon-moon" transform="translate(435 68)" aria-label="Kor’s Shard am lokalen Horizont">
+                    <image class="celestial-artwork moon-artwork horizon-moon-artwork shard-artwork" href="assets/images/kors-shard-hd.png" x="-31" y="-31" width="62" height="62" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
                   </g>
 
                   <image class="horizon-atmosphere horizon-clouds-artwork horizon-clouds-polar horizon-clouds-north" href="assets/images/horizon-clouds-polar-north-hd.png" x="0" y="0" width="840" height="280" preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
@@ -829,6 +854,12 @@
             <strong id="timeline-zoom-level" aria-live="polite">Zyklus</strong>
             <button id="timeline-zoom-in" class="button button-quiet timeline-zoom-button" type="button" aria-label="Zeitpfad hineinzoomen">+</button>
             <button id="next-cycle" class="button button-quiet timeline-cycle-button" type="button">Nächster Zyklus</button>
+            <div class="timeline-direct-jump">
+              <label for="cycle-jump-input">Zyklusnummer</label>
+              <input id="cycle-jump-input" class="field-control field-compact" type="number" min="1" max="300" step="1" value="1" inputmode="numeric" />
+              <button id="cycle-jump" class="button button-quiet" type="button">Zyklus öffnen</button>
+              <button id="moon-alignment-jump" class="button button-quiet" type="button">300er-Nordpolausrichtung</button>
+            </div>
           </nav>
 
           <div id="phase-track" class="phase-track" aria-label="Klickbare Abschnitte des erzeugten Zyklus"></div>
@@ -908,7 +939,7 @@
       </main>
 
       <footer>
-        <span class="footer-mark"><svg aria-hidden="true"><use href="#icon-era-cycle"></use></svg>Era · Astralchronik von Sol und Yol</span>
+        <span class="footer-mark"><svg aria-hidden="true"><use href="#icon-era-cycle"></use></svg>Era · Astralchronik von Sol, Yol, Kor und Kor’s Shard</span>
         <span>Im Nordpol-Observatorium kartografiert · vollständig offline</span>
       </footer>
     </div>

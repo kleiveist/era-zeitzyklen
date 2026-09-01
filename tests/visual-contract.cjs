@@ -24,6 +24,8 @@ const artworkSpecs = [
   { file: "sol-star-hd.png", minWidth: 600, minHeight: 600, alpha: true },
   { file: "yol-star-hd.png", minWidth: 600, minHeight: 600, alpha: true },
   { file: "zehs-star-hd.png", minWidth: 600, minHeight: 600, alpha: true },
+  { file: "kor-moon-hd.png", minWidth: 1200, minHeight: 1200, minBytes: 1_000_000, alpha: true },
+  { file: "kors-shard-hd.png", minWidth: 1200, minHeight: 1200, minBytes: 1_000_000, alpha: true },
 ];
 
 const directionalBiomes = Object.freeze({
@@ -619,15 +621,22 @@ for (const name of [
   "HORIZON_PROJECTION_SCALE",
   "IRRADIANCE_MODEL",
   "ZEHS_PARAMETERS",
+  "MOON_ORBIT_MODEL",
   "normalizeDegrees",
   "normalizeHorizonLatitude",
   "getLatitudeLift",
   "getEraRotationDegrees",
   "getOrbitPoint",
   "getBodyVisualRadius",
+  "getCelestialDistanceScale",
   "ensureOrbitClearance",
+  "solveEccentricAnomaly",
+  "getMoonOrbitState",
+  "getMoonMapPoint",
   "getViewBasis",
   "projectOrbitPointToHorizon",
+  "getMoonObserverBasis",
+  "projectMoonToHorizon",
   "getIrradianceDwellAt",
   "getHorizonIrradiance",
   "getSnapshot",
@@ -676,6 +685,15 @@ requireMatch("index.html", /<dt>S-Int<\/dt><dd>nicht definiert<\/dd>/i, "für ZE
 requireMatch("index.html", /<dt>Namensbezug<\/dt><dd>Zehsen<\/dd>/i, "ZEHS dokumentiert den Namensbezug");
 requireMatch("app.js", /distanceAu\s*:\s*40\b/, "ZEHS-Entfernung gehört zum zentralen Parametervertrag");
 requireMatch("app.js", /rotationReference\s*:\s*["'][^"']*vollständige Rotation Eras/i, "ZEHS dokumentiert den Rotationsbezug");
+requireMatch("index.html", /id=["']kor-body["'][\s\S]*?kor-moon-hd\.png[\s\S]*?id=["']kors-shard-body["'][\s\S]*?kors-shard-hd\.png/i, "Kor und Kor’s Shard besitzen getrennte HD-Kartenkörper");
+requireMatch("index.html", /id=["']horizon-kor-body["'][\s\S]*?kor-moon-hd\.png[\s\S]*?id=["']horizon-kors-shard-body["'][\s\S]*?kors-shard-hd\.png/i, "beide Monde besitzen getrennte unbeschriftete Horizontkörper");
+requireMatch("index.html", /id=["']kor-orbit-rear["'][\s\S]*?id=["']kors-shard-orbit-rear["'][\s\S]*?id=["']kor-orbit-front["'][\s\S]*?id=["']kors-shard-orbit-front["']/i, "beide Polbahnen unterscheiden Vorder- und Rückseite");
+requireMatch("styles.css", /\.moon-orbit-rear\s*\{[^}]*stroke-dasharray[^}]*opacity/is, "rückwärtige Polbahnen sind gestrichelt und zurückgenommen");
+requireMatch("app.js", /function\s+solveEccentricAnomaly[\s\S]*?eccentricity\s*\*\s*Math\.sin\(anomaly\)/i, "Mondpositionen folgen einer kontinuierlichen elliptischen Kepler-Lösung");
+requireMatch("app.js", /worldPosition\s*=\s*Object\.freeze\(\{[\s\S]*?x:[\s\S]*?y:[\s\S]*?z:/i, "Mondzustände besitzen echte 3D-Weltkoordinaten");
+requireMatch("app.js", /alignmentCycleNumber\s*:\s*300[\s\S]*?alignmentCycleUm\s*:\s*config\.regularUm\s*\+\s*config\.convectionDurationUm\s*\/\s*2/i, "300er-Ausrichtung liegt in der Mitte der dokumentierten Konvektion");
+requireMatch("app.js", /setBodyElementState\([\s\S]*?visualScale:\s*horizonProjection\.sol\.apparentScale[\s\S]*?visualScale:\s*horizonProjection\.yol\.apparentScale/i, "Sol und Yol werden im Horizont aus der Bahnentfernung skaliert");
+requireMatch("index.html", /id=["']cycle-jump-input["'][^>]*max=["']300["'][\s\S]*?id=["']moon-alignment-jump["']/i, "Prüfmodus besitzt direkte Zyklus- und 300er-Navigation");
 requireMatch(
   "styles.css",
   /:active[^{}]*\{[^{}]*(?:translateY\(\s*2px\s*\)|translate\(\s*(?:0|2px)\s*,\s*2px\s*\)|translate\s*:\s*(?:0|2px)\s+2px)/is,

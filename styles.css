@@ -1176,6 +1176,35 @@ main {
   stroke-dasharray: 7 7 20 7;
 }
 
+.moon-orbit-plane {
+  pointer-events: none;
+  shape-rendering: geometricPrecision;
+}
+
+.moon-orbit {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.moon-orbit-kor {
+  stroke: #a89ac7;
+}
+
+.moon-orbit-shard {
+  stroke: #69acd0;
+}
+
+.moon-orbit-rear {
+  stroke-width: 2;
+  stroke-dasharray: 5 9;
+  opacity: 0.3;
+}
+
+.moon-orbit-front {
+  stroke-width: 3;
+  opacity: 0.9;
+}
+
 .era-aura-outer {
   fill: var(--nebula);
   opacity: 0.52;
@@ -1322,6 +1351,52 @@ main {
 
 .body {
   will-change: transform, opacity;
+}
+
+.moon-body {
+  pointer-events: none;
+  transform-box: fill-box;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+.moon-artwork {
+  opacity: 1;
+}
+
+.moon-proximity-mark {
+  fill: none;
+  stroke: var(--brass-light);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.58;
+}
+
+.moon-label {
+  fill: var(--sky-ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  paint-order: stroke;
+  stroke: var(--stone-950);
+  stroke-width: 3px;
+  vector-effect: non-scaling-stroke;
+}
+
+.moon-label-shard {
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.moon-body[data-depth="rear"] .moon-artwork,
+.moon-body[data-depth="rear"] .moon-proximity-mark,
+.moon-body[data-depth="rear"] .moon-label {
+  opacity: 0.74;
+}
+
+.horizon-moon .moon-artwork {
+  opacity: 0.96;
 }
 
 .body-tier {
@@ -2186,6 +2261,29 @@ main {
 .timeline-zoom-button {
   font-size: 22px;
   line-height: 24px;
+}
+
+.timeline-direct-jump {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: auto minmax(76px, 100px) minmax(130px, auto) minmax(190px, auto);
+  align-items: center;
+  justify-content: end;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 2px solid var(--engraving-soft);
+}
+
+.timeline-direct-jump label {
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.timeline-direct-jump .field-control {
+  min-height: 40px;
 }
 
 .timeline-zoom-controls .button:disabled {
@@ -3294,6 +3392,15 @@ footer {
 }
 
 @media (max-width: 720px) {
+  .timeline-direct-jump {
+    grid-template-columns: minmax(0, 1fr) 84px;
+    justify-content: stretch;
+  }
+
+  .timeline-direct-jump .button {
+    grid-column: 1 / -1;
+  }
+
   body::before {
     border-width: 4px;
   }
@@ -3506,6 +3613,15 @@ footer {
 }
 
 @media (max-width: 430px) {
+  .timeline-direct-jump {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-direct-jump > * {
+    grid-column: 1;
+    width: 100%;
+  }
+
   .brand-lockup {
     grid-template-columns: 1fr;
   }

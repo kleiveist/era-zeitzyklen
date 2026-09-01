@@ -331,7 +331,7 @@ const contract = global.ERA_CYCLE_CONTRACT;
 assert.ok(contract, "app.js veröffentlicht den read-only ERA_CYCLE_CONTRACT");
 assert.ok(Object.isFrozen(contract), "ERA_CYCLE_CONTRACT ist eingefroren");
 
-for (const constantName of ["ORBIT_GEOMETRY", "HORIZON_GEOMETRY", "HORIZON_DIRECTIONS", "HORIZON_LATITUDES", "HORIZON_PROJECTION_SCALE", "IRRADIANCE_MODEL", "ZEHS_PARAMETERS"]) {
+for (const constantName of ["ORBIT_GEOMETRY", "HORIZON_GEOMETRY", "HORIZON_DIRECTIONS", "HORIZON_LATITUDES", "HORIZON_PROJECTION_SCALE", "IRRADIANCE_MODEL", "ZEHS_PARAMETERS", "MOON_ORBIT_MODEL"]) {
   assert.ok(contract[constantName], `${constantName} ist Teil des Geometrievertrags`);
   assert.ok(Object.isFrozen(contract[constantName]), `${constantName} ist read-only`);
 }
@@ -342,9 +342,15 @@ for (const functionName of [
   "getEraRotationDegrees",
   "getOrbitPoint",
   "getBodyVisualRadius",
+  "getCelestialDistanceScale",
   "ensureOrbitClearance",
+  "solveEccentricAnomaly",
+  "getMoonOrbitState",
+  "getMoonMapPoint",
   "getViewBasis",
   "projectOrbitPointToHorizon",
+  "getMoonObserverBasis",
+  "projectMoonToHorizon",
   "getIrradianceDwellAt",
   "getHorizonIrradiance",
   "getSnapshot",
@@ -668,6 +674,13 @@ for (const bodyName of ["sol", "yol"]) {
     `${bodyName}: Richtungswahl verändert den Weltpunkt nicht`,
   );
 }
+for (const bodyName of ["kor", "korsShard"]) {
+  assert.deepEqual(
+    directionFrameAfter.worldPoints[bodyName],
+    directionFrameBefore.worldPoints[bodyName],
+    `${bodyName}: Richtungswahl verändert die 3D-Weltposition nicht`,
+  );
+}
 assertPointClose(
   directionFrameAfter.worldPoints.zehs,
   directionFrameBefore.worldPoints.zehs,
@@ -719,6 +732,18 @@ for (const bodyName of ["sol", "yol"]) {
     `${bodyName}: Breitenwahl verändert den Weltpunkt nicht`,
   );
   assert.equal(latitudeFrame30.horizonProjection[bodyName].latitudeDegrees, 30, `${bodyName}: 30 Grad fließen in die Projektion ein`);
+}
+for (const bodyName of ["kor", "korsShard"]) {
+  assert.deepEqual(
+    latitudeFrame30.worldPoints[bodyName],
+    latitudeFrameBefore.worldPoints[bodyName],
+    `${bodyName}: Breitenwahl verändert die 3D-Weltposition nicht`,
+  );
+  assert.equal(
+    latitudeFrame30.horizonProjection[bodyName].latitudeDegrees,
+    30,
+    `${bodyName}: 30 Grad fließen nur in die Mondprojektion ein`,
+  );
 }
 assertPointClose(
   latitudeFrame30.worldPoints.zehs,
@@ -1464,8 +1489,24 @@ for (const bodyName of ["sol", "yol"]) {
   const horizonBody = elementFor(`#horizon-${bodyName}-body`);
   assert.equal(
     horizonBody.getAttribute("data-visual-radius"),
-    orbitBody.getAttribute("data-visual-radius"),
-    `${bodyName}: beide Grafiken verwenden dieselbe Körpergröße`,
+    contract
+      .getBodyVisualRadius(
+        frame.snapshot[bodyName].intensity,
+        bodyName,
+        frame.horizonProjection[bodyName].apparentScale,
+      )
+      .toFixed(3),
+    `${bodyName}: Horizontgröße wird aus der gemeinsamen Weltentfernung berechnet`,
+  );
+  assert.equal(
+    orbitBody.getAttribute("data-apparent-scale"),
+    "1.0000",
+    `${bodyName}: die Draufsicht bleibt eine unskalierte Kartenmarke`,
+  );
+  assert.equal(
+    horizonBody.getAttribute("data-apparent-scale"),
+    frame.horizonProjection[bodyName].apparentScale.toFixed(4),
+    `${bodyName}: der Horizont protokolliert die entfernungsabhängige Größe`,
   );
   assert.equal(
     horizonBody.getAttribute("data-source-angle"),
@@ -1535,6 +1576,7 @@ if (require.main === module) {
       directions: directionButtons.length,
       latitudes: latitudeButtons.length,
       zehsDistanceAu: contract.ZEHS_PARAMETERS.distanceAu,
+      moons: Object.keys(contract.MOON_ORBIT_MODEL.bodies).length,
       geometrySnapshots: sampledSnapshots,
       finalEraTime: elementFor("#era-time").textContent,
     }),
