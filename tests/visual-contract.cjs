@@ -399,7 +399,6 @@ for (const className of [
   "horizon-nebula",
   "horizon-star-crosses",
   "mountain-back-light",
-  "horizon-runes",
   "biome-sky",
   "polar-glacier-light",
   "temperate-forest-front",
@@ -412,6 +411,14 @@ for (const className of [
 ]) {
   requireMatch("index.html", new RegExp(`\\bclass\\s*=\\s*["'][^"']*\\b${className}\\b`, "i"), `${className} gehört zur hochauflösenden Pixelkulisse`);
 }
+
+reject("index.html", /class=["'][^"']*\bhorizon-runes\b/i, "dekorative Pixelrunen oberhalb der Kompassleiste sind entfernt");
+reject("index.html", /class=["'][^"']*\bhorizon-body-label\b/i, "Sol und Yol bleiben im Horizontbild unbeschriftet");
+reject(
+  "index.html",
+  /id=["']horizon-zehs-star["'][\s\S]{0,600}<text\b[^>]*>\s*ZEHS\s*<\/text>/i,
+  "ZEHS bleibt im Horizontbild unbeschriftet",
+);
 
 for (const asset of artworkSpecs) {
   if (asset.runtime === false) continue;
@@ -485,6 +492,11 @@ requireMatch(
   "styles.css",
   /:root\[data-theme=["']light["']\]\s+\.horizon-stars-artwork\s*\{[^}]*display\s*:\s*none[^}]*opacity\s*:\s*0/is,
   "die hochauflösende Sternenebene verschwindet im hellen Theme vollständig",
+);
+requireMatch(
+  "styles.css",
+  /:root\[data-theme=["']dark["']\]\s+#horizon-view\[data-direction=["']north["']\]\s+\.horizon-artwork-night\.horizon-artwork-north\s*\{[^}]*filter\s*:\s*brightness\(1\.4\)/is,
+  "alle drei Nordpanoramen erhalten ausschließlich im dunklen Theme einen Helligkeitsausgleich",
 );
 requireMatch(
   "styles.css",

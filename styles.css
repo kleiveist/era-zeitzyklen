@@ -1416,10 +1416,6 @@ main {
   font-size: 16px;
 }
 
-.horizon-zehs-star text {
-  font-size: 13px;
-}
-
 .convection-field,
 .horizon-convection-field {
   opacity: 0;
@@ -1688,10 +1684,6 @@ main {
   opacity: 0.74;
 }
 
-.horizon-body-label {
-  font-size: 18px !important;
-}
-
 .mountain-back {
   fill: var(--mountain-back);
 }
@@ -1738,10 +1730,6 @@ main {
 
 .horizon-terrace {
   fill: var(--mountain-front);
-}
-
-.horizon-runes {
-  fill: var(--brass);
 }
 
 .polar-mountain-back {
@@ -3308,10 +3296,6 @@ footer {
     font-size: 18px;
   }
 
-  .horizon-zehs-star text {
-    font-size: 13px;
-  }
-
   .zehs-parameters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3640,6 +3624,10 @@ footer {
 
 :root[data-theme="dark"] .horizon-artwork-night {
   filter: brightness(0.84) saturate(1.14) contrast(1.06);
+}
+
+:root[data-theme="dark"] #horizon-view[data-direction="north"] .horizon-artwork-night.horizon-artwork-north {
+  filter: brightness(1.4) saturate(1.1) contrast(1.02);
 }
 
 :root[data-theme="light"] .horizon-artwork-day {

@@ -138,7 +138,10 @@ Sterne transparent vor `hd1`, Sol, Yol und ZEHS
 in der Mitte und eine sehr transparente Wolkenebene vor den Himmelskörpern gezeichnet. Im hellen
 Theme sind sämtliche dekorativen Sterne und Konstellationen vollständig ausgeblendet. Dadurch
 verschwinden die bewegten Körper sichtbar hinter nahen Gebäuden, Bögen und Gelände von `hd2`, statt
-nur über einem flachen Panorama zu schweben. Die Seitenbezeichnungen lauten:
+nur über einem flachen Panorama zu schweben. Im Horizontbild selbst bleiben Sol, Yol und ZEHS
+unbeschriftet; ihre Namen sind bereits im astralen Weltzustand zu sehen. Die drei Nordpanoramen
+erhalten ausschließlich im dunklen Theme einen eigenen Helligkeitsausgleich, damit Polar,
+Gemäßigt und Wüste zu den übrigen Blickrichtungen passen. Die Seitenbezeichnungen lauten:
 
 | Blickrichtung | links | rechts |
 | --- | --- | --- |
@@ -146,6 +149,9 @@ nur über einem flachen Panorama zu schweben. Die Seitenbezeichnungen lauten:
 | Osten | Norden | Süden |
 | Süden | Osten | Westen |
 | Westen | Süden | Norden |
+
+Die Kompass-Trennlinie und die drei Richtungsangaben bleiben sichtbar. Zusätzliche dekorative
+Pixelrunen oberhalb dieser Leiste werden nicht eingeblendet.
 
 Ein Blickpfeil auf Era kennzeichnet die gewählte lokale Richtung. Eine dazu senkrechte
 Horizontschnittlinie trennt die vordere von der hinteren Hälfte. Beide Markierungen drehen sich
