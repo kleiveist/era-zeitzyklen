@@ -98,8 +98,8 @@ Konvektion belegt fest die letzten 32.000 ms.
 4. denselben `cycleUm` in die Zielmoduszeit umrechnen;
 5. Timeline und gemeinsamen Snapshot neu rendern.
 
-Dadurch bleiben Zyklusnummer, Phase und Weltzeitstand erhalten, obwohl beide
-Modi unterschiedliche Echtzeitachsen verwenden.
+Dadurch bleiben die Nummer des Konvektionsabschlusses, Phase und Weltzeitstand
+erhalten, obwohl beide Modi unterschiedliche Echtzeitachsen verwenden.
 
 ## 5. Ein gemeinsamer Snapshot
 
@@ -123,6 +123,12 @@ Kor und Kor’s Shard erweitern denselben Snapshot um absolute 3D-Weltpunkte.
 Die Nordpolkarte verwendet deren `{x, y}`-Anteil und Bahntiefe; der Horizont
 projiziert `{x, y, z}` gegen Oberflächennormale, Blickrichtung und Breitenstufe.
 Keine Ansicht berechnet einen zweiten, von der gemeinsamen Weltzeit gelösten Zustand.
+
+Der Himmelskörper-Messpunkt liest ebenfalls nur diesen gemeinsamen Renderzustand.
+`CELESTIAL_INSTRUMENTS` enthält die gekennzeichneten Stammdaten für ZEHS, Sol,
+Yol, Era, Kor und Kor’s Shard. Die Auswahl wechselt Bild und Messwerte, verändert
+aber weder Weltzeit noch Blickrichtung oder Simulation. ZEHS bleibt beim Laden
+die Standardauswahl.
 
 `Zyklusfortschritt` wird nur aus Um berechnet. Er wird nicht aus
 Darstellungssekunden, Sonnenwinkel oder `S-Int` abgeleitet.
@@ -240,14 +246,20 @@ series → cycle → detail
 - `series` zeigt alle bereits materialisierten Zyklen;
 - `cycle` zeigt genau den aktiven 46.080-Um-Zyklus;
 - `detail` zeigt genau ein großes Abschnittssiegel mit Text- und
-  Füllfortschritt.
+  horizontalem Füllfortschritt von links nach rechts.
 
 Ein Klick auf einen Zyklus oder Abschnitt verwendet wiederum die zentrale
-Um-/Moduszeit-Konvertierung.
+Um-/Moduszeit-Konvertierung. Pointer-Ereignisse auf dem Zeitpfad bilden die
+horizontale Position in `cycle` auf den vollständigen Zyklus und in `detail`
+auf die Grenzen des sichtbaren Abschnitts ab. Nach vier Pixeln Bewegung wird
+die Geste zum Scrubbing, pausiert gegebenenfalls die Wiedergabe und unterdrückt
+den nachfolgenden Button-Klick. `series` bleibt davon ausgenommen, damit dort
+jede große Karte ausschließlich ihren Zyklus öffnet.
 
-Eine Zahleneingabe öffnet im Prüfmodus direkt Zyklus 1 bis 300. Der separate
-Schalter **300er-Nordpolausrichtung** springt zu Zyklus 300, Um 45.880 und
-öffnet das zugehörige Konvektionsdetail. Damit bleibt das 800 Tage lange
+Die in der Oberfläche als **Konvektionsabschluss** bezeichnete Zahleneingabe
+öffnet im Prüfmodus direkt einen der vollständigen Prüfpfade 1 bis 300. Der
+separate Schalter **300er-Nordpolausrichtung** springt zu Pfad 300, Um 45.880
+und öffnet das zugehörige Konvektionsdetail. Damit bleibt das 800 Tage lange
 lineare Warten für die Abnahme unnötig.
 
 ## 11. Automatisierte Verträge
@@ -267,6 +279,7 @@ lineare Warten für die Abnahme unnötig.
 - reproduzierbare Folgeseeds;
 - Erhalt des Um-Stands beim Moduswechsel;
 - alle drei Prüfmodus-Zoomstufen;
+- horizontales Scrubbing in Zyklus- und Abschnittsansicht;
 - Rückkehr zur sechsminütigen Standardzeitfahrt.
 
 `tests/smoke.cjs` ergänzt den Vertrag um die sechsminütige Phasenfolge,

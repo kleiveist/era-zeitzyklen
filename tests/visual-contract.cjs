@@ -363,11 +363,15 @@ assert.match(timeModeTag, /^<select\b/i, "Zeitmodus ist ein natives, tastaturbed
 assert.match(timeModeTag, /\baria-label\s*=/i, "Zeitmodus besitzt einen zugänglichen Namen");
 requireMatch("index.html", /id=["']time-mode["'][\s\S]*?<option\b[^>]*value=["']chronicle["'][\s\S]*?<option\b[^>]*value=["']inspection["']/i, "Dropdown enthält Erklär- und Prüfmodus");
 requireMatch("index.html", /5\s*s\/Um\s*·\s*64\s*Stunden/i, "Prüfoption benennt 5 s/Um und 64 Stunden eindeutig");
+requireMatch("index.html", /<label\b[^>]*for=["']cycle-jump-input["'][^>]*>\s*Konvektionsabschluss\s*<\/label>/i, "direkte Prüfpfadauswahl heißt Konvektionsabschluss");
+reject("index.html", />\s*Zyklusnummer\s*</i, "veraltete Oberflächenbezeichnung Zyklusnummer ist entfernt");
 for (const controlId of ["timeline-zoom-out", "timeline-zoom-in", "previous-cycle", "next-cycle"]) {
   assert.match(openingTag("index.html", controlId), /^<button\b/i, `${controlId}: Timeline-Steuerung ist eine echte Schaltfläche`);
 }
-requireMatch("styles.css", /\.phase-segment-detail::before\s*\{[^}]*height\s*:\s*var\(--segment-progress/is, "großes Abschnittssiegel besitzt eine flächige Fortschrittsfüllung");
+requireMatch("styles.css", /\.phase-segment-detail::before\s*\{[^}]*width\s*:\s*var\(--segment-progress[^}]*height\s*:\s*100%/is, "großes Abschnittssiegel füllt sich flächig von links nach rechts");
 requireMatch("styles.css", /\.cycle-segment::before\s*\{[^}]*width\s*:\s*var\(--cycle-progress/is, "Zyklussiegel besitzt eine Gesamtfortschrittsfüllung");
+requireMatch("styles.css", /:root\[data-theme="light"\]\s+\.cycle-segment\s*\{[^}]*background\s*:\s*linear-gradient\([^}]*var\(--paper-inset\)/is, "große Zyklusschalter besitzen eine ausdrücklich helle Theme-Fläche");
+requireMatch("styles.css", /\.phase-track\[data-time-mode="inspection"\][^{]*\{[^}]*cursor\s*:\s*ew-resize[^}]*touch-action\s*:\s*pan-y/is, "Prüfpfad kennzeichnet horizontales Pointer-Scrubbing");
 requireMatch("app.js", /state\.playbackAnchorMs\s*\+\s*elapsed\s*\*\s*state\.playbackRate/i, "rAF-Zeitstempel bestimmt die Wiedergabe analytisch");
 reject("app.js", /clamp\(timestamp\s*-\s*state\.lastFrameAt\s*,\s*0\s*,\s*120\)/i, "gedrosselte Frames verlieren keine Weltzeit durch die alte 120-ms-Kappung");
 
@@ -425,6 +429,12 @@ for (const id of [
   "horizon-biome-polar",
   "horizon-biome-temperate",
   "horizon-biome-desert",
+  "celestial-instrument",
+  "celestial-selector-toggle",
+  "celestial-selector-menu",
+  "celestial-selector-image",
+  "celestial-class",
+  "celestial-distance",
   "zehs-visibility",
   "zehs-position",
 ]) {
@@ -463,6 +473,10 @@ for (const className of [
   "zehs-point",
   "zehs-point-core",
   "zehs-instrument",
+  "celestial-selector",
+  "celestial-selector-toggle",
+  "celestial-selector-menu",
+  "celestial-selector-option",
   "instrument-rail",
   "zehs-panel",
 ]) {
@@ -682,10 +696,39 @@ requireMatch("index.html", /\bdata-distance-au\s*=\s*["']40["']/, "ZEHS trägt d
 requireMatch("index.html", /\bdata-brightness\s*=\s*["']sehr hell["']/, "ZEHS trägt die kanonische Helligkeit");
 requireMatch("index.html", /\bdata-motion\s*=\s*["']annähernd fest["']/, "ZEHS trägt die kanonische Bewegungsangabe");
 requireMatch("index.html", /\bdata-orbiting-body\s*=\s*["']false["']/, "ZEHS wird nicht als lokaler Umlaufkörper ausgegeben");
-requireMatch("index.html", /<dt>S-Int<\/dt><dd>nicht definiert<\/dd>/i, "für ZEHS wird keine S-Int erfunden");
-requireMatch("index.html", /<dt>Namensbezug<\/dt><dd>Zehsen<\/dd>/i, "ZEHS dokumentiert den Namensbezug");
+requireMatch("index.html", /<dt>S-Int<\/dt><dd\b[^>]*>nicht definiert<\/dd>/i, "für ZEHS wird keine S-Int erfunden");
+requireMatch("index.html", /<dt>Namensbezug<\/dt><dd\b[^>]*>Zehsen<\/dd>/i, "ZEHS dokumentiert den Namensbezug");
 requireMatch("app.js", /distanceAu\s*:\s*40\b/, "ZEHS-Entfernung gehört zum zentralen Parametervertrag");
 requireMatch("app.js", /rotationReference\s*:\s*["'][^"']*vollständige Rotation Eras/i, "ZEHS dokumentiert den Rotationsbezug");
+const celestialToggleTag = openingTag("index.html", "celestial-selector-toggle");
+assert.match(celestialToggleTag, /^<button\b/i, "aktuelles Himmelskörperbild ist eine echte Schaltfläche");
+assert.match(celestialToggleTag, /\baria-haspopup\s*=\s*["']listbox["']/i, "Bildschalter kündigt sein Listbox-Dropdown an");
+assert.match(celestialToggleTag, /\baria-expanded\s*=\s*["']false["']/i, "Bildschalter startet geschlossen");
+assert.match(celestialToggleTag, /\baria-controls\s*=\s*["']celestial-selector-menu["']/i, "Bildschalter referenziert sein Dropdown");
+const celestialMenuTag = openingTag("index.html", "celestial-selector-menu");
+assert.match(celestialMenuTag, /\brole\s*=\s*["']listbox["']/i, "Himmelskörper-Dropdown ist eine Listbox");
+assert.match(celestialMenuTag, /\bhidden\b/i, "Himmelskörper-Dropdown startet verborgen");
+const celestialOptionSpecs = [
+  ["zehs", "zehs-star-hd.png"],
+  ["sol", "sol-star-hd.png"],
+  ["yol", "yol-star-hd.png"],
+  ["era", "era-world-hd.png"],
+  ["kor", "kor-moon-hd.png"],
+  ["kors-shard", "kors-shard-hd.png"],
+];
+for (const [optionId, imageFile] of celestialOptionSpecs) {
+  const optionTag = openingTag("index.html", `celestial-option-${optionId}`);
+  assert.match(optionTag, /^<button\b/i, `${optionId}: Bildoption ist eine echte Schaltfläche`);
+  assert.match(optionTag, /\brole\s*=\s*["']option["']/i, `${optionId}: Bildoption besitzt ihre Listbox-Rolle`);
+  requireMatch(
+    "index.html",
+    new RegExp(`id=["']celestial-option-${optionId}["'][\\s\\S]*?<img\\b[^>]*src=["']assets/images/${imageFile.replace(".", "\\.")}["']`, "i"),
+    `${optionId}: Bildoption verwendet das zugehörige HD-Bild`,
+  );
+}
+requireMatch("styles.css", /\.celestial-selector-menu\s*\{[^}]*grid-template-columns\s*:\s*repeat\(3\s*,/is, "Dropdown ordnet die Bildfelder als kompaktes Raster an");
+requireMatch("styles.css", /\.zehs-instrument-heading\s+img\s*\{[^}]*width\s*:\s*56px[^}]*height\s*:\s*56px/is, "Hauptbild und Dropdownbilder verwenden denselben quadratischen Rahmen");
+requireMatch("app.js", /function\s+updateCelestialInstrument\s*\([^)]*frame[\s\S]*?getCelestialInstrumentValues\([^,]+,\s*frame\)/i, "Messkarte wird aus dem gemeinsamen Render-Frame gefüllt");
 requireMatch("index.html", /id=["']kor-body["'][\s\S]*?kor-moon-hd\.png[\s\S]*?id=["']kors-shard-body["'][\s\S]*?kors-shard-hd\.png/i, "Kor und Kor’s Shard besitzen getrennte HD-Kartenkörper");
 requireMatch("index.html", /id=["']horizon-kor-body["'][\s\S]*?kor-moon-hd\.png[\s\S]*?id=["']horizon-kors-shard-body["'][\s\S]*?kors-shard-hd\.png/i, "beide Kor-Welten besitzen getrennte unbeschriftete Horizontkörper");
 requireMatch("index.html", /id=["']kor-orbit-rear["'][\s\S]*?id=["']kors-shard-orbit-rear["'][\s\S]*?id=["']kor-orbit-front["'][\s\S]*?id=["']kors-shard-orbit-front["']/i, "beide Polbahnen unterscheiden Vorder- und Rückseite");

@@ -37,20 +37,26 @@ Laufzeitabhängigkeiten.
   Erklärzyklus 6:00 Minuten, der lineare Prüfzyklus 64:00:00 Stunden.
 - Das **Archiv der Phasen** springt zur nächsten Instanz einer ausgewählten Vorlage.
 - Die 18 **Zyklus-Runen** erlauben denselben Sprung direkt über ein Siegel.
-- Das klickbare Chronikband und der Zeitregler erlauben direkte Zeitsprünge.
+- Das klickbare Chronikband und der Zeitregler erlauben direkte Zeitsprünge. Im Prüfmodus lässt
+  sich der Zeitstand zusätzlich mit gedrückter Maustaste oder per Finger horizontal über das
+  Zyklus- und Abschnittsfeld feinjustieren.
 - Ein **Seed** erzeugt immer wieder dieselbe Phasenfolge und dieselben Bewegungswerte.
 - **Neu würfeln** erzeugt einen anderen Seed.
 - Der kleine **Doppelkreis-Schalter** neben Abspielen/Pause schließt nach jeder vollständig
   beendeten Konvektion automatisch den nächsten Zyklus an. Sein Folgeseed wird einmalig und
-  reproduzierbar aus Root-Seed und Zyklusnummer abgeleitet; Sol, Yol, Era und die absolute
-  Weltzeit laufen ohne Positionssprung weiter.
+  reproduzierbar aus Root-Seed und der Nummer des Konvektionsabschlusses abgeleitet; Sol, Yol,
+  Era und die absolute Weltzeit laufen ohne Positionssprung weiter.
 - Nur im Prüfmodus besitzt das Chronikband die Zoomstufen **Zyklusfolge**, **Zyklus** und
   **Abschnitt**. Rauszoomen zeigt alle bereits geladenen Zyklen, die Zyklusansicht zeigt genau
   einen linearen 46.080-Um-Zyklus und die Detailansicht ein großes, fortschreitend gefülltes
-  Phasen- oder Konvektionssiegel.
-- Ebenfalls nur im Prüfmodus öffnet die **Zyklusnummer** direkt einen der ersten 300 Zyklen.
+  Phasen- oder Konvektionssiegel. Dessen flächige Füllung läuft von links nach rechts.
+- Ebenfalls nur im Prüfmodus bezeichnet **Konvektionsabschluss** die nummerierte Auswahl eines
+  der ersten 300 vollständigen Prüfpfade. **Zyklus öffnen** lädt den zugehörigen Pfad;
   **300er-Nordpolausrichtung** springt ohne Wartezeit in die gemeinsame Kor-/Kor’s-Shard-
-  Ausrichtung innerhalb der Konvektion des 300. Zyklus.
+  Ausrichtung innerhalb der Konvektion des 300. Pfads.
+- Das quadratische Bild im **Himmelskörper-Messpunkt** öffnet eine Bildauswahl für ZEHS, Sol,
+  Yol, Era, Kor und Kor’s Shard. Die Messkarte übernimmt anschließend Bild, Stammdaten,
+  aktuellen Horizontstatus und die schematische Position des gewählten Körpers.
 - 1×, 1,5×, 2× und 4× verändern nur das Wiedergabetempo; das Zeitmodell bleibt gleich.
 - **Helles Pergament / Dunkle Chronik** wechselt das vollständige Pixel-Fantasy-Farbsystem. Jede
   der zwölf Biom-/Richtungsszenen besitzt eine eigene Tag- und Nachtpalette als verlustfrei
@@ -126,10 +132,14 @@ Pixelhalo. Auch radiale Phasenabweichungen werden vor dem Rendern abgesichert. D
 SOL und YOL werden entlang des Vektors vom Era-Mittelpunkt nach außen gesetzt und können dadurch
 nicht in Era hineinragen.
 
-## ZEHS-Referenzstern
+## Himmelskörper-Messpunkt und ZEHS-Referenzstern
 
 ZEHS ist in der Nordpolkarte als eigenständiger, mehrlagiger Pixelpunkt und im lokalen Horizont
-als projizierter Fixpunkt sichtbar. Eine Messkarte hält alle freigegebenen Angaben zusammen:
+als projizierter Fixpunkt sichtbar. Sein quadratisches Bild dient zugleich als Schalter für ein
+Dropdown mit ZEHS, Sol, Yol, Era, Kor und Kor’s Shard. Alle Vorschaubilder verwenden denselben
+quadratischen Rahmen. Nach einer Auswahl füllt der gewählte Körper dieselbe Messkarte; dynamische
+Sichtbarkeit und Koordinaten stammen aus dem gemeinsamen Renderzustand. ZEHS bleibt die
+Standardauswahl und hält folgende freigegebenen Angaben zusammen:
 
 | Parameter | Wert |
 | --- | --- |

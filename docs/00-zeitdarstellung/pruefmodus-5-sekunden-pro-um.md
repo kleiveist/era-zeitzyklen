@@ -125,8 +125,8 @@ noch keinen Gleichlauf.
 | Neue reguläre Phase | Sie schließt an Winkel, radialen Zustand und Intensität des Vorgängers an. Bewegungsparameter dürfen sich ändern, der Weltpunkt springt nicht willkürlich. |
 | Beginn der Konvektion | Beide Sonnen werden ausgeblendet; Era rotiert weiterhin einmal in fünf Sekunden. |
 | Zyklusende ohne Autozyklus | Die Wiedergabe pausiert exakt am Endpunkt und zeigt den abgeschlossenen Zyklus. |
-| Zyklusende mit Autozyklus | Die Zyklusnummer steigt und der nächste reproduzierbare Phasenplan schließt am erreichten Zustand an. |
-| Folgeseed | Er wird einmalig aus Root-Seed und Zyklusnummer abgeleitet und gespeichert, nicht pro Bild neu erzeugt. |
+| Zyklusende mit Autozyklus | Die Nummer des Konvektionsabschlusses steigt und der nächste reproduzierbare Phasenplan schließt am erreichten Zustand an. |
+| Folgeseed | Er wird einmalig aus Root-Seed und der Nummer des Konvektionsabschlusses abgeleitet und gespeichert, nicht pro Bild neu erzeugt. |
 | Neuer Zyklus | Nur der lokale Zyklusfortschritt beginnt bei null. Absolute Weltzeit und erreichte Positionen bleiben stetig. |
 
 Ein neuer Zyklus muss Sol und Yol daher nicht an die Ausgangspunkte des ersten
@@ -141,11 +141,14 @@ Nur der Prüfmodus stellt die lineare Langzeitstruktur in drei Zoomstufen dar:
 |---|---|
 | Zyklusfolge | Alle bereits erzeugten Anschlusszyklen stehen nebeneinander. |
 | Zyklus | Ein vollständiger Zyklus aus 46.080 Um wird gezeigt. |
-| Abschnitt | Ein einzelnes Phasen- oder Konvektionssiegel wird groß dargestellt und füllt sich mit seinem Fortschritt. |
+| Abschnitt | Ein einzelnes Phasen- oder Konvektionssiegel wird groß dargestellt und füllt sich von links nach rechts mit seinem Fortschritt. |
 
 Ein Klick auf einen Zyklus öffnet ihn. Vor- und Zurücknavigation materialisiert
 benötigte Anschlusszyklen reproduzierbar. Das Herauszoomen kehrt zur
-Zyklusfolge zurück.
+Zyklusfolge zurück. In der Zyklus- und Abschnittsansicht kann der Zeitstand mit
+gedrückter Maustaste oder per Finger durch horizontales Ziehen feinjustiert
+werden. Eine kleine Bewegungsschwelle trennt diese Geste vom normalen Klick;
+beim Ziehen pausiert eine laufende Wiedergabe am gewählten Stand.
 
 ## 7. Abnahmekriterien
 

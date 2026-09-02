@@ -2231,8 +2231,8 @@ main {
 }
 
 .timeline-zoom-controls {
-  display: grid;
-  grid-template-columns: minmax(118px, auto) 48px minmax(110px, 1fr) 48px minmax(118px, auto);
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   margin-top: 16px;
@@ -2241,11 +2241,18 @@ main {
   background: var(--paper-inset);
 }
 
+.timeline-cycle-navigation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .timeline-zoom-controls[hidden] {
   display: none;
 }
 
 .timeline-zoom-controls strong {
+  min-width: 74px;
   color: var(--gold-bright);
   font-size: 12px;
   letter-spacing: 1px;
@@ -2258,20 +2265,23 @@ main {
   padding: 6px 10px;
 }
 
+.timeline-cycle-button {
+  white-space: nowrap;
+}
+
 .timeline-zoom-button {
+  width: 40px;
   font-size: 22px;
   line-height: 24px;
 }
 
 .timeline-direct-jump {
   display: grid;
-  grid-column: 1 / -1;
   grid-template-columns: auto minmax(76px, 100px) minmax(130px, auto) minmax(190px, auto);
   align-items: center;
   justify-content: end;
   gap: 8px;
-  padding-top: 8px;
-  border-top: 2px solid var(--engraving-soft);
+  margin-left: auto;
 }
 
 .timeline-direct-jump label {
@@ -2304,6 +2314,21 @@ main {
   background: var(--paper-inset);
   scrollbar-color: var(--gold) var(--paper-inset);
   scrollbar-width: auto;
+}
+
+.phase-track[data-time-mode="inspection"]:not([data-zoom="series"]) {
+  cursor: ew-resize;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.phase-track[data-time-mode="inspection"]:not([data-zoom="series"]) .phase-segment {
+  cursor: ew-resize;
+}
+
+.phase-track.is-scrubbing,
+.phase-track.is-scrubbing .phase-segment {
+  cursor: grabbing;
 }
 
 .phase-track::-webkit-scrollbar {
@@ -2411,9 +2436,9 @@ main {
 }
 
 .phase-segment-detail::before {
-  inset: auto 0 0;
-  width: 100%;
-  height: var(--segment-progress, 0%);
+  inset: 0 auto 0 0;
+  width: var(--segment-progress, 0%);
+  height: 100%;
   opacity: 0.28;
 }
 
@@ -3100,6 +3125,8 @@ main {
 
 .sky-stage {
   margin: 16px 16px 18px;
+  border: 0;
+  box-shadow: none;
 }
 
 .orbit-grid {
@@ -3282,6 +3309,25 @@ footer {
   color: color-mix(in srgb, var(--segment-color, var(--amethyst)) 72%, #141a36);
 }
 
+:root[data-theme="light"] .cycle-segment {
+  color: color-mix(in srgb, var(--cycle-color, var(--rust)) 68%, #20253f);
+  background: linear-gradient(180deg, var(--paper-inset), var(--paper-soft));
+  box-shadow:
+    inset -3px -3px 0 var(--engraving-soft),
+    inset 3px 3px 0 rgb(255 255 255 / 78%),
+    3px 3px 0 rgb(127 139 168 / 28%);
+}
+
+:root[data-theme="light"] .cycle-segment::before {
+  opacity: 0.1;
+}
+
+:root[data-theme="light"] .cycle-segment:hover,
+:root[data-theme="light"] .cycle-segment.is-active {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, #fffdf7, var(--paper-raised));
+}
+
 @media (max-width: 1180px) {
   .site-shell {
     padding-right: 24px;
@@ -3392,9 +3438,22 @@ footer {
 }
 
 @media (max-width: 720px) {
+  .timeline-zoom-controls {
+    display: grid;
+  }
+
+  .timeline-cycle-navigation {
+    display: grid;
+    grid-template-columns: 1fr 44px 44px;
+  }
+
   .timeline-direct-jump {
     grid-template-columns: minmax(0, 1fr) 84px;
     justify-content: stretch;
+    width: 100%;
+    margin-left: 0;
+    padding-top: 8px;
+    border-top: 2px solid var(--engraving-soft);
   }
 
   .timeline-direct-jump .button {
@@ -3536,10 +3595,6 @@ footer {
   .timeline-heading > p {
     margin-top: 12px;
     text-align: left;
-  }
-
-  .timeline-zoom-controls {
-    grid-template-columns: 1fr 44px 44px;
   }
 
   .timeline-zoom-controls strong {
@@ -4131,7 +4186,36 @@ footer {
   align-items: flex-start;
 }
 
+.zehs-instrument-heading > :last-child {
+  min-width: 0;
+}
+
+.celestial-selector {
+  position: relative;
+  z-index: 4;
+  flex: 0 0 auto;
+}
+
+.celestial-selector-toggle {
+  position: relative;
+  display: block;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  color: var(--ink-strong);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.celestial-selector-toggle:focus-visible,
+.celestial-selector-option:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
 .zehs-instrument-heading img {
+  display: block;
   width: 56px;
   height: 56px;
   flex: 0 0 auto;
@@ -4140,6 +4224,71 @@ footer {
   border: 2px solid var(--gold-deep);
   background: var(--sky-1);
   box-shadow: inset 0 0 0 2px var(--engraving-strong), 3px 3px 0 var(--shadow);
+}
+
+.celestial-selector-caret {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  color: var(--ink-dark);
+  border: 2px solid var(--gold-deep);
+  background: var(--gold-bright);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.celestial-selector-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(66px, 1fr));
+  gap: 6px;
+  width: max-content;
+  padding: 8px;
+  border: 2px solid var(--gold-deep);
+  background: var(--paper-raised);
+  box-shadow: 6px 6px 0 var(--shadow), inset 0 0 0 2px var(--engraving-soft);
+}
+
+.celestial-selector-menu[hidden] {
+  display: none;
+}
+
+.celestial-selector-option {
+  display: grid;
+  min-width: 66px;
+  padding: 5px;
+  place-items: center;
+  gap: 5px;
+  color: var(--ink-muted);
+  border: 2px solid transparent;
+  background: var(--paper-inset);
+  font: inherit;
+  cursor: pointer;
+}
+
+.celestial-selector-option:hover,
+.celestial-selector-option[aria-selected="true"] {
+  color: var(--gold-bright);
+  border-color: var(--gold-deep);
+  background: var(--paper-soft);
+}
+
+.celestial-selector-option span {
+  max-width: 64px;
+  overflow-wrap: anywhere;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 12px;
+  text-align: center;
 }
 
 .zehs-instrument-heading h2 {
@@ -4216,6 +4365,11 @@ footer {
 }
 
 @media (max-width: 430px) {
+  .celestial-selector-toggle {
+    width: 52px;
+    height: 52px;
+  }
+
   .zehs-instrument-heading img {
     width: 52px;
     height: 52px;
@@ -4269,6 +4423,9 @@ footer {
 .section-seal,
 .theme-toggle-icon,
 .explanation-icon,
+.celestial-selector-caret,
+.celestial-selector-menu,
+.celestial-selector-option,
 .zehs-instrument-heading img,
 .zehs-instrument-heading svg {
   overflow: hidden;

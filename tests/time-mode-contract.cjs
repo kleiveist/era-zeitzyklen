@@ -65,7 +65,7 @@ document.querySelector("#auto-cycle").emit("click");
 contract.selectCycle(0, { cycleUm: 46079.99 });
 contract.setPlaying(true, { announce: false });
 contract.tick(performance.now() + 100);
-assert.equal(contract.getState().cycleIndex, 1, "mit Autozyklus erhöht sich die Zyklusnummer");
+assert.equal(contract.getState().cycleIndex, 1, "mit Autozyklus erhöht sich die Nummer des Konvektionsabschlusses");
 assert.ok(contract.getState().absoluteWorldUm > 46080, "Zeitüberhang läuft in der absoluten Weltzeit weiter");
 assert.equal(contract.getState().playing, true, "Anschlusszyklus läuft ohne Pause weiter");
 contract.setPlaying(false, { announce: false });
@@ -230,12 +230,51 @@ assert.ok(
   document.querySelector("#phase-track").querySelectorAll(".cycle-segment").length >= 2,
   "Folgenzoom zeigt alle bereits materialisierten Zyklen",
 );
+assert.equal(
+  contract.getTimelineScrubTargetMs(500, {
+    left: 0,
+    clientWidth: 1000,
+    scrollWidth: 1000,
+  }),
+  null,
+  "Folgenzoom bleibt eine reine Zyklusauswahl ohne Scrubbing",
+);
 contract.setTimelineZoom("cycle", { announce: false });
 assert.equal(
   document.querySelector("#phase-track").querySelectorAll(".phase-segment").length,
   scenario1.segments.length,
   "Zykluszoom zeigt genau einen vollständigen Zyklus",
 );
+
+const phaseTrack = document.querySelector("#phase-track");
+phaseTrack.getBoundingClientRect = () => ({ left: 100, width: 1000 });
+phaseTrack.clientWidth = 1000;
+phaseTrack.scrollWidth = 1000;
+phaseTrack.scrollLeft = 0;
+contract.setPlaying(true, { announce: false });
+phaseTrack.emit("pointerdown", {
+  pointerId: 7,
+  pointerType: "mouse",
+  button: 0,
+  clientX: 100,
+});
+const scrubMove = phaseTrack.emit("pointermove", { pointerId: 7, clientX: 600 });
+assert.equal(scrubMove.defaultPrevented, true, "horizontales Ziehen übernimmt die Pointer-Geste");
+assert.equal(
+  contract.getState().currentMs,
+  inspection.presentationMs / 2,
+  "Ziehen zur Mitte stellt den Zyklus exakt auf 50 Prozent",
+);
+assert.equal(contract.getState().playing, false, "Scrubbing pausiert eine laufende Wiedergabe");
+assert.equal(phaseTrack.classList.contains("is-scrubbing"), true, "Zeitpfad zeigt den aktiven Ziehzustand");
+phaseTrack.emit("pointerup", { pointerId: 7, clientX: 850 });
+assert.equal(
+  contract.getState().currentMs,
+  inspection.presentationMs * 0.75,
+  "Loslassen bei drei Vierteln übernimmt den feinjustierten Zyklusstand",
+);
+assert.equal(phaseTrack.classList.contains("is-scrubbing"), false, "Loslassen beendet den Ziehzustand");
+
 contract.setTimelineZoom("detail", { announce: false });
 assert.equal(
   document.querySelector("#phase-track").querySelectorAll(".phase-segment-detail").length,
@@ -246,6 +285,28 @@ assert.match(
   document.querySelector("#phase-track").querySelector(".segment-detail-progress").textContent,
   /% Abschnittsfortschritt$/,
   "großes Siegel weist seinen Abschnittsfortschritt auch als Text aus",
+);
+const detailSegment = contract.getLastRenderFrame().snapshot.segment;
+const detailStartMs = detailSegment.umStart * inspection.millisecondsPerUm;
+const detailEndMs = detailSegment.umEnd * inspection.millisecondsPerUm;
+const detailButton = phaseTrack.querySelector(".phase-segment-detail");
+phaseTrack.emit("pointerdown", {
+  pointerId: 8,
+  pointerType: "mouse",
+  button: 0,
+  clientX: 100,
+});
+phaseTrack.emit("pointermove", { pointerId: 8, clientX: 350 });
+phaseTrack.emit("pointerup", { pointerId: 8, clientX: 350 });
+const detailQuarterMs = detailStartMs + (detailEndMs - detailStartMs) * 0.25;
+assert.ok(
+  Math.abs(contract.getState().currentMs - detailQuarterMs) < 1e-8,
+  "Detail-Scrubbing bildet die Breite ausschließlich auf den sichtbaren Abschnitt ab",
+);
+detailButton.click();
+assert.ok(
+  Math.abs(contract.getState().currentMs - detailQuarterMs) < 1e-8,
+  "der synthetische Klick nach einer Ziehgeste löst keinen zweiten Zeitsprung aus",
 );
 
 document.querySelector("#time-mode").value = "chronicle";

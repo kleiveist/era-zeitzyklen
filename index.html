@@ -804,27 +804,66 @@
             </aside>
 
             <aside class="panel zehs-panel" aria-labelledby="zehs-instrument-title">
-              <article class="zehs-instrument">
+              <article id="celestial-instrument" class="zehs-instrument" data-selected-body="zehs">
                 <div class="zehs-instrument-heading">
-                  <img src="assets/images/zehs-star-hd.png" alt="" width="627" height="627" />
+                  <div id="celestial-selector" class="celestial-selector">
+                    <button
+                      id="celestial-selector-toggle"
+                      class="celestial-selector-toggle"
+                      type="button"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                      aria-controls="celestial-selector-menu"
+                      aria-label="Himmelskörper auswählen, aktuell ZEHS"
+                    >
+                      <img id="celestial-selector-image" src="assets/images/zehs-star-hd.png" alt="" width="56" height="56" />
+                      <span class="celestial-selector-caret" aria-hidden="true">⌄</span>
+                    </button>
+                    <div id="celestial-selector-menu" class="celestial-selector-menu" role="listbox" aria-label="Himmelskörper für den Messpunkt" hidden>
+                      <button id="celestial-option-zehs" class="celestial-selector-option" type="button" role="option" aria-selected="true" data-body="zehs">
+                        <img src="assets/images/zehs-star-hd.png" alt="" width="56" height="56" />
+                        <span>ZEHS</span>
+                      </button>
+                      <button id="celestial-option-sol" class="celestial-selector-option" type="button" role="option" aria-selected="false" data-body="sol">
+                        <img src="assets/images/sol-star-hd.png" alt="" width="56" height="56" />
+                        <span>Sol</span>
+                      </button>
+                      <button id="celestial-option-yol" class="celestial-selector-option" type="button" role="option" aria-selected="false" data-body="yol">
+                        <img src="assets/images/yol-star-hd.png" alt="" width="56" height="56" />
+                        <span>Yol</span>
+                      </button>
+                      <button id="celestial-option-era" class="celestial-selector-option" type="button" role="option" aria-selected="false" data-body="era">
+                        <img src="assets/images/era-world-hd.png" alt="" width="56" height="56" />
+                        <span>Era</span>
+                      </button>
+                      <button id="celestial-option-kor" class="celestial-selector-option" type="button" role="option" aria-selected="false" data-body="kor">
+                        <img src="assets/images/kor-moon-hd.png" alt="" width="56" height="56" />
+                        <span>Kor</span>
+                      </button>
+                      <button id="celestial-option-kors-shard" class="celestial-selector-option" type="button" role="option" aria-selected="false" data-body="korsShard">
+                        <img src="assets/images/kors-shard-hd.png" alt="" width="56" height="56" />
+                        <span>Kor’s Shard</span>
+                      </button>
+                    </div>
+                  </div>
                   <div>
-                    <p class="panel-index">FERNSTERN-MESSPUNKT</p>
+                    <p id="celestial-instrument-index" class="panel-index">FERNSTERN-MESSPUNKT</p>
                     <h2 id="zehs-instrument-title">ZEHS · Rotationsreferenz</h2>
                   </div>
                 </div>
                 <div class="zehs-context-note">
                   <strong>Weltenlogischer Hinweis</strong>
-                  <p>Fernpunkt der ERA-Chronik; die Darstellung erhebt keinen Anspruch auf ein physikalisch exaktes Modell.</p>
+                  <p id="celestial-context">Fernpunkt der ERA-Chronik; die Darstellung erhebt keinen Anspruch auf ein physikalisch exaktes Modell.</p>
                 </div>
                 <dl class="zehs-parameters">
-                  <div><dt>Klasse</dt><dd>Referenzstern</dd></div>
-                  <div><dt>Entfernung</dt><dd>ungefähr 40 AU</dd></div>
-                  <div><dt>Helligkeit</dt><dd>sehr hell</dd></div>
-                  <div><dt>Eigenbewegung</dt><dd>annähernd fest</dd></div>
-                  <div><dt>Rotationsbezug</dt><dd>Untergang → Wiederaufgang</dd></div>
-                  <div><dt>Lokale Umlaufbahn</dt><dd>keine</dd></div>
-                  <div><dt>S-Int</dt><dd>nicht definiert</dd></div>
-                  <div><dt>Namensbezug</dt><dd>Zehsen</dd></div>
+                  <div><dt>Klasse</dt><dd id="celestial-class">Referenzstern</dd></div>
+                  <div><dt>Entfernung</dt><dd id="celestial-distance">ungefähr 40 AU</dd></div>
+                  <div><dt>Helligkeit</dt><dd id="celestial-brightness">sehr hell</dd></div>
+                  <div><dt>Eigenbewegung</dt><dd id="celestial-motion">annähernd fest</dd></div>
+                  <div><dt>Rotationsbezug</dt><dd id="celestial-rotation-reference">Untergang → Wiederaufgang</dd></div>
+                  <div><dt>Lokale Umlaufbahn</dt><dd id="celestial-local-orbit">keine</dd></div>
+                  <div><dt>S-Int</dt><dd id="celestial-s-int">nicht definiert</dd></div>
+                  <div><dt>Namensbezug</dt><dd id="celestial-name-reference">Zehsen</dd></div>
                   <div><dt>Horizontstatus</dt><dd id="zehs-visibility">sichtbar</dd></div>
                   <div><dt>Schematischer Punkt</dt><dd id="zehs-position">x 680 · y 124</dd></div>
                 </dl>
@@ -849,20 +888,26 @@
           </div>
 
           <nav id="timeline-zoom-controls" class="timeline-zoom-controls" aria-label="Zyklus- und Zoomnavigation" hidden>
-            <button id="previous-cycle" class="button button-quiet timeline-cycle-button" type="button">Voriger Zyklus</button>
-            <button id="timeline-zoom-out" class="button button-quiet timeline-zoom-button" type="button" aria-label="Zeitpfad herauszoomen">−</button>
-            <strong id="timeline-zoom-level" aria-live="polite">Zyklus</strong>
-            <button id="timeline-zoom-in" class="button button-quiet timeline-zoom-button" type="button" aria-label="Zeitpfad hineinzoomen">+</button>
-            <button id="next-cycle" class="button button-quiet timeline-cycle-button" type="button">Nächster Zyklus</button>
+            <div class="timeline-cycle-navigation">
+              <button id="previous-cycle" class="button button-quiet timeline-cycle-button" type="button">Voriger Zyklus</button>
+              <button id="timeline-zoom-out" class="button button-quiet timeline-zoom-button" type="button" aria-label="Zeitpfad herauszoomen">−</button>
+              <strong id="timeline-zoom-level" aria-live="polite">Zyklus</strong>
+              <button id="timeline-zoom-in" class="button button-quiet timeline-zoom-button" type="button" aria-label="Zeitpfad hineinzoomen">+</button>
+              <button id="next-cycle" class="button button-quiet timeline-cycle-button" type="button">Nächster Zyklus</button>
+            </div>
             <div class="timeline-direct-jump">
-              <label for="cycle-jump-input">Zyklusnummer</label>
+              <label for="cycle-jump-input">Konvektionsabschluss</label>
               <input id="cycle-jump-input" class="field-control field-compact" type="number" min="1" max="300" step="1" value="1" inputmode="numeric" />
               <button id="cycle-jump" class="button button-quiet" type="button">Zyklus öffnen</button>
               <button id="moon-alignment-jump" class="button button-quiet" type="button">300er-Nordpolausrichtung</button>
             </div>
           </nav>
 
-          <div id="phase-track" class="phase-track" aria-label="Klickbare Abschnitte des erzeugten Zyklus"></div>
+          <p id="timeline-scrub-help" class="sr-only">
+            Im Prüfmodus die Maustaste oder den Finger auf dem Zyklus- beziehungsweise Abschnittsfeld
+            gedrückt halten und horizontal ziehen, um den Zeitstand feinzujustieren.
+          </p>
+          <div id="phase-track" class="phase-track" aria-label="Klickbare Abschnitte des erzeugten Zyklus" aria-describedby="timeline-scrub-help"></div>
 
           <label class="sr-only" for="time-slider">Darstellungszeit im Konvektionszyklus</label>
           <input

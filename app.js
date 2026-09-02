@@ -10,6 +10,7 @@
   const TIME_MODES = config.timeModes;
   const TIME_MODE_ORDER = Object.freeze(["chronicle", "inspection"]);
   const TIMELINE_ZOOM_ORDER = Object.freeze(["series", "cycle", "detail"]);
+  const TIMELINE_SCRUB_THRESHOLD_PX = 4;
   const templateById = new Map(templates.map((template) => [template.id, template]));
   const categoryById = new Map(categories.map((category) => [category.id, category]));
   const sigilButtonsById = new Map();
@@ -109,6 +110,112 @@
     sIntensity: null,
     modelStatus: "Weltenlogik · schematische Darstellung",
     worldPoint: Object.freeze({ x: 756, y: 68 }),
+  });
+  const CELESTIAL_INSTRUMENT_ORDER = Object.freeze([
+    "zehs",
+    "sol",
+    "yol",
+    "era",
+    "kor",
+    "korsShard",
+  ]);
+  const CELESTIAL_INSTRUMENTS = Object.freeze({
+    zehs: Object.freeze({
+      id: "zehs",
+      name: "ZEHS",
+      title: "ZEHS · Rotationsreferenz",
+      indexLabel: "FERNSTERN-MESSPUNKT",
+      image: "assets/images/zehs-star-hd.png",
+      type: "Referenzstern",
+      distance: "ungefähr 40 AU",
+      brightness: "sehr hell",
+      motion: "annähernd fest",
+      rotationReference: "Untergang → Wiederaufgang",
+      localOrbit: "keine",
+      sIntensity: "nicht definiert",
+      nameRelation: "Zehsen",
+      context: "Fernpunkt der ERA-Chronik; die Darstellung erhebt keinen Anspruch auf ein physikalisch exaktes Modell.",
+    }),
+    sol: Object.freeze({
+      id: "sol",
+      name: "Sol",
+      title: "Sol · Sonnenmesspunkt",
+      indexLabel: "SONNEN-MESSPUNKT",
+      image: "assets/images/sol-star-hd.png",
+      type: "Sonnenkörper",
+      distance: "schematischer Kartenabstand",
+      brightness: "warmer Lichtkörper",
+      motion: "phasenabhängig",
+      rotationReference: "Sol-Phase relativ zu Era",
+      localOrbit: "schematische Sol-Bahn",
+      sIntensity: "phasenabhängig",
+      nameRelation: "Sol",
+      context: "Lichtkörper der ERA-Chronik; Kartenabstand und Bahnform sind illustrative Darstellungswerte.",
+    }),
+    yol: Object.freeze({
+      id: "yol",
+      name: "Yol",
+      title: "Yol · Sonnenmesspunkt",
+      indexLabel: "SONNEN-MESSPUNKT",
+      image: "assets/images/yol-star-hd.png",
+      type: "Sonnenkörper",
+      distance: "schematischer Kartenabstand",
+      brightness: "magischer Lichtkörper",
+      motion: "phasenabhängig",
+      rotationReference: "Yol-Phase relativ zu Era",
+      localOrbit: "schematische Yol-Bahn",
+      sIntensity: "phasenabhängig",
+      nameRelation: "Yol",
+      context: "Lichtkörper der ERA-Chronik; Kartenabstand und Bahnform sind illustrative Darstellungswerte.",
+    }),
+    era: Object.freeze({
+      id: "era",
+      name: "Era",
+      title: "Era · Weltreferenz",
+      indexLabel: "WELTKÖRPER-MESSPUNKT",
+      image: "assets/images/era-world-hd.png",
+      type: "Zentralwelt",
+      distance: "Bezugsmittelpunkt",
+      brightness: "nicht selbstleuchtend",
+      motion: "Eigenrotation",
+      rotationReference: "vollständige Rotation über ZEHS",
+      localOrbit: "keine lokale Bahn dargestellt",
+      sIntensity: "nicht definiert",
+      nameRelation: "Era",
+      context: "Zentraler Weltkörper und Beobachterstandort; die Messkarte zeigt Era als Bezugsmittelpunkt der Darstellung.",
+    }),
+    kor: Object.freeze({
+      id: "kor",
+      name: "Kor",
+      title: "Kor · Polbahn-Messpunkt",
+      indexLabel: "WELTKÖRPER-MESSPUNKT",
+      image: "assets/images/kor-moon-hd.png",
+      type: "Ether-Weltkörper",
+      distance: "illustrativer Modellabstand",
+      brightness: "entfernungsabhängig dargestellt",
+      motion: "variable Kepler-Bewegung",
+      rotationReference: "eigenständige Polpassage",
+      localOrbit: "stark elliptische Polbahn",
+      sIntensity: "nicht definiert",
+      nameRelation: "Ether-Entität Kor",
+      context: "Eigenständiger Weltkörper im illustrativen Polbahnmodell; die angezeigten Bahndaten sind keine kanonischen Orbitalzahlen.",
+    }),
+    korsShard: Object.freeze({
+      id: "korsShard",
+      name: "Kor’s Shard",
+      title: "Kor’s Shard · Polbahn-Messpunkt",
+      indexLabel: "WELTKÖRPER-MESSPUNKT",
+      image: "assets/images/kors-shard-hd.png",
+      type: "Geborstener Weltkörper",
+      distance: "illustrativer Modellabstand",
+      brightness: "entfernungsabhängig dargestellt",
+      motion: "variable Kepler-Bewegung",
+      rotationReference: "eigenständige Polpassage",
+      localOrbit: "stark elliptische Polbahn",
+      sIntensity: "nicht definiert",
+      nameRelation: "Ether-Entität Kor",
+      context: "Eigenständiger geborstener Weltkörper im illustrativen Polbahnmodell; die angezeigten Bahndaten sind keine kanonischen Orbitalzahlen.",
+    }),
   });
   const MOON_ORBIT_MODEL = Object.freeze({
     modelStatus: "Illustratives Bahnmodell · keine kanonischen Orbitalzahlen",
@@ -224,6 +331,30 @@
     horizonCenterLabel: document.querySelector("#horizon-center-label"),
     horizonRightLabel: document.querySelector("#horizon-right-label"),
     horizonConvectionField: document.querySelector("#horizon-convection-field"),
+    celestialInstrument: document.querySelector("#celestial-instrument"),
+    celestialSelector: document.querySelector("#celestial-selector"),
+    celestialSelectorToggle: document.querySelector("#celestial-selector-toggle"),
+    celestialSelectorImage: document.querySelector("#celestial-selector-image"),
+    celestialSelectorMenu: document.querySelector("#celestial-selector-menu"),
+    celestialOptions: Object.freeze({
+      zehs: document.querySelector("#celestial-option-zehs"),
+      sol: document.querySelector("#celestial-option-sol"),
+      yol: document.querySelector("#celestial-option-yol"),
+      era: document.querySelector("#celestial-option-era"),
+      kor: document.querySelector("#celestial-option-kor"),
+      korsShard: document.querySelector("#celestial-option-kors-shard"),
+    }),
+    celestialInstrumentIndex: document.querySelector("#celestial-instrument-index"),
+    celestialInstrumentTitle: document.querySelector("#zehs-instrument-title"),
+    celestialContext: document.querySelector("#celestial-context"),
+    celestialClass: document.querySelector("#celestial-class"),
+    celestialDistance: document.querySelector("#celestial-distance"),
+    celestialBrightness: document.querySelector("#celestial-brightness"),
+    celestialMotion: document.querySelector("#celestial-motion"),
+    celestialRotationReference: document.querySelector("#celestial-rotation-reference"),
+    celestialLocalOrbit: document.querySelector("#celestial-local-orbit"),
+    celestialSIntensity: document.querySelector("#celestial-s-int"),
+    celestialNameReference: document.querySelector("#celestial-name-reference"),
     zehsVisibility: document.querySelector("#zehs-visibility"),
     zehsPosition: document.querySelector("#zehs-position"),
     eraTime: document.querySelector("#era-time"),
@@ -289,6 +420,8 @@
     presentationMs: getTimeMode(readStoredTimeMode()).presentationMs,
     timelineZoom: "cycle",
     timelineDetailSegmentIndex: 0,
+    timelineScrubGesture: null,
+    timelineSuppressClick: false,
     eraRotationOffsetDegrees: 0,
     animationFrame: null,
     lastFrameAt: null,
@@ -299,6 +432,7 @@
     theme: document.documentElement?.dataset?.theme === "light" ? "light" : "dark",
     horizonDirection: readStoredHorizonDirection(),
     horizonLatitude: readStoredHorizonLatitude(),
+    selectedCelestialId: "zehs",
     irradianceTimelines: new Map(),
   };
 
@@ -324,6 +458,176 @@
     setUseHref(use, iconId);
     svg.append(use);
     return svg;
+  }
+
+  function formatInstrumentDecimal(value, digits = 1) {
+    const number = Number(value);
+    return Number.isFinite(number)
+      ? number.toFixed(digits).replace(".", ",")
+      : "—";
+  }
+
+  function getInstrumentHorizonValues(bodyId, frame) {
+    if (bodyId === "era") {
+      return Object.freeze({
+        visible: true,
+        visibility: "Beobachterstandort auf Era",
+        position: `x ${ORBIT_GEOMETRY.centerX} · y ${ORBIT_GEOMETRY.centerY} · Kartenmitte`,
+      });
+    }
+
+    const projection = frame?.horizonProjection?.[bodyId];
+    if (!projection) {
+      return Object.freeze({
+        visible: false,
+        visibility: "wird berechnet",
+        position: "—",
+      });
+    }
+
+    const visible = Boolean(projection.visible);
+    const side = projection.right < -0.08
+      ? "links"
+      : projection.right > 0.08
+        ? "rechts"
+        : "mittig";
+    const x = Math.round(projection.x);
+    const y = Math.round(projection.y);
+    const hiddenDuringConvection =
+      (bodyId === "sol" || bodyId === "yol") &&
+      frame.snapshot.template.motion === "convection";
+
+    return Object.freeze({
+      visible,
+      visibility: visible
+        ? `sichtbar · ${Math.round(projection.height)} px über Horizont`
+        : hiddenDuringConvection
+          ? "während Konvektion nicht sichtbar"
+          : "unter dem Horizont",
+      position: visible
+        ? `x ${x} · y ${y} · ${side}`
+        : `x ${x} · unter Horizont`,
+    });
+  }
+
+  function getCelestialInstrumentValues(bodyId, frame = lastRenderFrame) {
+    const normalizedBodyId = CELESTIAL_INSTRUMENTS[bodyId] ? bodyId : "zehs";
+    const metadata = CELESTIAL_INSTRUMENTS[normalizedBodyId];
+    const values = {
+      ...metadata,
+      ...getInstrumentHorizonValues(normalizedBodyId, frame),
+    };
+    if (!frame) return Object.freeze(values);
+
+    if (normalizedBodyId === "sol" || normalizedBodyId === "yol") {
+      const body = frame.snapshot[normalizedBodyId];
+      const point = frame.worldPoints[normalizedBodyId];
+      const direction = body.directionSign > 0
+        ? "vorwärts"
+        : body.directionSign < 0
+          ? "rückläufig"
+          : "stehend";
+      values.distance = `Kartenabstand ${Math.round(point.distance)} px`;
+      values.motion = body.visible
+        ? `${formatInstrumentDecimal(body.speed)}°/s · ${direction}`
+        : "während Konvektion ausgeblendet";
+      values.sIntensity = body.intensity === null
+        ? "nicht definiert"
+        : `S-Int ${formatInstrumentDecimal(body.intensity)}`;
+    } else if (normalizedBodyId === "era") {
+      values.motion = frame.snapshot.timeMode === "inspection"
+        ? "360° pro Um"
+        : `${formatInstrumentDecimal(TIME_MODES.chronicle.eraRotationDegreesPerSecond)}°/s Darstellung`;
+    } else if (normalizedBodyId === "kor" || normalizedBodyId === "korsShard") {
+      const body = frame.snapshot[normalizedBodyId];
+      const angularVelocityDegrees =
+        Math.abs(body.trueAngularVelocityPerUm) * 180 / Math.PI;
+      values.distance = `Modellabstand ${Math.round(body.distance)}`;
+      values.motion = `${formatInstrumentDecimal(angularVelocityDegrees, 3)}°/Um · Kepler-Modell`;
+    }
+
+    return Object.freeze(values);
+  }
+
+  function updateCelestialInstrument(frame = lastRenderFrame) {
+    const bodyId = CELESTIAL_INSTRUMENTS[state.selectedCelestialId]
+      ? state.selectedCelestialId
+      : "zehs";
+    const values = getCelestialInstrumentValues(bodyId, frame);
+    elements.celestialInstrument.setAttribute("data-selected-body", bodyId);
+    elements.celestialSelectorImage.setAttribute("src", values.image);
+    elements.celestialSelectorToggle.setAttribute(
+      "aria-label",
+      `Himmelskörper auswählen, aktuell ${values.name}`,
+    );
+    elements.celestialInstrumentIndex.textContent = values.indexLabel;
+    elements.celestialInstrumentTitle.textContent = values.title;
+    elements.celestialContext.textContent = values.context;
+    elements.celestialClass.textContent = values.type;
+    elements.celestialDistance.textContent = values.distance;
+    elements.celestialBrightness.textContent = values.brightness;
+    elements.celestialMotion.textContent = values.motion;
+    elements.celestialRotationReference.textContent = values.rotationReference;
+    elements.celestialLocalOrbit.textContent = values.localOrbit;
+    elements.celestialSIntensity.textContent = values.sIntensity;
+    elements.celestialNameReference.textContent = values.nameRelation;
+    elements.zehsVisibility.textContent = values.visibility;
+    elements.zehsVisibility.setAttribute("data-visible", String(values.visible));
+    elements.zehsVisibility.setAttribute("data-body", bodyId);
+    elements.zehsPosition.textContent = values.position;
+    elements.zehsPosition.setAttribute("data-body", bodyId);
+
+    for (const optionBodyId of CELESTIAL_INSTRUMENT_ORDER) {
+      const option = elements.celestialOptions[optionBodyId];
+      const selected = optionBodyId === bodyId;
+      option.setAttribute("aria-selected", String(selected));
+      option.setAttribute("tabindex", selected ? "0" : "-1");
+      option.classList.toggle("is-selected", selected);
+    }
+  }
+
+  function setCelestialMenuOpen(open, options = {}) {
+    const shouldOpen = Boolean(open);
+    elements.celestialSelectorMenu.hidden = !shouldOpen;
+    elements.celestialSelectorToggle.setAttribute("aria-expanded", String(shouldOpen));
+    elements.celestialSelector.classList.toggle("is-open", shouldOpen);
+    if (shouldOpen && options.focusOption) {
+      elements.celestialOptions[state.selectedCelestialId]?.focus?.();
+    } else if (!shouldOpen && options.focusToggle) {
+      elements.celestialSelectorToggle.focus?.();
+    }
+  }
+
+  function focusCelestialOption(bodyId, offset) {
+    const currentIndex = CELESTIAL_INSTRUMENT_ORDER.indexOf(bodyId);
+    const safeIndex = currentIndex === -1 ? 0 : currentIndex;
+    const nextIndex =
+      (safeIndex + offset + CELESTIAL_INSTRUMENT_ORDER.length) %
+      CELESTIAL_INSTRUMENT_ORDER.length;
+    elements.celestialOptions[CELESTIAL_INSTRUMENT_ORDER[nextIndex]]?.focus?.();
+  }
+
+  function selectCelestialBody(bodyId, options = {}) {
+    const normalizedBodyId = CELESTIAL_INSTRUMENTS[bodyId] ? bodyId : "zehs";
+    const changed = normalizedBodyId !== state.selectedCelestialId;
+    state.selectedCelestialId = normalizedBodyId;
+    updateCelestialInstrument(lastRenderFrame);
+    setCelestialMenuOpen(false, { focusToggle: options.focus !== false });
+    if (changed && options.announce !== false) {
+      announce(`${CELESTIAL_INSTRUMENTS[normalizedBodyId].name} im Himmelskörper-Messpunkt geöffnet.`);
+    }
+  }
+
+  function initializeCelestialSelector() {
+    for (const bodyId of CELESTIAL_INSTRUMENT_ORDER) {
+      const option = elements.celestialOptions[bodyId];
+      option.classList.add("celestial-selector-option");
+      option.setAttribute("role", "option");
+      option.setAttribute("data-body", bodyId);
+      option.setAttribute("aria-selected", String(bodyId === state.selectedCelestialId));
+      option.setAttribute("tabindex", bodyId === state.selectedCelestialId ? "0" : "-1");
+    }
+    setCelestialMenuOpen(false);
   }
 
   function applyTheme(theme, options = {}) {
@@ -2525,22 +2829,7 @@
       elements.horizonZehsStar.setAttribute("data-forward", horizonProjection.zehs.forward.toFixed(6));
       elements.horizonZehsStar.setAttribute("data-latitude-lift", horizonProjection.zehs.latitudeLift.toFixed(3));
     }
-    if (elements.zehsVisibility) {
-      elements.zehsVisibility.textContent = zehsVisible
-        ? `sichtbar · ${Math.round(horizonProjection.zehs.height)} px über Horizont`
-        : "unter dem Horizont";
-      elements.zehsVisibility.setAttribute("data-visible", String(zehsVisible));
-    }
-    if (elements.zehsPosition) {
-      const side = horizonProjection.zehs.right < -0.08
-        ? "links"
-        : horizonProjection.zehs.right > 0.08
-          ? "rechts"
-          : "mittig";
-      elements.zehsPosition.textContent = zehsVisible
-        ? `x ${Math.round(horizonProjection.zehs.x)} · y ${Math.round(horizonProjection.zehs.y)} · ${side}`
-        : `x ${Math.round(horizonProjection.zehs.x)} · unter Horizont`;
-    }
+    updateCelestialInstrument(frame);
     if (elements.horizonView) {
       elements.horizonView.classList.toggle("is-convection", isConvection);
       elements.horizonView.setAttribute(
@@ -2691,7 +2980,9 @@
     const renderedSegmentKey = `${snapshot.cycleIndex}:${segment.index}`;
     if (state.lastRenderedSegment !== renderedSegmentKey) {
       state.lastRenderedSegment = renderedSegmentKey;
-      announce(`Zyklus ${snapshot.cycleIndex + 1}, ${template.label}. Abschnitt ${segment.index + 1} von ${state.scenario.segments.length}.`);
+      if (!state.timelineScrubGesture?.active) {
+        announce(`Zyklus ${snapshot.cycleIndex + 1}, ${template.label}. Abschnitt ${segment.index + 1} von ${state.scenario.segments.length}.`);
+      }
     }
   }
 
@@ -2840,7 +3131,8 @@
       progressLabel.textContent = "0,00 % Abschnittsfortschritt";
       button.append(progressLabel);
     }
-    button.addEventListener("click", () => {
+    button.addEventListener("click", (event) => {
+      if (consumeTimelineScrubClick(event)) return;
       const modeDuration = endMs - startMs;
       if (isInspectionMode() && !options.detail) {
         state.timelineZoom = "detail";
@@ -3096,7 +3388,7 @@
         "Ein Um dauert bei 1× exakt fünf Sekunden. Die Konvektion beginnt bei 63:26:40 und endet mit dem Zyklus bei 64:00:00.";
       elements.phaseTrack.setAttribute(
         "aria-label",
-        "Lineare Abschnitte und Zyklen des 5-Sekunden-pro-Um-Prüfmodus",
+        "Lineare, per Klick und Ziehen steuerbare Abschnitte und Zyklen des 5-Sekunden-pro-Um-Prüfmodus",
       );
     } else {
       state.timelineZoom = "cycle";
@@ -3175,6 +3467,151 @@
     if (shouldAnnounce) {
       const snapshot = getSnapshot(state.currentMs);
       announce(`Gesprungen zu Zyklus ${state.cycleIndex + 1}, ${snapshot.template.label}, ${formatClock(state.currentMs, state.presentationMs)}.`);
+    }
+  }
+
+  function getTimelineScrubTargetMs(clientX, metrics = {}) {
+    if (!isInspectionMode() || state.timelineZoom === "series" || !state.scenario) {
+      return null;
+    }
+
+    const track = elements.phaseTrack;
+    const rect = metrics.rect || track.getBoundingClientRect?.() || {};
+    const left = Number.isFinite(Number(metrics.left))
+      ? Number(metrics.left)
+      : Number(rect.left) || 0;
+    const pointerX = Number.isFinite(Number(clientX)) ? Number(clientX) : left;
+    const viewportWidth = Math.max(
+      1,
+      Number(metrics.clientWidth) || Number(track.clientWidth) || Number(rect.width) || 1,
+    );
+    const contentWidth = Math.max(
+      viewportWidth,
+      Number(metrics.scrollWidth) || Number(track.scrollWidth) || viewportWidth,
+    );
+    const scrollLeft = clamp(
+      Number.isFinite(Number(metrics.scrollLeft))
+        ? Number(metrics.scrollLeft)
+        : Number(track.scrollLeft) || 0,
+      0,
+      Math.max(0, contentWidth - viewportWidth),
+    );
+    const progress = clamp(
+      (scrollLeft + (pointerX - left)) / contentWidth,
+      0,
+      1,
+    );
+
+    if (state.timelineZoom === "detail") {
+      const segment = state.scenario.segments[state.timelineDetailSegmentIndex] ||
+        findSegment(state.currentMs);
+      const startMs = segmentStartMs(segment);
+      return startMs + (segmentEndMs(segment) - startMs) * progress;
+    }
+
+    return state.presentationMs * progress;
+  }
+
+  function consumeTimelineScrubClick(event) {
+    if (!state.timelineSuppressClick) return false;
+    state.timelineSuppressClick = false;
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    return true;
+  }
+
+  function beginTimelineScrub(event) {
+    if (
+      !isInspectionMode() ||
+      state.timelineZoom === "series" ||
+      state.timelineScrubGesture ||
+      event.isPrimary === false ||
+      (Number.isFinite(Number(event.button)) && Number(event.button) !== 0)
+    ) {
+      return;
+    }
+
+    const pointerId = Number.isFinite(Number(event.pointerId))
+      ? Number(event.pointerId)
+      : null;
+    state.timelineScrubGesture = {
+      pointerId,
+      startX: Number(event.clientX) || 0,
+      active: false,
+    };
+    if (pointerId !== null) {
+      elements.phaseTrack.setPointerCapture?.(pointerId);
+    }
+  }
+
+  function moveTimelineScrub(event) {
+    const gesture = state.timelineScrubGesture;
+    if (!gesture) return;
+    if (
+      gesture.pointerId !== null &&
+      Number.isFinite(Number(event.pointerId)) &&
+      Number(event.pointerId) !== gesture.pointerId
+    ) {
+      return;
+    }
+
+    const clientX = Number(event.clientX) || 0;
+    if (
+      !gesture.active &&
+      Math.abs(clientX - gesture.startX) < TIMELINE_SCRUB_THRESHOLD_PX
+    ) {
+      return;
+    }
+
+    if (!gesture.active) {
+      gesture.active = true;
+      state.timelineSuppressClick = true;
+      elements.phaseTrack.classList.add("is-scrubbing");
+      if (state.playing) setPlaying(false, { announce: false });
+    }
+
+    event.preventDefault?.();
+    const targetMs = getTimelineScrubTargetMs(clientX);
+    if (targetMs !== null) seekTo(targetMs);
+  }
+
+  function endTimelineScrub(event, cancelled = false) {
+    const gesture = state.timelineScrubGesture;
+    if (!gesture) return;
+    if (
+      gesture.pointerId !== null &&
+      Number.isFinite(Number(event.pointerId)) &&
+      Number(event.pointerId) !== gesture.pointerId
+    ) {
+      return;
+    }
+
+    if (gesture.active && !cancelled && Number.isFinite(Number(event.clientX))) {
+      event.preventDefault?.();
+      const targetMs = getTimelineScrubTargetMs(Number(event.clientX));
+      if (targetMs !== null) seekTo(targetMs);
+    }
+
+    state.timelineScrubGesture = null;
+    elements.phaseTrack.classList.remove("is-scrubbing");
+    if (gesture.pointerId !== null) {
+      try {
+        elements.phaseTrack.releasePointerCapture?.(gesture.pointerId);
+      } catch (_) {
+        // Der Pointer kann bei einem Browser-Abbruch bereits freigegeben worden sein.
+      }
+    }
+
+    if (!gesture.active) return;
+    state.timelineSuppressClick = true;
+    window.setTimeout(() => {
+      state.timelineSuppressClick = false;
+    }, 0);
+    if (!cancelled) {
+      const snapshot = getSnapshot(state.currentMs);
+      announce(
+        `Prüfpfad auf ${formatClock(state.currentMs, state.presentationMs)}, ${snapshot.template.label}, feinjustiert.`,
+      );
     }
   }
 
@@ -3421,6 +3858,7 @@
       absoluteWorldUm: state.cycleIndex * config.totalUm + localWorldUm,
       horizonDirection: state.horizonDirection,
       horizonLatitude: state.horizonLatitude,
+      selectedCelestialId: state.selectedCelestialId,
       playing: state.playing,
       autoCycle: state.autoCycle,
       playbackRate: state.playbackRate,
@@ -3432,6 +3870,48 @@
   }
 
   function attachEvents() {
+    elements.celestialSelectorToggle.addEventListener("click", () => {
+      setCelestialMenuOpen(elements.celestialSelectorMenu.hidden);
+    });
+    elements.celestialSelectorToggle.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault?.();
+        setCelestialMenuOpen(true, { focusOption: true });
+      } else if (event.key === "Escape") {
+        event.preventDefault?.();
+        setCelestialMenuOpen(false);
+      }
+    });
+    for (const bodyId of CELESTIAL_INSTRUMENT_ORDER) {
+      const option = elements.celestialOptions[bodyId];
+      option.addEventListener("click", () => {
+        selectCelestialBody(bodyId, { focus: true });
+      });
+      option.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+          event.preventDefault?.();
+          focusCelestialOption(bodyId, 1);
+        } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+          event.preventDefault?.();
+          focusCelestialOption(bodyId, -1);
+        } else if (event.key === "Home") {
+          event.preventDefault?.();
+          elements.celestialOptions[CELESTIAL_INSTRUMENT_ORDER[0]]?.focus?.();
+        } else if (event.key === "End") {
+          event.preventDefault?.();
+          elements.celestialOptions[CELESTIAL_INSTRUMENT_ORDER.at(-1)]?.focus?.();
+        } else if (event.key === "Escape") {
+          event.preventDefault?.();
+          setCelestialMenuOpen(false, { focusToggle: true });
+        }
+      });
+    }
+    document.addEventListener("click", (event) => {
+      if (elements.celestialSelectorMenu.hidden) return;
+      if (!event.target?.closest?.("#celestial-selector")) {
+        setCelestialMenuOpen(false);
+      }
+    });
     for (const directionId of HORIZON_DIRECTION_ORDER) {
       const button = elements.horizonDirectionButtons[directionId];
       if (!button) continue;
@@ -3495,6 +3975,15 @@
       if (event.key === "Enter") loadScenario(elements.seedInput.value);
     });
     elements.newSeed.addEventListener("click", () => loadScenario(createNewSeed()));
+    elements.phaseTrack.addEventListener("pointerdown", beginTimelineScrub);
+    elements.phaseTrack.addEventListener("pointermove", moveTimelineScrub);
+    elements.phaseTrack.addEventListener("pointerup", (event) => endTimelineScrub(event));
+    elements.phaseTrack.addEventListener("pointercancel", (event) => {
+      endTimelineScrub(event, true);
+    });
+    elements.phaseTrack.addEventListener("lostpointercapture", (event) => {
+      endTimelineScrub(event, true);
+    });
     elements.timeSlider.addEventListener("input", () => seekTo(Number(elements.timeSlider.value)));
     elements.timeSlider.addEventListener("change", () => {
       const snapshot = getSnapshot(state.currentMs);
@@ -3551,6 +4040,8 @@
     HORIZON_PROJECTION_SCALE,
     IRRADIANCE_MODEL,
     ZEHS_PARAMETERS,
+    CELESTIAL_INSTRUMENT_ORDER,
+    CELESTIAL_INSTRUMENTS,
     MOON_ORBIT_MODEL,
     normalizeTimeMode,
     modeMsToCycleUm,
@@ -3574,12 +4065,15 @@
     projectMoonToHorizon,
     getIrradianceDwellAt,
     getHorizonIrradiance,
+    getCelestialInstrumentValues,
     getSnapshot,
     formatEraTime,
     deriveCycleSeed,
     setTimeMode,
     setTimelineZoom,
+    getTimelineScrubTargetMs,
     selectCycle,
+    selectCelestialBody,
     setPlaying,
     tick,
     getLastRenderFrame,
@@ -3589,6 +4083,7 @@
   applyTheme(state.theme, { persist: false });
   buildPhaseSelect();
   buildPhaseSigils();
+  initializeCelestialSelector();
   attachEvents();
   loadScenario(state.seed, { announce: false });
   updatePlayButton();

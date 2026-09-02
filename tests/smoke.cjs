@@ -331,7 +331,7 @@ const contract = global.ERA_CYCLE_CONTRACT;
 assert.ok(contract, "app.js veröffentlicht den read-only ERA_CYCLE_CONTRACT");
 assert.ok(Object.isFrozen(contract), "ERA_CYCLE_CONTRACT ist eingefroren");
 
-for (const constantName of ["ORBIT_GEOMETRY", "HORIZON_GEOMETRY", "HORIZON_DIRECTIONS", "HORIZON_LATITUDES", "HORIZON_PROJECTION_SCALE", "IRRADIANCE_MODEL", "ZEHS_PARAMETERS", "MOON_ORBIT_MODEL"]) {
+for (const constantName of ["ORBIT_GEOMETRY", "HORIZON_GEOMETRY", "HORIZON_DIRECTIONS", "HORIZON_LATITUDES", "HORIZON_PROJECTION_SCALE", "IRRADIANCE_MODEL", "ZEHS_PARAMETERS", "CELESTIAL_INSTRUMENT_ORDER", "CELESTIAL_INSTRUMENTS", "MOON_ORBIT_MODEL"]) {
   assert.ok(contract[constantName], `${constantName} ist Teil des Geometrievertrags`);
   assert.ok(Object.isFrozen(contract[constantName]), `${constantName} ist read-only`);
 }
@@ -353,6 +353,9 @@ for (const functionName of [
   "projectMoonToHorizon",
   "getIrradianceDwellAt",
   "getHorizonIrradiance",
+  "getCelestialInstrumentValues",
+  "selectCelestialBody",
+  "getTimelineScrubTargetMs",
   "getSnapshot",
   "formatEraTime",
   "getLastRenderFrame",
@@ -537,6 +540,17 @@ assert.equal(contract.ZEHS_PARAMETERS.nameRelation, "Zehsen", "Namensbezug ist d
 assert.equal(contract.ZEHS_PARAMETERS.orbitingBody, false, "ZEHS ist kein lokaler Umlaufkörper");
 assert.equal(contract.ZEHS_PARAMETERS.sIntensity, null, "für ZEHS wird keine S-Int erfunden");
 assert.ok(Object.isFrozen(contract.ZEHS_PARAMETERS.worldPoint), "ZEHS-Weltpunkt ist unveränderlich");
+assert.deepEqual(
+  contract.CELESTIAL_INSTRUMENT_ORDER,
+  ["zehs", "sol", "yol", "era", "kor", "korsShard"],
+  "Messpunkt bietet alle dargestellten Himmelskörper in stabiler Reihenfolge an",
+);
+for (const bodyId of contract.CELESTIAL_INSTRUMENT_ORDER) {
+  const instrument = contract.CELESTIAL_INSTRUMENTS[bodyId];
+  assert.ok(instrument, `${bodyId}: besitzt Messpunkt-Stammdaten`);
+  assert.ok(Object.isFrozen(instrument), `${bodyId}: Stammdaten sind read-only`);
+  assert.match(instrument.image, /^assets\/images\/.+-hd\.png$/, `${bodyId}: verwendet ein HD-Vorschaubild`);
+}
 assert.ok(track.children.length >= ERA_PHASES.templates.length, "alle Vorlagen plus Wiederholungen");
 assert.equal(sigils.children.length, 18, "jede Vorlage besitzt ein anwählbares Siegel");
 assert.ok(ERA_PHASES.templates.every((template) => /^icon-/.test(template.icon)), "jede Vorlage besitzt eine Icon-ID");
@@ -1463,6 +1477,54 @@ assert.equal(
   "ZEHS-Messkarte spiegelt den Horizontstatus",
 );
 assert.match(elementFor("#zehs-position").textContent, /^x \d+ · /, "ZEHS-Messkarte meldet die schematische Punktposition");
+
+const celestialToggle = elementFor("#celestial-selector-toggle");
+const celestialMenu = elementFor("#celestial-selector-menu");
+const celestialOptionIds = {
+  zehs: "#celestial-option-zehs",
+  sol: "#celestial-option-sol",
+  yol: "#celestial-option-yol",
+  era: "#celestial-option-era",
+  kor: "#celestial-option-kor",
+  korsShard: "#celestial-option-kors-shard",
+};
+assert.equal(celestialMenu.hidden, true, "Himmelskörper-Dropdown startet geschlossen");
+celestialToggle.click();
+assert.equal(celestialMenu.hidden, false, "Bildschalter öffnet das Himmelskörper-Dropdown");
+assert.equal(celestialToggle.getAttribute("aria-expanded"), "true", "Bildschalter meldet den offenen Zustand");
+celestialToggle.emit("keydown", { key: "ArrowDown" });
+assert.equal(document.activeElement, elementFor(celestialOptionIds.zehs), "Pfeiltaste fokussiert die aktuelle Auswahl");
+elementFor(celestialOptionIds.zehs).emit("keydown", { key: "ArrowRight" });
+assert.equal(document.activeElement, elementFor(celestialOptionIds.sol), "Pfeiltaste wechselt zum nächsten Bildfeld");
+elementFor(celestialOptionIds.sol).click();
+assert.equal(contract.getState().selectedCelestialId, "sol", "Bildauswahl aktiviert Sol");
+assert.equal(celestialMenu.hidden, true, "Auswahl schließt das Dropdown");
+assert.equal(document.activeElement, celestialToggle, "Fokus kehrt nach der Auswahl zum Bildschalter zurück");
+
+for (const bodyId of contract.CELESTIAL_INSTRUMENT_ORDER) {
+  contract.selectCelestialBody(bodyId, { announce: false, focus: false });
+  const values = contract.getCelestialInstrumentValues(bodyId);
+  assert.equal(contract.getState().selectedCelestialId, bodyId, `${bodyId}: Auswahl wird im Zustand geführt`);
+  assert.equal(elementFor("#celestial-selector-image").getAttribute("src"), values.image, `${bodyId}: Hauptbild wird ersetzt`);
+  assert.equal(elementFor("#zehs-instrument-title").textContent, values.title, `${bodyId}: Titel füllt die Messkarte`);
+  assert.equal(elementFor("#celestial-class").textContent, values.type, `${bodyId}: Klasse füllt die Messkarte`);
+  assert.equal(elementFor("#zehs-visibility").getAttribute("data-body"), bodyId, `${bodyId}: Horizontstatus gehört zur Auswahl`);
+  assert.equal(elementFor("#zehs-position").getAttribute("data-body"), bodyId, `${bodyId}: Punktposition gehört zur Auswahl`);
+  assert.ok(elementFor("#zehs-position").textContent.length > 1, `${bodyId}: Punktposition ist gefüllt`);
+  for (const optionBodyId of contract.CELESTIAL_INSTRUMENT_ORDER) {
+    assert.equal(
+      elementFor(celestialOptionIds[optionBodyId]).getAttribute("aria-selected"),
+      String(optionBodyId === bodyId),
+      `${bodyId}: Dropdown besitzt genau einen ausgewählten Eintrag`,
+    );
+  }
+}
+contract.selectCelestialBody("zehs", { announce: false, focus: false });
+assert.equal(
+  elementFor("#zehs-visibility").getAttribute("data-visible"),
+  String(frame.horizonProjection.zehs.visible),
+  "Rückkehr zu ZEHS stellt dessen dynamischen Horizontstatus wieder her",
+);
 for (const bodyName of ["sol", "yol"]) {
   assertPointClose(
     frame.worldPoints[bodyName],
