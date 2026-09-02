@@ -524,7 +524,7 @@
                       <stop offset=".42" stop-color="#ff9a52" stop-opacity=".62" />
                       <stop offset="1" stop-color="#ff4f2f" stop-opacity="0" />
                     </radialGradient>
-                    <radialGradient id="horizon-cool-field" cx="46%" cy="44%" r="82%">
+                    <radialGradient id="horizon-cool-field" cx="48%" cy="72%" r="78%">
                       <stop offset="0" stop-color="#e5fbff" stop-opacity=".72" />
                       <stop offset=".48" stop-color="#34a8ff" stop-opacity=".48" />
                       <stop offset="1" stop-color="#203de8" stop-opacity="0" />
@@ -546,27 +546,22 @@
                       <stop offset=".72" stop-color="#ff552d" stop-opacity=".82" />
                       <stop offset="1" stop-color="#a91620" stop-opacity="0" />
                     </linearGradient>
-                    <linearGradient id="horizon-yol-mana-veil" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0" stop-color="#dffcff" stop-opacity="0" />
-                      <stop offset=".26" stop-color="#72efff" stop-opacity=".26" />
-                      <stop offset=".58" stop-color="#399dff" stop-opacity=".34" />
-                      <stop offset=".84" stop-color="#46dfff" stop-opacity=".22" />
-                      <stop offset="1" stop-color="#e8ffff" stop-opacity="0" />
-                    </linearGradient>
-                    <linearGradient id="horizon-yol-ice" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0" stop-color="#efffff" />
-                      <stop offset=".45" stop-color="#8ee9ff" />
-                      <stop offset="1" stop-color="#397cff" />
+                    <linearGradient id="horizon-yol-cold-veil" x1="0" y1="24" x2="0" y2="252" gradientUnits="userSpaceOnUse">
+                      <stop offset="0" stop-color="#efffff" stop-opacity="0" />
+                      <stop offset=".42" stop-color="#a8f5ff" stop-opacity=".04" />
+                      <stop offset=".68" stop-color="#55c9ff" stop-opacity=".24" />
+                      <stop offset=".86" stop-color="#287ee8" stop-opacity=".5" />
+                      <stop offset="1" stop-color="#1749a8" stop-opacity=".64" />
                     </linearGradient>
                     <filter id="horizon-sol-heat-noise" x="-8%" y="-18%" width="116%" height="136%" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB" filterRes="3360 1120">
                       <feTurbulence type="fractalNoise" baseFrequency=".004 .044" numOctaves="3" seed="53" stitchTiles="stitch" result="sol-heat-noise" />
                       <feColorMatrix in="sol-heat-noise" type="matrix" values="1.5 0 0 0 -.22  0 .72 0 0 .08  0 0 .32 0 .02  0 0 0 1 0" result="sol-heat-color" />
                       <feComposite in="sol-heat-color" in2="SourceGraphic" operator="in" />
                     </filter>
-                    <filter id="horizon-yol-mana-noise" x="-10%" y="-20%" width="120%" height="140%" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB" filterRes="3360 1120">
-                      <feTurbulence type="fractalNoise" baseFrequency=".011 .023" numOctaves="4" seed="71" stitchTiles="stitch" result="yol-mana-noise" />
-                      <feColorMatrix in="yol-mana-noise" type="matrix" values=".28 0 0 0 .02  0 .92 0 0 .12  0 0 1.7 0 .18  0 0 0 1 0" result="yol-mana-color" />
-                      <feComposite in="yol-mana-color" in2="SourceGraphic" operator="in" />
+                    <filter id="horizon-yol-cold-noise" x="-8%" y="-18%" width="116%" height="136%" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB" filterRes="3360 1120">
+                      <feTurbulence type="fractalNoise" baseFrequency=".005 .038" numOctaves="4" seed="71" stitchTiles="stitch" result="yol-cold-noise" />
+                      <feColorMatrix in="yol-cold-noise" type="matrix" values=".2 0 0 0 .02  0 1.05 0 0 .14  0 0 1.65 0 .2  0 0 0 1 0" result="yol-cold-color" />
+                      <feComposite in="yol-cold-color" in2="SourceGraphic" operator="in" />
                     </filter>
                     <linearGradient id="horizon-particle-altitude-fade" x1="0" y1="0" x2="0" y2="252" gradientUnits="userSpaceOnUse">
                       <stop offset="0" stop-color="#fff" stop-opacity=".14" />
@@ -588,9 +583,6 @@
                       <circle r="2.2" fill="currentColor" opacity=".46" />
                       <circle r="1.1" fill="currentColor" />
                       <circle r=".38" fill="#f2ffff" />
-                    </symbol>
-                    <symbol id="horizon-yol-snowflake-shape" viewBox="-8 -8 16 16">
-                      <path d="M0-7V7M-6-3.5 6 3.5M-6 3.5 6-3.5M0-7-2-5M0-7 2-5M0 7-2 5M0 7 2 5M-6-3.5-3.2-3.6M-6-3.5-4.6-.9M6 3.5 3.2 3.6M6 3.5 4.6.9M-6 3.5-3.2 3.6M-6 3.5-4.6.9M6-3.5 3.2-3.6M6-3.5 4.6-.9" fill="none" stroke="currentColor" stroke-width="1.15" />
                     </symbol>
                   </defs>
 
@@ -764,10 +756,10 @@
 
                     <g class="horizon-yol-effects">
                       <rect class="horizon-irradiance-cool" x="0" y="0" width="840" height="252" fill="url(#horizon-cool-field)" />
-                      <rect class="horizon-yol-mana-noise" x="-36" y="-18" width="912" height="292" fill="url(#horizon-yol-mana-veil)" filter="url(#horizon-yol-mana-noise)" />
-                      <g class="horizon-yol-mana-veils" fill="none" stroke="url(#horizon-yol-mana-veil)" stroke-linecap="square">
-                        <path class="horizon-yol-mana-veil horizon-yol-mana-veil-a" d="M-32 68C92 20 162 92 278 48S474 22 574 66 732 90 872 38" />
-                        <path class="horizon-yol-mana-veil horizon-yol-mana-veil-b" d="M-44 154C86 104 182 174 296 132S496 106 606 148 762 176 884 126" />
+                      <rect class="horizon-yol-cold-noise" x="-24" y="20" width="888" height="244" fill="url(#horizon-yol-cold-veil)" filter="url(#horizon-yol-cold-noise)" />
+                      <g class="horizon-yol-cold-veils">
+                        <path class="horizon-yol-cold-veil horizon-yol-cold-veil-a" d="M-24 192C76 154 134 208 226 172S382 140 470 176 642 210 864 150V272H-24Z" fill="url(#horizon-yol-cold-veil)" />
+                        <path class="horizon-yol-cold-veil horizon-yol-cold-veil-b" d="M-32 220C90 182 158 230 262 196S442 164 538 200 722 224 872 182V280H-32Z" fill="url(#horizon-yol-cold-veil)" />
                       </g>
                       <g class="horizon-yol-blue-points" color="#4eeaff" mask="url(#horizon-particle-altitude-mask)">
                         <use href="#horizon-yol-orb-shape" x="40" y="82" width="14" height="14" /><use href="#horizon-yol-orb-shape" x="80" y="138" width="10" height="10" />
@@ -807,38 +799,6 @@
                         <use href="#horizon-yol-orb-shape" x="668" y="218" width="8" height="8" /><use href="#horizon-yol-orb-shape" x="704" y="54" width="10" height="10" />
                         <use href="#horizon-yol-orb-shape" x="740" y="144" width="7" height="7" /><use href="#horizon-yol-orb-shape" x="776" y="190" width="11" height="11" />
                         <use href="#horizon-yol-orb-shape" x="812" y="86" width="8" height="8" /><use href="#horizon-yol-orb-shape" x="838" y="30" width="10" height="10" />
-                      </g>
-                      <g class="horizon-yol-ice-rim" fill="url(#horizon-yol-ice)" stroke="#eaffff" stroke-width="1">
-                        <path d="M0 238 24 226 48 240 72 220 96 238 120 224 144 242 168 218 192 238 216 226 240 242 264 216 288 238 312 222 336 240 360 218 384 238 408 224 432 242 456 216 480 238 504 222 528 240 552 218 576 238 600 224 624 242 648 216 672 238 696 222 720 240 744 218 768 238 792 224 816 240 840 220V252H0Z" />
-                        <path d="M28 236 36 206 44 238ZM124 238 134 196 144 240ZM238 238 248 202 258 240ZM354 238 364 190 376 240ZM474 238 484 200 494 240ZM594 238 606 194 616 240ZM714 238 724 202 734 240ZM804 238 816 198 826 240Z" />
-                      </g>
-                      <g class="horizon-yol-frost-crystals" fill="none" stroke="#c9f9ff" stroke-width="2.8">
-                        <path d="M0 224 34 210 68 226 102 206 136 222 170 204 204 226 238 208 272 224 306 202 340 222 374 206 408 226 442 204 476 222 510 202 544 226 578 208 612 224 646 204 680 222 714 206 748 226 782 202 816 220 840 208" />
-                        <path d="M18 240 48 226 78 242 108 224 138 238 168 222 198 242 228 226 258 240 288 220 318 238 348 224 378 242 408 222 438 238 468 220 498 242 528 226 558 240 588 222 618 238 648 224 678 242 708 220 738 238 768 224 798 240 828 222" />
-                      </g>
-                      <g class="horizon-yol-snow horizon-yol-snow-a" color="#d9faff">
-                        <use href="#horizon-yol-snowflake-shape" x="42" y="34" width="18" height="18" />
-                        <use href="#horizon-yol-snowflake-shape" x="128" y="96" width="12" height="12" />
-                        <use href="#horizon-yol-snowflake-shape" x="218" y="42" width="16" height="16" />
-                        <use href="#horizon-yol-snowflake-shape" x="314" y="112" width="20" height="20" />
-                        <use href="#horizon-yol-snowflake-shape" x="412" y="54" width="13" height="13" />
-                        <use href="#horizon-yol-snowflake-shape" x="506" y="124" width="17" height="17" />
-                        <use href="#horizon-yol-snowflake-shape" x="606" y="38" width="19" height="19" />
-                        <use href="#horizon-yol-snowflake-shape" x="704" y="104" width="14" height="14" />
-                        <use href="#horizon-yol-snowflake-shape" x="790" y="48" width="17" height="17" />
-                      </g>
-                      <g class="horizon-yol-snow horizon-yol-snow-b" color="#7fdcff">
-                        <use href="#horizon-yol-snowflake-shape" x="78" y="176" width="12" height="12" />
-                        <use href="#horizon-yol-snowflake-shape" x="168" y="146" width="17" height="17" />
-                        <use href="#horizon-yol-snowflake-shape" x="268" y="196" width="14" height="14" />
-                        <use href="#horizon-yol-snowflake-shape" x="362" y="158" width="12" height="12" />
-                        <use href="#horizon-yol-snowflake-shape" x="460" y="208" width="18" height="18" />
-                        <use href="#horizon-yol-snowflake-shape" x="558" y="168" width="14" height="14" />
-                        <use href="#horizon-yol-snowflake-shape" x="652" y="202" width="17" height="17" />
-                        <use href="#horizon-yol-snowflake-shape" x="754" y="158" width="12" height="12" />
-                      </g>
-                      <g class="horizon-yol-icicles" fill="url(#horizon-yol-ice)" stroke="#efffff" stroke-width=".8">
-                        <path d="M18 0H58L50 18 42 8 34 34 28 12ZM116 0H164L154 26 146 10 136 42 128 16ZM224 0H274L264 20 254 8 246 38 236 14ZM342 0H392L382 30 372 12 362 46 352 16ZM468 0H516L508 20 498 10 488 40 478 14ZM590 0H640L630 28 620 10 612 44 602 16ZM714 0H766L756 22 746 8 736 38 726 14ZM810 0H840V34L830 12 820 42Z" />
                       </g>
                     </g>
 

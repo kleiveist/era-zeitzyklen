@@ -226,11 +226,13 @@ gelten bei demselben Um-Stand und derselben Breitenstufe dieselben Modellwerte:
 - der Cache-Schlüssel trennt Zyklus, Zeitmodus, Blickrichtung und Breitenstufe.
 
 Sol steuert gestaffelte Farbglut, Hitzeflimmern und zwei gelbrote
-Leuchtpunktlagen. Yol steuert eine stärkere kalte Grundwirkung, zwei dünne
-cyanblaue Linienströmungen, blaue Glühwürmchen-Kugeln, eine gefüllte Frostkante,
-kräftige Kristalllinien, zwei Schneelagen und hell konturierte Eiszapfen. Die
-Glühkerne beider Körper sind verkleinert; eine gemeinsame Alpha-Höhenmaske
-reduziert ihre Wirkung stetig zum oberen Bildrand. Die vierte Effektstufe schaltet pro Körper zwei
+Leuchtpunktlagen. Yol verwendet denselben atmosphärischen Aufbau in Blau: ein
+hochaufgelöstes Kälterauschen, zwei gefüllte Kälteschleier, blaue
+Glühwürmchen-Kugeln und den blauen Endsturm. Der vertikale Farbverlauf der
+Kälteschleier beginnt oben transparent und erreicht unten seine höchste
+Deckkraft; Eiszapfen, Frostkanten und Schneeflocken gehören nicht mehr zur
+Darstellung. Die Glühkerne beider Körper sind verkleinert; eine gemeinsame
+Alpha-Höhenmaske reduziert ihre Wirkung stetig zum oberen Bildrand. Die vierte Effektstufe schaltet pro Körper zwei
 gegenläufige Sturmfelder mit mindestens 48 zusätzlichen, in weniger als
 0,8 Sekunden bewegten Partikeln frei. Haben beide Körper ihre Schwelle und
 Sturmstufe erreicht, bleiben beide Farbstürme gleichzeitig sichtbar. Zwei

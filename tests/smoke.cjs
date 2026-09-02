@@ -455,8 +455,8 @@ assert.ok(
   "Yols Effekt ist bei gleicher Himmelshöhe an 60 Grad am stärksten, bei 30 Grad mittel und am Nordpol leicht",
 );
 assert.ok(
-  desertIrradiance.yolFrost > temperateIrradiance.yolFrost && temperateIrradiance.yolFrost > polarIrradiance.yolFrost,
-  "auch Yols deutlichere Eis-Lagen folgen der Breitenstaffelung",
+  desertIrradiance.yolCold > temperateIrradiance.yolCold && temperateIrradiance.yolCold > polarIrradiance.yolCold,
+  "auch Yols blauer Kälteschleier folgt der Breitenstaffelung",
 );
 
 const beforeDelayIrradiance = contract.getHorizonIrradiance(
@@ -587,11 +587,11 @@ assert.ok(solOnlyIrradiance.warm > 0 && solOnlyIrradiance.cool === 0, "Sol allei
 assert.ok(solOnlyIrradiance.shimmer > 0, "auch Sol erhält einen zunehmenden Lichtschimmer");
 assert.equal(yolOnlyIrradiance.mode, "yol", "Yol allein erzeugt den kühlen Modus");
 assert.ok(yolOnlyIrradiance.cool > 0 && yolOnlyIrradiance.warm === 0, "Yol allein färbt ausschließlich kühl");
-assert.ok(yolOnlyIrradiance.shimmer > solOnlyIrradiance.shimmer, "Yols magischer Soloschimmer ist ausgeprägter");
+assert.equal(yolOnlyIrradiance.shimmer, solOnlyIrradiance.shimmer, "Yols blauer Kälteschimmer spiegelt Sols warmen Soloschimmer");
 assert.ok(desertIrradiance.shimmer > yolOnlyIrradiance.shimmer, "gemeinsame Sichtbarkeit schimmert stärker als Yol allein");
-assert.ok(yolOnlyIrradiance.yolMana > 0 && yolOnlyIrradiance.yolParticles > 0, "Yol aktiviert Mana-Schleier und blaue Partikel");
-assert.ok(yolOnlyIrradiance.yolFrost > 0 && yolOnlyIrradiance.yolSnow > 0, "Yols hohe Stufen aktivieren Frost und Schnee");
-assert.ok(yolOnlyIrradiance.yolIcicles > 0, "Yols stärkste Stufe aktiviert Eiszapfen");
+assert.ok(yolOnlyIrradiance.yolCold > 0 && yolOnlyIrradiance.yolParticles > 0, "Yol aktiviert den blauen Kälteschleier und blaue Partikel");
+assert.ok(yolOnlyIrradiance.yolDeepCold > 0, "Yols hohe Stufe aktiviert den kräftigeren unteren Kälteschleier");
+assert.equal("yolIcicles" in yolOnlyIrradiance, false, "Yols Modell enthält keine Eiszapfenstufe mehr");
 assert.ok(solOnlyIrradiance.solHeat > 0 && solOnlyIrradiance.solSparks > 0, "Sol aktiviert Hitzeflimmern und rote Funken");
 assert.ok(solOnlyIrradiance.solBlaze > 0, "Sols stärkste Stufe aktiviert die glühende Hitzelage");
 assert.ok(solOnlyIrradiance.solStorm > 0, "Sols vierte Stufe aktiviert den schnellen gelbroten Partikelsturm");
@@ -733,8 +733,8 @@ assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-wa
 assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-cool"), "0.000", "vor der Schwelle besitzt Yol keine kühle Tönung");
 assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-sparks"), "0.000", "Sol-Funken starten deaktiviert");
 assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-storm"), "0.000", "Sols Partikelsturm startet deaktiviert");
-assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-snow"), "0.000", "Yol-Schnee startet deaktiviert");
-assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-icicles"), "0.000", "Yol-Eiszapfen starten deaktiviert");
+assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-cold"), "0.000", "Yols Kälteschleier startet deaktiviert");
+assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-deep-cold"), "0.000", "Yols tiefer Kälteschleier startet deaktiviert");
 assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-storm"), "0.000", "Yols Leuchtkugelsturm startet deaktiviert");
 
 slider.value = "54000";
@@ -894,9 +894,8 @@ const irradianceBeforeThemeChange = {
   heat: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-heat"),
   sparks: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-sparks"),
   solStorm: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-storm"),
-  mana: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-mana"),
-  snow: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-snow"),
-  icicles: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-icicles"),
+  cold: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-cold"),
+  deepCold: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-deep-cold"),
   yolStorm: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-storm"),
 };
 elementFor("#theme-toggle").emit("click");
@@ -913,9 +912,8 @@ assert.deepEqual(
     heat: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-heat"),
     sparks: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-sparks"),
     solStorm: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-storm"),
-    mana: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-mana"),
-    snow: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-snow"),
-    icicles: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-icicles"),
+    cold: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-cold"),
+    deepCold: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-deep-cold"),
     yolStorm: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-storm"),
   },
   irradianceBeforeThemeChange,

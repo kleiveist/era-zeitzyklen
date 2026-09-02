@@ -393,11 +393,9 @@ for (const property of [
   "solSparks",
   "solBlaze",
   "solStorm",
-  "yolMana",
+  "yolCold",
   "yolParticles",
-  "yolFrost",
-  "yolSnow",
-  "yolIcicles",
+  "yolDeepCold",
   "yolStorm",
   "dualInterference",
 ]) {

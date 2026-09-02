@@ -4117,11 +4117,9 @@ footer {
   --irradiance-sol-sparks: 0;
   --irradiance-sol-blaze: 0;
   --irradiance-sol-storm: 0;
-  --irradiance-yol-mana: 0;
+  --irradiance-yol-cold: 0;
   --irradiance-yol-particles: 0;
-  --irradiance-yol-frost: 0;
-  --irradiance-yol-snow: 0;
-  --irradiance-yol-icicles: 0;
+  --irradiance-yol-deep-cold: 0;
   --irradiance-yol-storm: 0;
   --irradiance-dual: 0;
 }
@@ -4138,14 +4136,10 @@ footer {
 .horizon-sol-heat-veil,
 .horizon-sol-embers,
 .horizon-sol-storm,
-.horizon-yol-mana-noise,
-.horizon-yol-mana-veil,
+.horizon-yol-cold-noise,
+.horizon-yol-cold-veil,
 .horizon-yol-blue-points,
 .horizon-yol-orb-storm,
-.horizon-yol-ice-rim,
-.horizon-yol-frost-crystals,
-.horizon-yol-snow,
-.horizon-yol-icicles,
 .horizon-dual-interference {
   transition: opacity 900ms ease-in-out;
 }
@@ -4169,12 +4163,11 @@ footer {
 }
 
 .horizon-sol-heat-veils,
-.horizon-yol-mana-veils,
+.horizon-yol-cold-veils,
 .horizon-sol-embers,
 .horizon-sol-storm,
 .horizon-yol-blue-points,
-.horizon-yol-orb-storm,
-.horizon-yol-snow {
+.horizon-yol-orb-storm {
   transform-box: fill-box;
   transform-origin: center;
   will-change: opacity, transform;
@@ -4223,28 +4216,28 @@ footer {
   animation: horizon-sol-storm-b 0.78s ease-in-out infinite alternate-reverse;
 }
 
-.horizon-yol-mana-noise {
-  opacity: var(--irradiance-yol-mana);
+.horizon-yol-cold-noise {
+  opacity: var(--irradiance-yol-cold);
   mix-blend-mode: screen;
   transform-box: fill-box;
-  transform-origin: center;
-  animation: horizon-yol-mana-noise 10.8s ease-in-out infinite alternate;
+  transform-origin: center bottom;
+  animation: horizon-yol-cold-noise 7.6s ease-in-out infinite alternate;
 }
 
-.horizon-yol-mana-veil {
-  opacity: var(--irradiance-yol-mana);
+.horizon-yol-cold-veil {
   mix-blend-mode: screen;
-  stroke-width: 5px;
   transform-box: fill-box;
-  transform-origin: center;
+  transform-origin: center bottom;
 }
 
-.horizon-yol-mana-veil-a {
-  animation: horizon-yol-mana-veil-a 12.4s ease-in-out infinite alternate;
+.horizon-yol-cold-veil-a {
+  opacity: var(--irradiance-yol-cold);
+  animation: horizon-yol-cold-veil-a 7s ease-in-out infinite alternate;
 }
 
-.horizon-yol-mana-veil-b {
-  animation: horizon-yol-mana-veil-b 15.6s ease-in-out infinite alternate-reverse;
+.horizon-yol-cold-veil-b {
+  opacity: var(--irradiance-yol-deep-cold);
+  animation: horizon-yol-cold-veil-b 9.4s ease-in-out infinite alternate-reverse;
 }
 
 .horizon-yol-blue-points {
@@ -4264,38 +4257,6 @@ footer {
 
 .horizon-yol-orb-storm-b {
   animation: horizon-yol-orb-storm-b 0.74s ease-in-out infinite alternate-reverse;
-}
-
-.horizon-yol-ice-rim {
-  opacity: var(--irradiance-yol-frost);
-  mix-blend-mode: screen;
-  stroke-linejoin: bevel;
-}
-
-.horizon-yol-frost-crystals {
-  opacity: var(--irradiance-yol-frost);
-  mix-blend-mode: screen;
-  stroke-linecap: square;
-  stroke-linejoin: bevel;
-}
-
-.horizon-yol-snow {
-  opacity: var(--irradiance-yol-snow);
-  mix-blend-mode: screen;
-}
-
-.horizon-yol-snow-a {
-  animation: horizon-yol-snow-a 12.8s ease-in-out infinite;
-}
-
-.horizon-yol-snow-b {
-  animation: horizon-yol-snow-b 16.4s ease-in-out infinite;
-}
-
-.horizon-yol-icicles {
-  opacity: var(--irradiance-yol-icicles);
-  mix-blend-mode: screen;
-  stroke-linejoin: bevel;
 }
 
 .horizon-dual-interference {
@@ -4356,19 +4317,19 @@ footer {
   to { transform: translate3d(-15%, 12%, 0) rotate(-5deg) scale(1.03); }
 }
 
-@keyframes horizon-yol-mana-noise {
-  from { transform: translate3d(-1.4%, -0.6%, 0) scale(1.02); }
-  to { transform: translate3d(1.5%, 0.8%, 0) scale(1.06); }
+@keyframes horizon-yol-cold-noise {
+  from { transform: translate3d(-0.9%, 1.3%, 0) scale(1.015, 1.04); }
+  to { transform: translate3d(0.9%, -1.5%, 0) scale(1.035, 1.09); }
 }
 
-@keyframes horizon-yol-mana-veil-a {
-  from { transform: translate3d(-2%, -1.2%, 0) scale(1.02, 1.05); }
-  to { transform: translate3d(1.8%, 1.4%, 0) scale(1.06, 1.01); }
+@keyframes horizon-yol-cold-veil-a {
+  from { transform: translate3d(-1.3%, 1.5%, 0) scale(1.02, 1); }
+  to { transform: translate3d(1.2%, -1.9%, 0) scale(1.045, 1.085); }
 }
 
-@keyframes horizon-yol-mana-veil-b {
-  from { transform: translate3d(1.6%, 1%, 0) scale(1.04, 1.01); }
-  to { transform: translate3d(-1.8%, -1.5%, 0) scale(1.01, 1.07); }
+@keyframes horizon-yol-cold-veil-b {
+  from { transform: translate3d(1.1%, 0.9%, 0) scale(1.03, 1.02); }
+  to { transform: translate3d(-1.2%, -2.3%, 0) scale(1.055, 1.105); }
 }
 
 @keyframes horizon-yol-blue-points {
@@ -4384,18 +4345,6 @@ footer {
 @keyframes horizon-yol-orb-storm-b {
   from { transform: translate3d(13%, 10%, 0) rotate(-5deg) scale(1.12); }
   to { transform: translate3d(-17%, -12%, 0) rotate(6deg) scale(1.04); }
-}
-
-@keyframes horizon-yol-snow-a {
-  0% { transform: translate3d(-0.6%, -7%, 0); }
-  50% { transform: translate3d(1%, 2%, 0); }
-  100% { transform: translate3d(-0.4%, 10%, 0); }
-}
-
-@keyframes horizon-yol-snow-b {
-  0% { transform: translate3d(0.8%, -9%, 0); }
-  50% { transform: translate3d(-1.1%, 1%, 0); }
-  100% { transform: translate3d(0.5%, 11%, 0); }
 }
 
 @keyframes horizon-shimmer-a {
@@ -4427,11 +4376,10 @@ footer {
   .horizon-sol-heat-veil,
   .horizon-sol-embers,
   .horizon-sol-storm,
-  .horizon-yol-mana-noise,
-  .horizon-yol-mana-veil,
+  .horizon-yol-cold-noise,
+  .horizon-yol-cold-veil,
   .horizon-yol-blue-points,
   .horizon-yol-orb-storm,
-  .horizon-yol-snow,
   .horizon-shimmer-a,
   .horizon-shimmer-b {
     animation: none;
@@ -4444,14 +4392,10 @@ footer {
 :root[data-theme="light"] .horizon-sol-embers,
 :root[data-theme="light"] .horizon-sol-storm,
 :root[data-theme="light"] .horizon-irradiance-cool,
-:root[data-theme="light"] .horizon-yol-mana-noise,
-:root[data-theme="light"] .horizon-yol-mana-veil,
+:root[data-theme="light"] .horizon-yol-cold-noise,
+:root[data-theme="light"] .horizon-yol-cold-veil,
 :root[data-theme="light"] .horizon-yol-blue-points,
 :root[data-theme="light"] .horizon-yol-orb-storm,
-:root[data-theme="light"] .horizon-yol-ice-rim,
-:root[data-theme="light"] .horizon-yol-frost-crystals,
-:root[data-theme="light"] .horizon-yol-snow,
-:root[data-theme="light"] .horizon-yol-icicles,
 :root[data-theme="light"] .horizon-dual-interference {
   mix-blend-mode: multiply;
 }

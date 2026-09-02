@@ -242,10 +242,11 @@ Nach der Zwei-Um-Schwelle steigt die Wirkung über weitere sichtbare Um stufenlo
 erreichbare Maximum folgt der projizierten Himmelshöhe und der jeweiligen S-Intensität. Sol baut
 mehrere warme Lagen aus Farbglut und Hitzeflimmern auf; in den hohen Stufen tanzen kleine gelbrote
 Leuchtpunkte über die Fläche. Beide Punktfarben verwenden verkleinerte Glühkerne und werden zum
-oberen Bildrand über eine stetige Höhenmaske schwächer. Yols bewusst stärkere magische Kälte
-verwendet statt deckender violetter Flächen nur dünne cyanblaue Strömungen, blaue
-Glühwürmchen-Kugeln, eine gefüllte gezackte Frostkante, kräftige Kristalllinien, Schneeflocken und
-hell konturierte Eiszapfen. In Stufe 4 verdichten sich die Punkte jedes Körpers in zwei
+oberen Bildrand über eine stetige Höhenmaske schwächer. Yols magische Kälte spiegelt Sols
+atmosphärischen Aufbau in Blau: ein hochauflösendes Kältefeld und zwei bewegte blaue Schleier sind
+oben fast transparent und nehmen nach unten stetig zu. Kleine blaue Glühwürmchen-Kugeln ergänzen
+die Schleier; Eiszapfen, Frostkanten und Schneeflocken werden nicht verwendet. In Stufe 4
+verdichten sich die Punkte jedes Körpers in zwei
 gegenläufige, sehr schnelle Sturmfelder mit jeweils mindestens 48 zusätzlichen Partikeln. Sind
 beide Körper lange genug sichtbar, bleiben beide farbgetrennten Stürme gleichzeitig aktiv und ein
 zweilagiger Regenbogenschimmer wird dezent heller. Alle Ebenen sind hochauflösende Vektoren
@@ -473,9 +474,9 @@ SVG-Verläufe, orbitale Richtungspfeile und die frühere horizontabhängige Skal
 Y-Radien. Außerdem prüft er die präzisen Vektorbahnen, alle 48 Laufzeit-Panoramaslots, sämtliche
 24 kombinierten 3:1-Originale samt 48 RGBA-Ebenen, ihre pixelgenaue Rekonstruktion, identische
 Tag-/Nacht-Masken, eigenständige Tagespaletten, die feste Horizontebenen-Reihenfolge, den
-hochaufgelösten Sol-Hitzelagen, Yols balkenfreie cyanblaue Strömungen, beide farbgetrennten
-Partikelstürme, Schnee- und Eisstufen, den dezenten zweilagigen Regenbogenschimmer und den
-gemeinsamen Geometrievertrag.
+hochaufgelösten Sol-Hitzelagen, Yols nach unten zunehmende blaue Kälteschleier, beide
+farbgetrennten Partikelstürme, den dezenten zweilagigen Regenbogenschimmer und den gemeinsamen
+Geometrievertrag.
 
 ## Grenzen der Darstellung
 

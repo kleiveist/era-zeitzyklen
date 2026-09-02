@@ -84,10 +84,10 @@ In der Horizontdarstellung bestimmt `S-Int` zusammen mit der tatsächlichen
 Himmelshöhe und der Breitenstaffelung `60° stark > 30° mittel > 0° leicht` das
 erreichbare Maximum des grafischen Strahlungseffekts. Dieser
 beginnt für Sol und Yol jeweils erst nach zwei vollständig und ohne Unterbrechung
-sichtbaren Um und steigert sich danach mit der weiteren Sichtdauer. Yols dünne
-cyanblaue Strömungen, kleine blaue Leuchtkugeln, eine deutliche Frostkante,
-Schneeflocken und Eiszapfen
-verbildlichen magische Kälte; sie ändern nicht die Weltenregel, dass Yols
+sichtbaren Um und steigert sich danach mit der weiteren Sichtdauer. Yols nach
+unten zunehmende blaue Kälteschleier und kleine blaue Leuchtkugeln verbildlichen
+magische Kälte. Die Darstellung verwendet ausdrücklich keine Eiszapfen,
+Frostkante oder Schneeflocken und ändert nicht die Weltenregel, dass Yols
 Strahlung Wasser nicht unmittelbar gefrieren lässt. Die Partikelstürme der
 höchsten Darstellungsstufe sind ebenfalls visuelle Intensitätszeichen und keine
 zusätzliche kanonische Wetterphase.
