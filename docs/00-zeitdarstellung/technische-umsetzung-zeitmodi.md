@@ -1,7 +1,7 @@
 ---
 title: Technische Umsetzung der Zeitmodi
 status: implemented
-updated: 2026-09-01
+updated: 2026-09-02
 ---
 
 <!-- AUTO-GENERATED:backlink START -->
@@ -11,7 +11,8 @@ updated: 2026-09-01
 # Technische Umsetzung der Zeitmodi
 
 Dieses Dokument beschreibt die bereits implementierte Abbildung des linearen
-[5-s/Um-Prüfmodus](pruefmodus-5-sekunden-pro-um.md) und der schematischen
+[5-s/Um-Prüfmodus](pruefmodus-5-sekunden-pro-um.md), der linearen
+[15-min/Um-Spielsimulation](zeitdarstellung-im-spiel.md) und der schematischen
 [Sechs-Minuten-Zeitfahrt](erklaermodus-sechs-minuten.md). Es definiert keine
 neue kanonische Orbitalphysik.
 
@@ -43,18 +44,18 @@ const TOTAL_UM = UM_PER_TAN * TAN_PER_DIR * DIR_PER_MOHN * MOHN_PER_CYCLE;
 Daraus folgen `TOTAL_UM = 46_080` und `regularUm = 45_680`. Die
 Konvektionsdauer ist Teil dieser Gesamtsumme.
 
-## 3. Zwei unveränderliche Zeitprofile
+## 3. Drei unveränderliche Zeitprofile
 
 Die Modi stehen in `TIME_MODES` und werden eingefroren. Der Erklärmodus bleibt
 Standard.
 
-| Feld | `chronicle` | `inspection` |
-|---|---:|---:|
-| Art | `semantic-preview` | `linear-world-time` |
-| Gesamtdauer | 360.000 ms | 230.400.000 ms |
-| Konvektionsdauer | 32.000 ms | 2.000.000 ms |
-| Millisekunden pro Um | abschnittsabhängig | 5.000 ms |
-| Era-Rotation | 5,6°/s | 360°/Um = 72°/s bei 1× |
+| Feld | `chronicle` | `inspection` | `gameplay` |
+|---|---:|---:|---:|
+| Art | `semantic-preview` | `linear-world-time` | `linear-world-time` |
+| Gesamtdauer | 360.000 ms | 230.400.000 ms | 41.472.000.000 ms |
+| Konvektionsdauer | 32.000 ms | 2.000.000 ms | 360.000.000 ms |
+| Millisekunden pro Um | abschnittsabhängig | 5.000 ms | 900.000 ms |
+| Era-Rotation | 5,6°/s | 360°/Um = 72°/s bei 1× | 360°/Um = 0,4°/s bei 1× |
 
 Die lokale Auswahl wird unter `era-time-mode` gespeichert. Unbekannte Werte
 fallen auf `chronicle` zurück.
@@ -64,17 +65,19 @@ fallen auf `chronicle` zurück.
 Die zentrale Austauschgröße ist `cycleUm`. Sie bezeichnet den Um-Stand im
 aktiven Zyklus und liegt zwischen 0 und 46.080.
 
-### Prüfmodus
+### Lineare Modi
 
-Die Konvertierung ist überall linear:
+Prüf- und Spielmodus verwenden dieselbe lineare Konvertierung mit dem
+jeweiligen Profilwert `millisecondsPerUm`:
 
 ```text
-cycleUm = modeMs / 5.000
-modeMs  = cycleUm × 5.000
+cycleUm = modeMs / millisecondsPerUm
+modeMs  = cycleUm × millisecondsPerUm
 ```
 
-Abschnittsgrenzen ergeben sich direkt aus `umStart × 5.000` und
-`umEnd × 5.000`.
+Im Prüfmodus beträgt der Faktor 5.000 ms, in der offenen-Welt-Spielsimulation
+900.000 ms. Abschnittsgrenzen ergeben sich jeweils direkt aus `umStart ×
+millisecondsPerUm` und `umEnd × millisecondsPerUm`.
 
 ### Erklärmodus
 
@@ -99,7 +102,7 @@ Konvektion belegt fest die letzten 32.000 ms.
 5. Timeline und gemeinsamen Snapshot neu rendern.
 
 Dadurch bleiben die Nummer des Konvektionsabschlusses, Phase und Weltzeitstand
-erhalten, obwohl beide Modi unterschiedliche Echtzeitachsen verwenden.
+erhalten, obwohl die drei Modi unterschiedliche Echtzeitachsen verwenden.
 
 ## 5. Ein gemeinsamer Snapshot
 
@@ -135,12 +138,15 @@ Darstellungssekunden, Sonnenwinkel oder `S-Int` abgeleitet.
 
 ## 6. Era-Rotation
 
-Im Prüfmodus gilt für den nicht normalisierten Winkel:
+In beiden linearen Modi gilt für den nicht normalisierten Winkel:
 
 ```text
-absoluteWorldUm = cycleIndex × 46.080 + modeMs / 5.000
+absoluteWorldUm = cycleIndex × 46.080 + modeMs / millisecondsPerUm
 eraDegrees      = startDegrees + absoluteWorldUm × 360°
 ```
+
+`millisecondsPerUm` beträgt im Prüfmodus 5.000 und in der Spielsimulation
+900.000.
 
 Die absolute Weltzeit verhindert eine Rücksetzung am Zykluswechsel. Für die
 Grafik wird der Winkel anschließend auf den benötigten Bereich normalisiert.
@@ -150,11 +156,11 @@ berechnet. Dieser Pfad bleibt absichtlich illustrativ.
 
 ## 7. Sol- und Yol-Bewegung
 
-Jeder Abschnitt besitzt für beide Modi getrennte, seedgebundene
+Jeder Abschnitt besitzt für alle drei Modi getrennte, seedgebundene
 Bewegungsparameter. Der Endzustand eines Abschnitts wird als Anfangszustand
 des Nachfolgers übernommen.
 
-Im Prüfmodus gelten zusätzliche Semantiken:
+In beiden linearen Modi gelten zusätzliche Semantiken:
 
 - synchrone Kategorien erhalten exakt 360°/Um und keine zusätzliche
   Winkelschwingung;
@@ -167,7 +173,7 @@ Im Prüfmodus gelten zusätzliche Semantiken:
 - während der Konvektion werden beide Sonnen unsichtbar, ohne ihre
   Anschlusszustände willkürlich neu zu würfeln.
 
-Für elliptische Bahnen verwendet der Prüfmodus einen polaren Richtungswinkel.
+Für elliptische Bahnen verwenden beide linearen Modi einen polaren Richtungswinkel.
 Der Strahl dieses Winkels wird mit der Ellipse geschnitten. Dadurch bedeutet
 `360°/Um` tatsächlich denselben Welt-Richtungswinkel wie Eras Rotation und
 nicht bloß denselben Fortschritt eines ungeeigneten Ellipsenparameters.
@@ -230,14 +236,14 @@ Zielzyklus und übernimmt den Zeitüberhang.
 reproduzierbaren Folgeseed. `ensureCycle()` erzeugt jeden benötigten Zyklus
 höchstens einmal und speichert ihn im In-Memory-Register.
 
-Der Anschluss übernimmt die letzten Sol-/Yol-Zustände beider Modi. Im
-Prüfmodus sorgt zusätzlich `absoluteWorldUm` für Eras durchgehenden Winkel.
+Der Anschluss übernimmt die letzten Sol-/Yol-Zustände aller Modi. In beiden
+linearen Modi sorgt zusätzlich `absoluteWorldUm` für Eras durchgehenden Winkel.
 Nur `cycleUm` beginnt im neuen Zyklus wieder bei null.
 
 ## 10. Zeitpfad
 
-Der Erklärmodus baut immer die kompakte Liste seiner Phasenabschnitte. Der
-Prüfmodus aktiviert `TIMELINE_ZOOM_ORDER` mit:
+Der Erklärmodus baut immer die kompakte Liste seiner Phasenabschnitte. Beide
+linearen Modi aktivieren `TIMELINE_ZOOM_ORDER` mit:
 
 ```text
 series → cycle → detail
@@ -257,16 +263,21 @@ den nachfolgenden Button-Klick. `series` bleibt davon ausgenommen, damit dort
 jede große Karte ausschließlich ihren Zyklus öffnet.
 
 Die in der Oberfläche als **Konvektionsabschluss** bezeichnete Zahleneingabe
-öffnet im Prüfmodus direkt einen der vollständigen Prüfpfade 1 bis 300. Der
+öffnet in beiden linearen Modi direkt einen der vollständigen Pfade 1 bis 300. Der
 separate Schalter **300er-Nordpolausrichtung** springt zu Pfad 300, Um 45.880
 und öffnet das zugehörige Konvektionsdetail. Damit bleibt das 800 Tage lange
-lineare Warten für die Abnahme unnötig.
+lineare Warten für die Abnahme unnötig. Das gemeinsame Tempo-Dropdown bietet
+zusätzlich 6×; es beschleunigt nur die Wiedergabe und ändert weder
+`millisecondsPerUm` noch die Weltzeitkonvertierung.
 
 ## 11. Automatisierte Verträge
 
 `tests/time-mode-contract.cjs` prüft insbesondere:
 
 - 5.000 ms = 1 Um = 360° Era-Rotation;
+- 900.000 ms = 1 Um in der Spielsimulation;
+- 480 Tage pro vollständigem Spielsimulationszyklus und 4 Tage 4 Stunden
+  Konvektion;
 - 360.000 ms = 72 Um im Prüfmodus;
 - Konvektionsbeginn bei 45.680 Um beziehungsweise `63:26:40`;
 - Zyklusende bei 46.080 Um beziehungsweise `64:00:00`;
@@ -278,8 +289,9 @@ lineare Warten für die Abnahme unnötig.
 - stetige Phasen- und Zyklusanschlüsse;
 - reproduzierbare Folgeseeds;
 - Erhalt des Um-Stands beim Moduswechsel;
-- alle drei Prüfmodus-Zoomstufen;
+- alle drei Zoomstufen in beiden linearen Modi;
 - horizontales Scrubbing in Zyklus- und Abschnittsansicht;
+- das zusätzliche Wiedergabetempo 6×;
 - Rückkehr zur sechsminütigen Standardzeitfahrt.
 
 `tests/smoke.cjs` ergänzt den Vertrag um die sechsminütige Phasenfolge,
@@ -305,3 +317,6 @@ stetige Zyklusgrenzen und die 300er-Ausrichtung während der Konvektion.
   werden.
 - Der Prüfmodus darf seine lineare Weltzeit nicht zugunsten einer kürzeren
   Vorschau heimlich komprimieren.
+- Die Spielsimulation bildet hier ausschließlich die offene-Welt-Grundzeit
+  `1 Um = 15 Minuten` ab. Orts- und Aktionsfaktoren bleiben Gameplay-Systeme
+  und werden nicht stillschweigend als Timeline-Tempo interpretiert.

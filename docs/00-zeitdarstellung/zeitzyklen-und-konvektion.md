@@ -1,7 +1,7 @@
 ---
 title: Zeitzyklen und Konvektion von Sol und Yol
 status: accepted
-updated: 2026-09-01
+updated: 2026-09-02
 ---
 <!-- AUTO-GENERATED:backlink START -->
 [← Zurück](index.md)
@@ -167,8 +167,9 @@ Die Weltzeit und ihre beschleunigte Darstellung sind getrennt dokumentiert:
 
 - [Prüfmodus: 5 Sekunden pro Um](pruefmodus-5-sekunden-pro-um.md)
 - [Erklärmodus: Sechs-Minuten-Zeitfahrt](erklaermodus-sechs-minuten.md)
+- [Spielsimulation: 15 Minuten pro Um](zeitdarstellung-im-spiel.md)
 - [Technische Umsetzung der Zeitmodi](technische-umsetzung-zeitmodi.md)
 
-In beiden Modi bleiben Sol und Yol während der Konvektion unsichtbar. Die
+In allen drei Modi bleiben Sol und Yol während der Konvektion unsichtbar. Die
 Darstellung zeigt weder ein Zusammenlaufen noch ein Verschmelzen der beiden
 Himmelskörper.

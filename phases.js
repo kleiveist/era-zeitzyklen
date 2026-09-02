@@ -3,7 +3,7 @@
  *
  * Kanonisch sind: Namen, beobachtbare Richtungen, Einheiten, der 46.080-Um-
  * Konvektionszyklus sowie die 400-Um-Konvektion. Zahlenbereiche für Geschwindigkeit,
- * Intensität und Einzeldauer sind ein illustratives Modell; der Prüfmodus übernimmt daraus
+ * Intensität und Einzeldauer sind ein illustratives Modell; die linearen Modi übernehmen daraus
  * nur relative, seedgebundene Bewegungsverhältnisse.
  */
 (function defineEraPhases(global) {
@@ -21,6 +21,14 @@
   const INSPECTION_PRESENTATION_MS = TOTAL_UM * INSPECTION_MILLISECONDS_PER_UM;
   const INSPECTION_CONVECTION_MS =
     CONVECTION_DURATION_UM * INSPECTION_MILLISECONDS_PER_UM;
+  const INSPECTION_SPEED_METER_MAXIMUM = 160;
+  const GAMEPLAY_MINUTES_PER_UM = 15;
+  const GAMEPLAY_MILLISECONDS_PER_UM = GAMEPLAY_MINUTES_PER_UM * 60 * 1000;
+  const GAMEPLAY_PRESENTATION_MS = TOTAL_UM * GAMEPLAY_MILLISECONDS_PER_UM;
+  const GAMEPLAY_CONVECTION_MS =
+    CONVECTION_DURATION_UM * GAMEPLAY_MILLISECONDS_PER_UM;
+  const GAMEPLAY_SPEED_METER_MAXIMUM = INSPECTION_SPEED_METER_MAXIMUM *
+    (INSPECTION_MILLISECONDS_PER_UM / GAMEPLAY_MILLISECONDS_PER_UM);
   const TIME_MODES = Object.freeze({
     chronicle: Object.freeze({
       id: "chronicle",
@@ -30,18 +38,58 @@
       presentationMs: CHRONICLE_PRESENTATION_MS,
       convectionPresentationMs: CHRONICLE_CONVECTION_MS,
       eraRotationDegreesPerSecond: 5.6,
+      sliderStepMs: 50,
+      speedMeterMaximum: 14,
+      presentationLabel: "Darstellungszeit",
+      timeMappingLabel: "semantisch komprimiert",
+      timelineTitle: "Sechs-Minuten-Zeitpfad · Erklärmodus",
+      timelineSummary: "Abschnittsbreiten zeigen die Erklärzeit, nicht das lineare Verhältnis der Um. Die Konvektion erhält 32 Sekunden.",
+      timelineAriaLabel: "Klickbare Abschnitte des sechsminütigen Erklärmodus",
+      activationAnnouncement: "Sechs-Minuten-Zeitfahrt als schematischer Erklärmodus aktiviert.",
     }),
     inspection: Object.freeze({
       id: "inspection",
       label: "5 Sekunden pro Um",
       shortLabel: "5 s/Um Prüfmodus",
       kind: "linear-world-time",
+      motionProfile: "inspection",
       presentationMs: INSPECTION_PRESENTATION_MS,
       convectionPresentationMs: INSPECTION_CONVECTION_MS,
       millisecondsPerUm: INSPECTION_MILLISECONDS_PER_UM,
       umPerSecond: 1 / (INSPECTION_MILLISECONDS_PER_UM / 1000),
       eraRotationDegreesPerUm: 360,
       eraRotationDegreesPerSecond: 360 / (INSPECTION_MILLISECONDS_PER_UM / 1000),
+      sliderStepMs: 100,
+      speedMeterMaximum: INSPECTION_SPEED_METER_MAXIMUM,
+      presentationLabel: "Prüflaufzeit",
+      durationLabel: "Prüfzeit",
+      timeMappingLabel: "linear · 5 s/Um",
+      timelineTitle: "Linearer 5-s/Um-Prüfpfad",
+      timelineSummary: "Ein Um dauert bei 1× exakt fünf Sekunden. Die Konvektion beginnt bei 63:26:40 und endet mit dem Zyklus bei 64:00:00.",
+      timelineAriaLabel: "Lineare, per Klick und Ziehen steuerbare Abschnitte und Zyklen des 5-Sekunden-pro-Um-Prüfmodus",
+      activationAnnouncement: "Prüfmodus aktiviert. Fünf Sekunden entsprechen einem Um; ein Zyklus dauert 64 Stunden.",
+    }),
+    gameplay: Object.freeze({
+      id: "gameplay",
+      label: "15 Minuten pro Um",
+      shortLabel: "15 min/Um Spielsimulation",
+      kind: "linear-world-time",
+      motionProfile: "inspection",
+      presentationMs: GAMEPLAY_PRESENTATION_MS,
+      convectionPresentationMs: GAMEPLAY_CONVECTION_MS,
+      millisecondsPerUm: GAMEPLAY_MILLISECONDS_PER_UM,
+      umPerSecond: 1 / (GAMEPLAY_MILLISECONDS_PER_UM / 1000),
+      eraRotationDegreesPerUm: 360,
+      eraRotationDegreesPerSecond: 360 / (GAMEPLAY_MILLISECONDS_PER_UM / 1000),
+      sliderStepMs: 1000,
+      speedMeterMaximum: GAMEPLAY_SPEED_METER_MAXIMUM,
+      presentationLabel: "Spielsimulationszeit",
+      durationLabel: "Spielzeit",
+      timeMappingLabel: "linear · 15 min/Um",
+      timelineTitle: "Linearer 15-min/Um-Spielpfad",
+      timelineSummary: "Ein Um dauert bei 1× exakt 15 Spielminuten. Die Konvektion beginnt nach 475 Tagen und 20 Stunden und endet mit dem Zyklus nach 480 Tagen.",
+      timelineAriaLabel: "Lineare, per Klick und Ziehen steuerbare Abschnitte und Zyklen der 15-Minuten-pro-Um-Spielsimulation",
+      activationAnnouncement: "Spielsimulation aktiviert. Fünfzehn Minuten entsprechen einem Um; ein Zyklus dauert 480 Tage.",
     }),
   });
 
@@ -64,6 +112,10 @@
     inspectionMillisecondsPerUm: INSPECTION_MILLISECONDS_PER_UM,
     inspectionPresentationMs: INSPECTION_PRESENTATION_MS,
     inspectionConvectionPresentationMs: INSPECTION_CONVECTION_MS,
+    gameplayMinutesPerUm: GAMEPLAY_MINUTES_PER_UM,
+    gameplayMillisecondsPerUm: GAMEPLAY_MILLISECONDS_PER_UM,
+    gameplayPresentationMs: GAMEPLAY_PRESENTATION_MS,
+    gameplayConvectionPresentationMs: GAMEPLAY_CONVECTION_MS,
     minRepeatedTemplates: 12,
     maxRepeatedTemplates: 18,
     schemaVersion: 4,

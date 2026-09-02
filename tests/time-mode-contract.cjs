@@ -5,6 +5,7 @@ const { contract } = require("./smoke.cjs");
 
 const config = global.ERA_PHASES.config;
 const inspection = contract.TIME_MODES.inspection;
+const gameplay = contract.TIME_MODES.gameplay;
 const chronicle = contract.TIME_MODES.chronicle;
 
 function angularDistance(left, right) {
@@ -15,13 +16,17 @@ function pointDistance(left, right) {
   return Math.hypot(left.x - right.x, left.y - right.y);
 }
 
-function snapshotAt(ms, scenario, cycleIndex = 0) {
+function snapshotAtMode(ms, timeMode, scenario, cycleIndex = 0) {
   return contract.getSnapshot(ms, {
     exact: true,
-    timeMode: "inspection",
+    timeMode,
     scenario,
     cycleIndex,
   });
+}
+
+function snapshotAt(ms, scenario, cycleIndex = 0) {
+  return snapshotAtMode(ms, "inspection", scenario, cycleIndex);
 }
 
 assert.ok(Object.isFrozen(contract.TIME_MODES), "Zeitprofile sind unveränderlich");
@@ -33,6 +38,18 @@ assert.equal(inspection.umPerSecond, 0.2, "pro realer Sekunde verstreichen 0,2 U
 assert.equal(inspection.presentationMs, 230400000, "46.080 Um ergeben exakt 64 Stunden");
 assert.equal(inspection.convectionPresentationMs, 2000000, "400 Um ergeben 33 Minuten 20 Sekunden");
 assert.equal(inspection.eraRotationDegreesPerSecond, 72, "Era dreht sich bei 1× um 72 Grad pro Sekunde");
+assert.equal(gameplay.millisecondsPerUm, 900000, "ein Um dauert in der Spielsimulation 15 Minuten");
+assert.equal(gameplay.umPerSecond, 1 / 900, "die Spielsimulation vergeht linear mit 1/900 Um pro Sekunde");
+assert.equal(gameplay.presentationMs, 41472000000, "46.080 Um ergeben in der offenen-Welt-Grundzeit 480 Tage");
+assert.equal(gameplay.convectionPresentationMs, 360000000, "400 Um Konvektion ergeben vier Tage und vier Stunden Spielzeit");
+assert.equal(gameplay.eraRotationDegreesPerSecond, 0.4, "Era dreht sich in 15 Minuten exakt einmal");
+assert.equal(gameplay.motionProfile, "inspection", "beide linearen Modi teilen denselben Um-basierten Bewegungsplan");
+assert.ok(
+  Math.abs(gameplay.speedMeterMaximum - inspection.speedMeterMaximum / 180) < 1e-12,
+  "der Spielmodus skaliert die Geschwindigkeitsanzeige proportional zur 180-fach längeren Um-Dauer",
+);
+assert.equal(inspection.presentationMs / 6, 38400000, "der Prüfpfad dauert bei 6× exakt 10 Stunden 40 Minuten");
+assert.equal(gameplay.presentationMs / 6, 6912000000, "der Spielpfad dauert bei 6× exakt 80 Tage");
 
 document.querySelector("#time-mode").value = "inspection";
 document.querySelector("#time-mode").emit("change");
@@ -75,6 +92,18 @@ contract.selectCycle(0, { cycleUm: 0 });
 const afterOneUm = snapshotAt(5000, scenario0);
 assert.equal(afterOneUm.cycleUm, 1, "nach fünf Sekunden ist genau ein Um vergangen");
 assert.equal(afterOneUm.absoluteWorldUm, 1, "Kalender und Bewegung verwenden dieselbe Weltzeit");
+const gameplayAfterOneUm = snapshotAtMode(
+  gameplay.millisecondsPerUm,
+  "gameplay",
+  scenario0,
+);
+assert.equal(gameplayAfterOneUm.cycleUm, 1, "nach 15 Spielminuten ist genau ein Um vergangen");
+for (const bodyName of ["sol", "yol"]) {
+  assert.ok(
+    angularDistance(gameplayAfterOneUm[bodyName].angle, afterOneUm[bodyName].angle) < 1e-9,
+    `${bodyName}: Prüf- und Spielmodus zeigen am selben Um denselben linearen Weltwinkel`,
+  );
+}
 const eraAtZero = contract.getEraRotationUnwrappedDegrees(0, "orbit", {
   exact: true,
   timeMode: "inspection",
@@ -88,6 +117,23 @@ const eraAfterOneUm = contract.getEraRotationUnwrappedDegrees(5000, "orbit", {
   cycleIndex: 0,
 });
 assert.equal(eraAfterOneUm - eraAtZero, 360, "ein Um erzeugt exakt eine Era-Rotation");
+const gameplayEraAtZero = contract.getEraRotationUnwrappedDegrees(0, "orbit", {
+  exact: true,
+  timeMode: "gameplay",
+  scenario: scenario0,
+  cycleIndex: 0,
+});
+const gameplayEraAfterOneUm = contract.getEraRotationUnwrappedDegrees(
+  gameplay.millisecondsPerUm,
+  "orbit",
+  {
+    exact: true,
+    timeMode: "gameplay",
+    scenario: scenario0,
+    cycleIndex: 0,
+  },
+);
+assert.equal(gameplayEraAfterOneUm - gameplayEraAtZero, 360, "auch die Spielsimulation erzeugt pro Um exakt eine Era-Rotation");
 
 const afterSixMinutes = snapshotAt(360000, scenario0);
 assert.equal(afterSixMinutes.cycleUm, 72, "sechs reale Minuten ergeben im Prüfmodus 72 Um");
@@ -309,6 +355,82 @@ assert.ok(
   "der synthetische Klick nach einer Ziehgeste löst keinen zweiten Zeitsprung aus",
 );
 
+const inspectionFrameBeforeGameplay = contract.getLastRenderFrame();
+const worldUmBeforeGameplay = inspectionFrameBeforeGameplay.snapshot.absoluteWorldUm;
+document.querySelector("#time-mode").value = "gameplay";
+document.querySelector("#time-mode").emit("change");
+assert.equal(contract.getState().timeMode, "gameplay", "Dropdown aktiviert die dritte Zeit-Einstellung");
+assert.equal(contract.getState().absoluteWorldUm, worldUmBeforeGameplay, "Spielmoduswechsel bewahrt den exakten Weltzeitstand");
+assert.equal(document.querySelector("#time-slider").getAttribute("max"), "41472000000", "Spielzeit-Slider umfasst den vollständigen 480-Tage-Zyklus");
+assert.equal(document.querySelector("#time-slider").getAttribute("step"), "1000", "Spielzeit-Slider verwendet stabile Sekundenschritte");
+assert.equal(document.querySelector("#timeline-total").textContent, "480 Tage · 00:00:00", "Spielzeit wird als lesbare Tagesdauer ausgegeben");
+assert.equal(document.querySelector("#timeline-title").textContent, "Linearer 15-min/Um-Spielpfad");
+assert.match(document.querySelector("#timeline-summary").textContent, /15 Spielminuten/);
+assert.equal(document.querySelector("#timeline-zoom-controls").hidden, false, "Spielsimulation erhält dieselbe Langzeitnavigation");
+assert.equal(document.querySelector("#phase-track").getAttribute("data-time-kind"), "linear-world-time", "Spielpfad verwendet die gemeinsame lineare Interaktion");
+assert.equal(localStorage.getItem("era-time-mode"), "gameplay", "Dropdown speichert die Spielsimulation");
+const gameplayFrameAfterSwitch = contract.getLastRenderFrame();
+for (const bodyName of ["sol", "yol"]) {
+  assert.ok(
+    angularDistance(
+      inspectionFrameBeforeGameplay.snapshot[bodyName].angle,
+      gameplayFrameAfterSwitch.snapshot[bodyName].angle,
+    ) < 1e-9,
+    `${bodyName}: Moduswechsel verändert am selben Um nicht den Weltwinkel`,
+  );
+}
+
+contract.setTimelineZoom("series", { announce: false });
+assert.ok(
+  document.querySelector("#phase-track").querySelectorAll(".cycle-segment").length >= 2,
+  "Spielsimulation besitzt den Zyklusfolgen-Zoom",
+);
+contract.setTimelineZoom("cycle", { announce: false });
+assert.equal(
+  contract.getTimelineScrubTargetMs(600, {
+    left: 100,
+    clientWidth: 1000,
+    scrollWidth: 1000,
+  }),
+  gameplay.presentationMs / 2,
+  "Spielpfad-Scrubbing bildet die Mitte auf 240 Tage ab",
+);
+contract.setTimelineZoom("detail", { announce: false });
+assert.equal(
+  document.querySelector("#phase-track").querySelectorAll(".phase-segment-detail").length,
+  1,
+  "Spielsimulation besitzt denselben Detail-Zoom",
+);
+
+contract.selectCycle(0, { cycleUm: 0 });
+document.querySelector("#playback-rate").value = "6";
+document.querySelector("#playback-rate").emit("change");
+assert.equal(contract.getState().playbackRate, 6, "6× ist als Wiedergabetempo aktivierbar");
+contract.setPlaying(true, { announce: false });
+contract.tick(performance.now() + 1000);
+assert.ok(
+  contract.getState().currentMs >= 5990 && contract.getState().currentMs <= 6020,
+  "6× lässt pro realer Sekunde sechs Sekunden der gewählten Zeitlinie verstreichen",
+);
+contract.setPlaying(false, { announce: false });
+document.querySelector("#playback-rate").value = "1";
+document.querySelector("#playback-rate").emit("change");
+
+document.querySelector("#time-mode").value = "inspection";
+document.querySelector("#time-mode").emit("change");
+contract.selectCycle(0, { cycleUm: 0 });
+document.querySelector("#playback-rate").value = "6";
+document.querySelector("#playback-rate").emit("change");
+contract.setPlaying(true, { announce: false });
+contract.tick(performance.now() + 1000);
+assert.ok(
+  contract.getState().currentMs >= 5990 && contract.getState().currentMs <= 6020,
+  "6× beschleunigt auch den linearen Prüfpfad um denselben Faktor",
+);
+contract.setPlaying(false, { announce: false });
+document.querySelector("#playback-rate").value = "1";
+document.querySelector("#playback-rate").emit("change");
+
 document.querySelector("#time-mode").value = "chronicle";
 document.querySelector("#time-mode").emit("change");
 assert.equal(contract.getState().presentationMs, 360000, "Rückkehr zum Erklärmodus stellt 6:00 wieder her");
@@ -317,8 +439,9 @@ assert.equal(document.querySelector("#timeline-zoom-controls").hidden, true, "Er
 assert.equal(localStorage.getItem("era-time-mode"), "chronicle", "Dropdown speichert die Rückkehr zum Erklärmodus");
 
 process.stdout.write(`${JSON.stringify({
-  contract: "dual-time-mode",
+  contract: "triple-time-mode",
   inspectionHours: inspection.presentationMs / 3600000,
+  gameplayDays: gameplay.presentationMs / 86400000,
   convectionStart: "63:26:40",
   cycleEnd: "64:00:00",
   materializedCycles: state1.cycleCount,

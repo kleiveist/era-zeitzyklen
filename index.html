@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Interaktive Zeitzyklen von Sol, Yol, Kor und Kor’s Shard auf Era: sechsminütiger Erklärmodus und linearer 5-Sekunden-pro-Um-Prüfmodus."
+      content="Interaktive Zeitzyklen von Sol, Yol, Kor und Kor’s Shard auf Era: Erklärmodus, linearer 5-Sekunden-Prüfmodus und 15-Minuten-Spielsimulation."
     />
     <meta id="theme-color" name="theme-color" content="#070b1a" />
     <title>Era – Zeitzyklen von Sol, Yol, Kor und Kor’s Shard</title>
@@ -98,7 +98,8 @@
             <h1><span class="title-main">Zeitzyklen</span><span class="title-orbit">von Sol, Yol, Kor &amp; Kor’s Shard</span></h1>
             <p class="subtitle">
               Betritt das Observatorium von Era und verfolge 46.080 Um als lebendige Astralchronik.
-              Wähle zwischen der sechsminütigen Zeitfahrt und einer linearen 5-s/Um-Prüfung.
+              Wähle zwischen sechsminütiger Zeitfahrt, linearer 5-s/Um-Prüfung und
+              15-min/Um-Spielsimulation.
             </p>
             <div class="hero-runes" aria-label="Merkmale der Astralchronik">
               <span><i aria-hidden="true"></i>Live-Orbit</span>
@@ -121,6 +122,7 @@
               <select id="time-mode" class="time-mode-select" aria-label="Zeitmodus der Astralchronik">
                 <option value="chronicle">6:00 · Erklärmodus</option>
                 <option value="inspection">5 s/Um · 64 Stunden</option>
+                <option value="gameplay">15 min/Um · Spielsimulation</option>
               </select>
             </label>
           </div>
@@ -323,7 +325,6 @@
                   <path class="orbit-axis-ticks" d="M412 40H428M412 72H428M412 104H428M412 136H428M412 384H428M412 416H428M412 448H428M412 480H428M40 252V268M72 252V268M104 252V268M136 252V268M168 252V268M200 252V268M232 252V268M264 252V268M576 252V268M608 252V268M640 252V268M672 252V268M704 252V268M736 252V268M768 252V268M800 252V268" />
                 </g>
                 <g class="orbit-map-frame" aria-hidden="true">
-                  <path d="M20 52V20H52M788 20H820V52M20 468V500H52M788 500H820V468" />
                   <path class="orbit-scale-ticks" d="M84 20V28M116 20V24M148 20V28M180 20V24M660 20V24M692 20V28M724 20V24M756 20V28M84 492V500M116 496V500M148 492V500M180 496V500M660 496V500M692 492V500M724 496V500M756 492V500" />
                 </g>
                 <g class="orbit-sector-labels" aria-hidden="true">
@@ -904,7 +905,7 @@
           </nav>
 
           <p id="timeline-scrub-help" class="sr-only">
-            Im Prüfmodus die Maustaste oder den Finger auf dem Zyklus- beziehungsweise Abschnittsfeld
+            In einem linearen Modus die Maustaste oder den Finger auf dem Zyklus- beziehungsweise Abschnittsfeld
             gedrückt halten und horizontal ziehen, um den Zeitstand feinzujustieren.
           </p>
           <div id="phase-track" class="phase-track" aria-label="Klickbare Abschnitte des erzeugten Zyklus" aria-describedby="timeline-scrub-help"></div>
@@ -938,6 +939,7 @@
                 <option value="1.5">1,5× · 4:00</option>
                 <option value="2">2× · 3:00</option>
                 <option value="4">4× · 1:30</option>
+                <option value="6">6× · 1:00</option>
               </select>
             </label>
             <div class="timeline-position" aria-hidden="true">
@@ -972,11 +974,12 @@
             </article>
             <article>
               <svg class="explanation-icon" aria-hidden="true"><use href="#icon-compression"></use></svg>
-              <h3>Zwei Zeitmodi</h3>
+              <h3>Drei Zeitmodi</h3>
               <p>
                 Der Erklärmodus zeigt den ganzen Zyklus in sechs Minuten und gibt der Konvektion
                 32 Sekunden. Im linearen Prüfmodus dauert jedes Um exakt fünf Sekunden; der gesamte
-                Zyklus läuft dort 64 Stunden.
+                Zyklus läuft dort 64 Stunden. Die lineare Spielsimulation übernimmt zusätzlich die
+                offene-Welt-Grundzeit von 15 Minuten pro Um.
               </p>
             </article>
           </div>

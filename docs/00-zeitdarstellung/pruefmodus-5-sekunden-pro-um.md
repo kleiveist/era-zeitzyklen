@@ -1,7 +1,7 @@
 ---
 title: Prüfmodus mit 5 Sekunden pro Um
 status: implemented
-updated: 2026-09-01
+updated: 2026-09-02
 ---
 
 <!-- AUTO-GENERATED:backlink START -->
@@ -135,7 +135,9 @@ Phasenfolge bleibt eine reproduzierbare Beispielsimulation.
 
 ## 6. Zeitpfad und Navigation
 
-Nur der Prüfmodus stellt die lineare Langzeitstruktur in drei Zoomstufen dar:
+Der Prüfmodus stellt die lineare Langzeitstruktur in drei Zoomstufen dar. Die
+[Spielsimulation](zeitdarstellung-im-spiel.md) verwendet denselben Aufbau mit
+ihrer eigenen 15-min/Um-Zeitachse:
 
 | Zoomstufe | Inhalt |
 |---|---|

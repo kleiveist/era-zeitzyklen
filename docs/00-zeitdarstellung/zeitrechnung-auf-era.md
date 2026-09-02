@@ -1,7 +1,7 @@
 ---
 title: Zeitrechnung auf Era
 status: accepted
-updated: 2026-09-01
+updated: 2026-09-02
 ---
 <!-- AUTO-GENERATED:backlink START -->
 [← Zurück](index.md)
@@ -121,6 +121,8 @@ Lore-Zeitraum repräsentieren, solange die Dokumentation beide Ebenen klar
 trennt.
 
 Die Webseite verwendet davon getrennt einen linearen
-[5-Sekunden-Prüfmodus](pruefmodus-5-sekunden-pro-um.md) und eine schematische
-[Sechs-Minuten-Zeitfahrt](erklaermodus-sechs-minuten.md). Beide ändern die
-kanonische Bedeutung eines Um nicht.
+[5-Sekunden-Prüfmodus](pruefmodus-5-sekunden-pro-um.md), eine lineare
+[15-Minuten-Spielsimulation](zeitdarstellung-im-spiel.md) für die offene-Welt-
+Grundgeschwindigkeit und eine schematische
+[Sechs-Minuten-Zeitfahrt](erklaermodus-sechs-minuten.md). Keiner dieser Modi
+ändert die kanonische Bedeutung eines Um.

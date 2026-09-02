@@ -1,7 +1,7 @@
 ---
 title: Erklärmodus als Sechs-Minuten-Zeitfahrt
 status: implemented
-updated: 2026-09-01
+updated: 2026-09-02
 ---
 
 <!-- AUTO-GENERATED:backlink START -->
@@ -99,10 +99,10 @@ Während `5:28–6:00` gilt:
 
 Der Erklärmodus verwendet den kompakten Zeitpfad mit allen Phasensiegeln. Ein
 Klick auf ein Siegel springt zum zugehörigen Abschnitt. Die drei
-Langzeit-Zoomstufen des Prüfmodus werden hier nicht eingeblendet, da bereits
+Langzeit-Zoomstufen der beiden linearen Modi werden hier nicht eingeblendet, da bereits
 der gesamte Zyklus in sechs Minuten sichtbar ist.
 
-Beim Wechsel in den Prüfmodus wird der aktuelle Um-Stand umgerechnet. Die
+Beim Wechsel in Prüfmodus oder Spielsimulation wird der aktuelle Um-Stand umgerechnet. Die
 Wiedergabe pausiert während des Wechsels, Zyklus, Phase und Weltzeitpunkt
 bleiben erhalten. Bei der Rückkehr wird derselbe Um-Stand wieder auf die
 semantische Erklärzeit abgebildet.
@@ -111,16 +111,16 @@ Die gewählte Einstellung wird lokal als `era-time-mode` gespeichert. Die
 Sechs-Minuten-Zeitfahrt bleibt der Standard, wenn keine gültige Auswahl
 vorliegt.
 
-## 6. Abgrenzung zum Prüfmodus
+## 6. Abgrenzung zu den linearen Modi
 
-| Frage | Sechs-Minuten-Erklärmodus | 5-s/Um-Prüfmodus |
-|---|---|---|
-| Vollständiger Zyklus bei 1× | 6:00 | 64:00:00 |
-| Beziehung zwischen Echtzeit und Um | abschnittsweise semantisch | überall linear |
-| Era-Rotation | illustrativ 5,6°/s | kanonisch 360°/Um = 72°/s |
-| Konvektion | didaktisch 0:32 | linear 0:33:20 |
-| Zeitpfad | kompakte Phasenübersicht | Zyklusfolge, Zyklus und Detail |
-| Hauptzweck | Phasen in einer Spielsitzung erklären | Zeitrechnung und Kontinuität exakt prüfen |
+| Frage | Sechs-Minuten-Erklärmodus | 5-s/Um-Prüfmodus | 15-min/Um-Spielsimulation |
+|---|---|---|---|
+| Vollständiger Zyklus bei 1× | 6:00 | 64:00:00 | 480 Tage |
+| Beziehung zwischen Echtzeit und Um | abschnittsweise semantisch | überall linear | überall linear |
+| Era-Rotation | illustrativ 5,6°/s | kanonisch 360°/Um = 72°/s | kanonisch 360°/Um = 0,4°/s |
+| Konvektion | didaktisch 0:32 | linear 0:33:20 | linear 4 Tage 4 Stunden |
+| Zeitpfad | kompakte Phasenübersicht | Zyklusfolge, Zyklus und Detail | Zyklusfolge, Zyklus und Detail |
+| Hauptzweck | Phasen in einer Spielsitzung erklären | Zeitrechnung und Kontinuität exakt prüfen | offene-Welt-Grundzeit simulieren |
 
 ## 7. Abnahmekriterien
 

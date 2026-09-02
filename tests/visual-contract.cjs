@@ -315,6 +315,19 @@ requireMatch("phases.js", /\bCHRONICLE_PRESENTATION_MS\s*=\s*360000\b/, "der Erk
 requireMatch("phases.js", /\bCHRONICLE_CONVECTION_MS\s*=\s*32000\b/, "die Erklärmodus-Konvektion erhält weiter 32 Sekunden");
 requireMatch("phases.js", /\bINSPECTION_MILLISECONDS_PER_UM\s*=\s*5000\b/, "der Prüfmodus verwendet fünf Sekunden pro Um");
 requireMatch("phases.js", /\bINSPECTION_PRESENTATION_MS\s*=\s*TOTAL_UM\s*\*\s*INSPECTION_MILLISECONDS_PER_UM\b/, "die 64 Stunden werden aus 46.080 Um berechnet");
+requireMatch("phases.js", /\bGAMEPLAY_MINUTES_PER_UM\s*=\s*15\b/, "die Spielsimulation übernimmt 15 Minuten pro Um aus dem Gameplay-Dokument");
+requireMatch("phases.js", /\bGAMEPLAY_MILLISECONDS_PER_UM\s*=\s*GAMEPLAY_MINUTES_PER_UM\s*\*\s*60\s*\*\s*1000\b/, "die Gameplay-Grundzeit wird ohne handgeschriebenen Millisekundenwert abgeleitet");
+requireMatch("phases.js", /\bGAMEPLAY_PRESENTATION_MS\s*=\s*TOTAL_UM\s*\*\s*GAMEPLAY_MILLISECONDS_PER_UM\b/, "die 480 Spieltage werden aus 46.080 Um berechnet");
+const gameplayTimeDocument = fs.readFileSync(
+  path.join(root, "docs", "00-zeitdarstellung", "zeitdarstellung-im-spiel.md"),
+  "utf8",
+);
+assert.match(gameplayTimeDocument, /Offene Welt und Außenbereiche[^\n]*1,0×[^\n]*15 Minuten/, "Gameplay-Doku: offene Welt verwendet 15 Minuten pro Um");
+assert.match(gameplayTimeDocument, /gewöhnliche Innenbereiche[^\n]*1,5×[^\n]*10 Minuten/, "Gameplay-Doku: Innenraumzeit folgt weiterhin dem Faktor 1,5×");
+assert.match(gameplayTimeDocument, /Große Dungeons[^\n]*2,0×[^\n]*7 Minuten 30 Sekunden/, "Gameplay-Doku: Dungeonzeit folgt weiterhin dem Faktor 2×");
+assert.match(gameplayTimeDocument, /Schnellreise[^\n]*60× bis 600×[^\n]*15 bis 1,5 Sekunden/, "Gameplay-Doku: Schnellreisezeiten sind aus der neuen Basis abgeleitet");
+assert.match(gameplayTimeDocument, /Kurzes Warten[^\n]*900×[^\n]*1 Um dauert 1 Sekunde/, "Gameplay-Doku: Wartezeit ist aus der neuen Basis abgeleitet");
+assert.match(gameplayTimeDocument, /Schlafen[^\n]*1\.800×[^\n]*1 Um dauert 0,5 Sekunden/, "Gameplay-Doku: Schlafzeit ist aus der neuen Basis abgeleitet");
 requireMatch("phases.js", /\bdefaultTimeMode\s*:\s*["']chronicle["']/, "die sechsminütige Zeitfahrt bleibt Standard");
 requireMatch("phases.js", /\bUM_PER_TAN\s*=\s*16\b/, "ein Tan besteht aus 16 Um");
 requireMatch("phases.js", /\bTAN_PER_DIR\s*=\s*8\b/, "ein Dir besteht aus 8 Tan");
@@ -323,7 +336,7 @@ requireMatch("phases.js", /\bMOHN_PER_CYCLE\s*=\s*10\b/, "ein Konvektionszyklus 
 requireMatch("phases.js", /\beraRotationDegreesPerSecond\s*:\s*5\.6\b/, "Eras Eigenrotation ist auf 5,6 Grad pro Sekunde verdoppelt");
 requireMatch("phases.js", /\bschemaVersion\s*:\s*4\b/, "Szenarioschema schützt Zeitmodi und kontinuierliche Übergänge");
 requireMatch("app.js", /template\.category\s*===\s*["']synchron["'][\s\S]*?mode\.eraRotationDegreesPerUm[\s\S]*?amplitude\s*=\s*0\b/, "alle synchronen Prüfphasen bleiben exakt an Eras Winkelgeschwindigkeit gekoppelt");
-requireMatch("app.js", /template\.motion\s*===\s*["']fixed-orbit["'][\s\S]*?if\s*\(inspection\)[\s\S]*?drift\s*=\s*0[\s\S]*?amplitude\s*=\s*0/, "weltfest stehende Sonnen erhalten im Prüfmodus keine Winkelbewegung");
+requireMatch("app.js", /template\.motion\s*===\s*["']fixed-orbit["'][\s\S]*?if\s*\(linear\)[\s\S]*?drift\s*=\s*0[\s\S]*?amplitude\s*=\s*0/, "weltfest stehende Sonnen erhalten in linearen Modi keine Winkelbewegung");
 requireMatch("app.js", /startRadialOffset[\s\S]*endRadialOffset[\s\S]*startIntensity[\s\S]*endIntensity/i, "Radialposition und Intensität besitzen explizite kontinuierliche Segmentenden");
 requireMatch("app.js", /finalCelestialStates[\s\S]*initialCelestialStates/i, "vollständige Zyklen übergeben ihre letzten Sternpositionen getrennt je Zeitmodus");
 
@@ -339,6 +352,21 @@ assert.match(orbitTag, /\bshape-rendering\s*=\s*["']crispEdges["']/i, "Orbitansi
 assert.match(horizonTag, /\bshape-rendering\s*=\s*["']crispEdges["']/i, "Horizontansicht rendert mit crispEdges");
 assert.match(orbitTag, /\baria-labelledby\s*=/i, "Orbitansicht besitzt zugänglichen Titel und Beschreibung");
 assert.match(horizonTag, /\baria-labelledby\s*=/i, "Horizontansicht besitzt zugänglichen Titel und Beschreibung");
+reject(
+  "index.html",
+  /<path\b[^>]*d=["']M20 52V20H52M788 20H820V52M20 468V500H52M788 500H820V468["']/i,
+  "die vier pixeligen rechten Winkel liegen nicht mehr über der Astralkarte",
+);
+requireMatch(
+  "styles.css",
+  /\.sky-stage\s*,\s*\.horizon-stage\s*\{[^}]*border\s*:\s*4px\s+solid/is,
+  "der eigentliche Rahmen der Astralkarte bleibt erhalten",
+);
+reject(
+  "styles.css",
+  /\.sky-stage\s*\{[^}]*border\s*:\s*0/is,
+  "der Astralkartenrahmen wird nicht mehr irrtümlich entfernt",
+);
 assert.match(horizonTag, /\bdata-biome\s*=\s*["']polar["']/i, "Horizont startet mit der polaren Eiswelt");
 assert.match(horizonTag, /\bdata-direction\s*=\s*["']north["']/i, "Horizont startet mit dem neuen Nordpanorama");
 assert.match(horizonTag, /\bdata-panorama\s*=\s*["']polar-north["']/i, "Horizont protokolliert die aktive Panorama-ID");
@@ -361,17 +389,21 @@ assert.match(directionGroupTag, /\baria-label(?:ledby)?\s*=/i, "Richtungsauswahl
 const timeModeTag = openingTag("index.html", "time-mode");
 assert.match(timeModeTag, /^<select\b/i, "Zeitmodus ist ein natives, tastaturbedienbares Auswahlfeld");
 assert.match(timeModeTag, /\baria-label\s*=/i, "Zeitmodus besitzt einen zugänglichen Namen");
-requireMatch("index.html", /id=["']time-mode["'][\s\S]*?<option\b[^>]*value=["']chronicle["'][\s\S]*?<option\b[^>]*value=["']inspection["']/i, "Dropdown enthält Erklär- und Prüfmodus");
+requireMatch("index.html", /id=["']time-mode["'][\s\S]*?<option\b[^>]*value=["']chronicle["'][\s\S]*?<option\b[^>]*value=["']inspection["'][\s\S]*?<option\b[^>]*value=["']gameplay["']/i, "Dropdown enthält Erklär-, Prüf- und Spielsimulationsmodus");
 requireMatch("index.html", /5\s*s\/Um\s*·\s*64\s*Stunden/i, "Prüfoption benennt 5 s/Um und 64 Stunden eindeutig");
+requireMatch("index.html", /15\s*min\/Um\s*·\s*Spielsimulation/i, "Gameplay-Option benennt die dokumentierte Grundgeschwindigkeit eindeutig");
+requireMatch("index.html", /<option\b[^>]*value=["']4["'][^>]*>[\s\S]*?<option\b[^>]*value=["']6["'][^>]*>\s*6×/i, "6× steht unterhalb der vorhandenen Wiedergabetempi");
 requireMatch("index.html", /<label\b[^>]*for=["']cycle-jump-input["'][^>]*>\s*Konvektionsabschluss\s*<\/label>/i, "direkte Prüfpfadauswahl heißt Konvektionsabschluss");
 reject("index.html", />\s*Zyklusnummer\s*</i, "veraltete Oberflächenbezeichnung Zyklusnummer ist entfernt");
 for (const controlId of ["timeline-zoom-out", "timeline-zoom-in", "previous-cycle", "next-cycle"]) {
   assert.match(openingTag("index.html", controlId), /^<button\b/i, `${controlId}: Timeline-Steuerung ist eine echte Schaltfläche`);
 }
 requireMatch("styles.css", /\.phase-segment-detail::before\s*\{[^}]*width\s*:\s*var\(--segment-progress[^}]*height\s*:\s*100%/is, "großes Abschnittssiegel füllt sich flächig von links nach rechts");
+requireMatch("styles.css", /:root\[data-theme="light"\]\s+\.phase-segment\.is-active\s*\{[^}]*background\s*:\s*linear-gradient\([^}]*#fffef9/is, "aktives Phasen- und Detailfeld bleibt im Hellmodus ausdrücklich hell");
+requireMatch("styles.css", /:root\[data-theme="light"\]\s+\.phase-segment-detail::before\s*\{[^}]*opacity\s*:\s*0\.1/is, "Detailfortschritt dunkelt die helle Fläche nur dezent ab");
 requireMatch("styles.css", /\.cycle-segment::before\s*\{[^}]*width\s*:\s*var\(--cycle-progress/is, "Zyklussiegel besitzt eine Gesamtfortschrittsfüllung");
 requireMatch("styles.css", /:root\[data-theme="light"\]\s+\.cycle-segment\s*\{[^}]*background\s*:\s*linear-gradient\([^}]*var\(--paper-inset\)/is, "große Zyklusschalter besitzen eine ausdrücklich helle Theme-Fläche");
-requireMatch("styles.css", /\.phase-track\[data-time-mode="inspection"\][^{]*\{[^}]*cursor\s*:\s*ew-resize[^}]*touch-action\s*:\s*pan-y/is, "Prüfpfad kennzeichnet horizontales Pointer-Scrubbing");
+requireMatch("styles.css", /\.phase-track\[data-time-kind="linear-world-time"\][^{]*\{[^}]*cursor\s*:\s*ew-resize[^}]*touch-action\s*:\s*pan-y/is, "beide linearen Zeitpfade kennzeichnen horizontales Pointer-Scrubbing");
 requireMatch("app.js", /state\.playbackAnchorMs\s*\+\s*elapsed\s*\*\s*state\.playbackRate/i, "rAF-Zeitstempel bestimmt die Wiedergabe analytisch");
 reject("app.js", /clamp\(timestamp\s*-\s*state\.lastFrameAt\s*,\s*0\s*,\s*120\)/i, "gedrosselte Frames verlieren keine Weltzeit durch die alte 120-ms-Kappung");
 
