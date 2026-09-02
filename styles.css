@@ -4113,12 +4113,36 @@ footer {
   --irradiance-cool: 0;
   --irradiance-shimmer: 0;
   --irradiance-shimmer-low: 0;
+  --irradiance-sol-heat: 0;
+  --irradiance-sol-sparks: 0;
+  --irradiance-sol-blaze: 0;
+  --irradiance-yol-mana: 0;
+  --irradiance-yol-particles: 0;
+  --irradiance-yol-frost: 0;
+  --irradiance-yol-snow: 0;
+  --irradiance-yol-icicles: 0;
+  --irradiance-dual: 0;
 }
 
 .horizon-irradiance {
   pointer-events: none;
   image-rendering: auto;
   shape-rendering: geometricPrecision;
+}
+
+.horizon-irradiance-warm,
+.horizon-irradiance-cool,
+.horizon-sol-heat-noise,
+.horizon-sol-heat-veil,
+.horizon-sol-embers,
+.horizon-yol-mana-noise,
+.horizon-yol-mana-veil,
+.horizon-yol-blue-points,
+.horizon-yol-frost-crystals,
+.horizon-yol-snow,
+.horizon-yol-icicles,
+.horizon-dual-interference {
+  transition: opacity 900ms ease-in-out;
 }
 
 .horizon-irradiance-warm {
@@ -4128,6 +4152,111 @@ footer {
 
 .horizon-irradiance-cool {
   opacity: var(--irradiance-cool);
+  mix-blend-mode: screen;
+}
+
+.horizon-sol-heat-noise {
+  opacity: var(--irradiance-sol-heat);
+  mix-blend-mode: screen;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: horizon-sol-heat-noise 7.2s ease-in-out infinite alternate;
+}
+
+.horizon-sol-heat-veils,
+.horizon-yol-mana-veils,
+.horizon-sol-embers,
+.horizon-yol-blue-points,
+.horizon-yol-snow {
+  transform-box: fill-box;
+  transform-origin: center;
+  will-change: opacity, transform;
+}
+
+.horizon-sol-heat-veil {
+  mix-blend-mode: screen;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+.horizon-sol-heat-veil-a {
+  opacity: var(--irradiance-sol-heat);
+  animation: horizon-sol-heat-veil-a 6.8s ease-in-out infinite alternate;
+}
+
+.horizon-sol-heat-veil-b {
+  opacity: var(--irradiance-sol-blaze);
+  animation: horizon-sol-heat-veil-b 9.2s ease-in-out infinite alternate-reverse;
+}
+
+.horizon-sol-embers {
+  mix-blend-mode: screen;
+}
+
+.horizon-sol-embers-a {
+  opacity: var(--irradiance-sol-sparks);
+  animation: horizon-sol-embers-a 5.6s ease-in-out infinite;
+}
+
+.horizon-sol-embers-b {
+  opacity: var(--irradiance-sol-blaze);
+  animation: horizon-sol-embers-b 7.4s ease-in-out infinite;
+}
+
+.horizon-yol-mana-noise {
+  opacity: var(--irradiance-yol-mana);
+  mix-blend-mode: screen;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: horizon-yol-mana-noise 10.8s ease-in-out infinite alternate;
+}
+
+.horizon-yol-mana-veil {
+  opacity: var(--irradiance-yol-mana);
+  mix-blend-mode: screen;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.horizon-yol-mana-veil-a {
+  animation: horizon-yol-mana-veil-a 12.4s ease-in-out infinite alternate;
+}
+
+.horizon-yol-mana-veil-b {
+  animation: horizon-yol-mana-veil-b 15.6s ease-in-out infinite alternate-reverse;
+}
+
+.horizon-yol-blue-points {
+  opacity: var(--irradiance-yol-particles);
+  mix-blend-mode: screen;
+  animation: horizon-yol-blue-points 8.8s ease-in-out infinite alternate;
+}
+
+.horizon-yol-frost-crystals {
+  opacity: var(--irradiance-yol-frost);
+  mix-blend-mode: screen;
+}
+
+.horizon-yol-snow {
+  opacity: var(--irradiance-yol-snow);
+  mix-blend-mode: screen;
+}
+
+.horizon-yol-snow-a {
+  animation: horizon-yol-snow-a 12.8s ease-in-out infinite;
+}
+
+.horizon-yol-snow-b {
+  animation: horizon-yol-snow-b 16.4s ease-in-out infinite;
+}
+
+.horizon-yol-icicles {
+  opacity: var(--irradiance-yol-icicles);
+  mix-blend-mode: screen;
+}
+
+.horizon-dual-interference {
+  opacity: var(--irradiance-dual);
   mix-blend-mode: screen;
 }
 
@@ -4145,6 +4274,65 @@ footer {
 
 .horizon-shimmer-b {
   animation: horizon-shimmer-b 11.6s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes horizon-sol-heat-noise {
+  from { transform: translate3d(-0.8%, 1.2%, 0) scale(1.015, 1.04); }
+  to { transform: translate3d(0.8%, -1.4%, 0) scale(1.03, 1.09); }
+}
+
+@keyframes horizon-sol-heat-veil-a {
+  from { transform: translate3d(-1.2%, 1.4%, 0) scale(1.02, 1); }
+  to { transform: translate3d(1.1%, -1.8%, 0) scale(1.04, 1.08); }
+}
+
+@keyframes horizon-sol-heat-veil-b {
+  from { transform: translate3d(1%, 0.8%, 0) scale(1.03, 1.02); }
+  to { transform: translate3d(-1.1%, -2.2%, 0) scale(1.05, 1.1); }
+}
+
+@keyframes horizon-sol-embers-a {
+  0% { transform: translate3d(0, 5%, 0); }
+  50% { transform: translate3d(1.1%, -4%, 0); }
+  100% { transform: translate3d(-0.7%, -10%, 0); }
+}
+
+@keyframes horizon-sol-embers-b {
+  0% { transform: translate3d(0.8%, 7%, 0) scale(0.94); }
+  50% { transform: translate3d(-0.9%, -3%, 0) scale(1.06); }
+  100% { transform: translate3d(0.4%, -12%, 0) scale(0.98); }
+}
+
+@keyframes horizon-yol-mana-noise {
+  from { transform: translate3d(-1.4%, -0.6%, 0) scale(1.02); }
+  to { transform: translate3d(1.5%, 0.8%, 0) scale(1.06); }
+}
+
+@keyframes horizon-yol-mana-veil-a {
+  from { transform: translate3d(-2%, -1.2%, 0) scale(1.02, 1.05); }
+  to { transform: translate3d(1.8%, 1.4%, 0) scale(1.06, 1.01); }
+}
+
+@keyframes horizon-yol-mana-veil-b {
+  from { transform: translate3d(1.6%, 1%, 0) scale(1.04, 1.01); }
+  to { transform: translate3d(-1.8%, -1.5%, 0) scale(1.01, 1.07); }
+}
+
+@keyframes horizon-yol-blue-points {
+  from { transform: translate3d(-0.7%, 1.4%, 0); }
+  to { transform: translate3d(0.9%, -2.2%, 0); }
+}
+
+@keyframes horizon-yol-snow-a {
+  0% { transform: translate3d(-0.6%, -7%, 0); }
+  50% { transform: translate3d(1%, 2%, 0); }
+  100% { transform: translate3d(-0.4%, 10%, 0); }
+}
+
+@keyframes horizon-yol-snow-b {
+  0% { transform: translate3d(0.8%, -9%, 0); }
+  50% { transform: translate3d(-1.1%, 1%, 0); }
+  100% { transform: translate3d(0.5%, 11%, 0); }
 }
 
 @keyframes horizon-shimmer-a {
@@ -4172,10 +4360,32 @@ footer {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .horizon-sol-heat-noise,
+  .horizon-sol-heat-veil,
+  .horizon-sol-embers,
+  .horizon-yol-mana-noise,
+  .horizon-yol-mana-veil,
+  .horizon-yol-blue-points,
+  .horizon-yol-snow,
   .horizon-shimmer-a,
   .horizon-shimmer-b {
     animation: none;
   }
+}
+
+:root[data-theme="light"] .horizon-irradiance-warm,
+:root[data-theme="light"] .horizon-sol-heat-noise,
+:root[data-theme="light"] .horizon-sol-heat-veil,
+:root[data-theme="light"] .horizon-sol-embers,
+:root[data-theme="light"] .horizon-irradiance-cool,
+:root[data-theme="light"] .horizon-yol-mana-noise,
+:root[data-theme="light"] .horizon-yol-mana-veil,
+:root[data-theme="light"] .horizon-yol-blue-points,
+:root[data-theme="light"] .horizon-yol-frost-crystals,
+:root[data-theme="light"] .horizon-yol-snow,
+:root[data-theme="light"] .horizon-yol-icicles,
+:root[data-theme="light"] .horizon-dual-interference {
+  mix-blend-mode: multiply;
 }
 
 .biome-name-label {

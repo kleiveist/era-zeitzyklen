@@ -393,92 +393,147 @@ assert.equal(contract.formatEraTime(16), "Mohn 0 · Dir 0 · Tan 1 · Um 0");
 assert.equal(contract.formatEraTime(128), "Mohn 0 · Dir 1 · Tan 0 · Um 0");
 assert.equal(contract.formatEraTime(4608), "Mohn 1 · Dir 0 · Tan 0 · Um 0");
 assert.equal(contract.formatEraTime(46080), "Mohn 10 · Dir 0 · Tan 0 · Um 0");
-assert.deepEqual(
-  contract.IRRADIANCE_MODEL.latitudeStrength,
-  { 0: 0, 30: 0.64, 60: 1 },
-  "Einstrahlung bleibt am Pol aus und ist bei 60 Grad stärker als bei 30 Grad",
-);
-assert.ok(contract.IRRADIANCE_MODEL.delayMs > 0, "Einstrahlung beginnt erst nach einer Verweildauer");
+assert.equal(contract.IRRADIANCE_MODEL.activationDelayUm, 2, "Einstrahlung beginnt exakt nach zwei sichtbaren Um");
 assert.equal(contract.IRRADIANCE_MODEL.sampleMs, 200, "Einstrahlung wird fein genug für einen glatten Verlauf abgetastet");
-assert.ok(contract.IRRADIANCE_MODEL.buildupMs > contract.IRRADIANCE_MODEL.delayMs, "Einstrahlung baut sich langsam auf");
-assert.ok(contract.IRRADIANCE_MODEL.decayMs > 0, "Einstrahlung besitzt einen langsamen Abbau statt eines Rücksetzens");
+assert.equal(contract.IRRADIANCE_MODEL.sampleUm, 0.05, "lineare Modi tasten die sichtbare Weltzeit unabhängig vom Echtzeitprofil ab");
+assert.ok(contract.IRRADIANCE_MODEL.buildupUm > contract.IRRADIANCE_MODEL.activationDelayUm, "Einstrahlung steigert sich über mehrere weitere Um");
+assert.ok(contract.IRRADIANCE_MODEL.heightFloor > 0, "ein niedriger Sonnenstand besitzt eine schwache, aber sichtbare Maximalstufe");
 assert.equal(contract.HORIZON_PROJECTION_SCALE.celestial, 0.76, "alle Sol-/Yol-Phasen verwenden dieselbe Horizonthöhe");
 
 const stableIrradianceSnapshot = {
   template: { motion: "orbit", category: "synchron" },
-  segment: { displayStart: 0 },
+  segment: { displayStart: 0, umStart: 0 },
   ms: 30000,
   positionMs: 30000,
+  cycleUm: 12,
   sol: { visible: true, intensity: 8, angularVelocity: 5.6 },
   yol: { visible: true, intensity: 8, angularVelocity: 5.6 },
 };
-const bothVisibleProjection = { sol: { visible: true }, yol: { visible: true } };
+const matureIrradianceHistory = {
+  solDwellMs: 60000,
+  yolDwellMs: 60000,
+  solDwellUm: 12,
+  yolDwellUm: 12,
+};
+const bothVisibleProjection = {
+  sol: { visible: true, height: contract.HORIZON_GEOMETRY.maxSkyHeight },
+  yol: { visible: true, height: contract.HORIZON_GEOMETRY.maxSkyHeight },
+};
 const polarIrradiance = contract.getHorizonIrradiance(
   stableIrradianceSnapshot,
   bothVisibleProjection,
   0,
+  matureIrradianceHistory,
 );
 const temperateIrradiance = contract.getHorizonIrradiance(
   stableIrradianceSnapshot,
   bothVisibleProjection,
   30,
+  matureIrradianceHistory,
 );
 const desertIrradiance = contract.getHorizonIrradiance(
   stableIrradianceSnapshot,
   bothVisibleProjection,
   60,
+  matureIrradianceHistory,
 );
-assert.equal(polarIrradiance.mode, "none", "am Pol entsteht kein Einstrahlungseffekt");
-assert.equal(polarIrradiance.warm, 0, "am Pol bleibt die Sol-Tönung aus");
-assert.equal(polarIrradiance.cool, 0, "am Pol bleibt die Yol-Tönung aus");
+assert.equal(polarIrradiance.mode, "dual", "die Zwei-Um-Regel gilt auch am Pol, wenn beide Körper sichtbar sind");
 assert.equal(temperateIrradiance.mode, "dual", "gemeinsame Sichtbarkeit mischt Sol und Yol");
 assert.ok(temperateIrradiance.warm > 0 && temperateIrradiance.cool > 0, "Dualeinstrahlung enthält warme und kalte Farbe");
 assert.ok(temperateIrradiance.shimmer > 0, "Dualeinstrahlung erzeugt Schimmer");
-assert.ok(desertIrradiance.sol > temperateIrradiance.sol, "Sol-Einstrahlung ist bei 60 Grad stärker als bei 30 Grad");
-assert.ok(desertIrradiance.yol > temperateIrradiance.yol, "Yol-Einstrahlung ist bei 60 Grad stärker als bei 30 Grad");
+assert.equal(polarIrradiance.sol, temperateIrradiance.sol, "Breitengrad ersetzt nicht die tatsächliche Himmelshöhe");
+assert.equal(desertIrradiance.yol, temperateIrradiance.yol, "gleiche Projekthöhe ergibt in jedem Biom dasselbe Maximum");
 
 const beforeDelayIrradiance = contract.getHorizonIrradiance(
-  { ...stableIrradianceSnapshot, ms: 2000, positionMs: 2000 },
+  stableIrradianceSnapshot,
   bothVisibleProjection,
   60,
+  { solDwellUm: 1.999, yolDwellUm: 1.999 },
+);
+const staleEnvelopeBeforeDelay = contract.getHorizonIrradiance(
+  stableIrradianceSnapshot,
+  bothVisibleProjection,
+  60,
+  {
+    solDwellUm: 1.999,
+    yolDwellUm: 1.999,
+    solEnvelope: 1,
+    yolEnvelope: 1,
+  },
+);
+const exactActivationIrradiance = contract.getHorizonIrradiance(
+  stableIrradianceSnapshot,
+  bothVisibleProjection,
+  60,
+  { solDwellUm: 2, yolDwellUm: 2 },
 );
 const buildingIrradiance = contract.getHorizonIrradiance(
-  { ...stableIrradianceSnapshot, ms: 7000, positionMs: 7000 },
+  stableIrradianceSnapshot,
   bothVisibleProjection,
   60,
+  { solDwellUm: 4, yolDwellUm: 4 },
 );
-assert.equal(beforeDelayIrradiance.mode, "none", "vor der Mindestdauer bleibt der Effekt aus");
-assert.ok(desertIrradiance.shimmer > buildingIrradiance.shimmer, "Schimmer wächst mit der sichtbaren Verweildauer");
+assert.equal(beforeDelayIrradiance.mode, "none", "vor zwei vollständigen sichtbaren Um bleibt der Effekt exakt aus");
+assert.equal(staleEnvelopeBeforeDelay.mode, "none", "ein alter Cachewert kann die exakte Zwei-Um-Schwelle nicht umgehen");
+assert.equal(exactActivationIrradiance.mode, "dual", "bei exakt zwei sichtbaren Um erscheint die erste Effektstufe");
+assert.ok(exactActivationIrradiance.sol > 0 && exactActivationIrradiance.yol > 0, "die Aktivierungsschwelle besitzt eine sichtbare Anfangsstärke");
+assert.ok(buildingIrradiance.shimmer > exactActivationIrradiance.shimmer, "Schimmer wächst nach der Zwei-Um-Schwelle weiter");
+assert.ok(desertIrradiance.shimmer > buildingIrradiance.shimmer, "lange gemeinsame Sichtbarkeit erzeugt eine stärkere Stufe");
+
+const lowAltitudeIrradiance = contract.getHorizonIrradiance(
+  stableIrradianceSnapshot,
+  {
+    sol: { visible: true, height: contract.HORIZON_GEOMETRY.maxSkyHeight * 0.2 },
+    yol: { visible: true, height: contract.HORIZON_GEOMETRY.maxSkyHeight * 0.2 },
+  },
+  60,
+  matureIrradianceHistory,
+);
+assert.ok(desertIrradiance.sol > lowAltitudeIrradiance.sol, "ein hoher Sol-Stand erlaubt ein stärkeres Maximum als Horizontnähe");
+assert.ok(desertIrradiance.yol > lowAltitudeIrradiance.yol, "ein hoher Yol-Stand erlaubt ein stärkeres Maximum als Horizontnähe");
+
+const lowIntensityIrradiance = contract.getHorizonIrradiance(
+  {
+    ...stableIrradianceSnapshot,
+    sol: { ...stableIrradianceSnapshot.sol, intensity: 2 },
+    yol: { ...stableIrradianceSnapshot.yol, intensity: 2 },
+  },
+  bothVisibleProjection,
+  60,
+  matureIrradianceHistory,
+);
+assert.ok(desertIrradiance.sol > lowIntensityIrradiance.sol, "Sols S-Int begrenzt die erreichbare Effektstärke");
+assert.ok(desertIrradiance.yol > lowIntensityIrradiance.yol, "Yols S-Int begrenzt die erreichbare Effektstärke");
 
 const crossPhaseIrradianceBefore = contract.getHorizonIrradiance(
   {
     ...stableIrradianceSnapshot,
-    segment: { index: 7, displayStart: 10000 },
+    segment: { index: 7, displayStart: 10000, umStart: 100 },
     ms: 19999,
     positionMs: 19999,
   },
   bothVisibleProjection,
   60,
-  { solDwellMs: 10000, yolDwellMs: 10000, solEnvelope: 0.45, yolEnvelope: 0.45 },
+  { solDwellMs: 10000, yolDwellMs: 10000, solDwellUm: 4, yolDwellUm: 4 },
 );
 const crossPhaseIrradianceAfter = contract.getHorizonIrradiance(
   {
     ...stableIrradianceSnapshot,
-    segment: { index: 8, displayStart: 20000 },
+    segment: { index: 8, displayStart: 20000, umStart: 120 },
     ms: 20001,
     positionMs: 20001,
   },
   bothVisibleProjection,
   60,
-  { solDwellMs: 10200, yolDwellMs: 10200, solEnvelope: 0.46, yolEnvelope: 0.46 },
+  { solDwellMs: 10200, yolDwellMs: 10200, solDwellUm: 4.2, yolDwellUm: 4.2 },
 );
 assert.ok(
-  crossPhaseIrradianceAfter.solDwellMs > crossPhaseIrradianceBefore.solDwellMs,
-  "ein reiner Phasenwechsel setzt Sols sichtbare Verweildauer nicht zurück",
+  crossPhaseIrradianceAfter.solDwellUm > crossPhaseIrradianceBefore.solDwellUm,
+  "ein reiner Phasenwechsel setzt Sols sichtbare Um-Dauer nicht zurück",
 );
 assert.ok(
-  crossPhaseIrradianceAfter.yolDwellMs > crossPhaseIrradianceBefore.yolDwellMs,
-  "ein reiner Phasenwechsel setzt Yols sichtbare Verweildauer nicht zurück",
+  crossPhaseIrradianceAfter.yolDwellUm > crossPhaseIrradianceBefore.yolDwellUm,
+  "ein reiner Phasenwechsel setzt Yols sichtbare Um-Dauer nicht zurück",
 );
 assert.ok(
   crossPhaseIrradianceAfter.shimmer >= crossPhaseIrradianceBefore.shimmer,
@@ -487,30 +542,30 @@ assert.ok(
 
 const settingIrradianceBefore = contract.getHorizonIrradiance(
   stableIrradianceSnapshot,
-  { sol: { visible: true }, yol: { visible: false } },
+  { sol: { visible: true, height: contract.HORIZON_GEOMETRY.maxSkyHeight }, yol: { visible: false, height: 0 } },
   60,
-  { solDwellMs: 12000, yolDwellMs: 0, solEnvelope: 0.6, yolEnvelope: 0 },
+  { solDwellUm: 12, yolDwellUm: 0 },
 );
 const settingIrradianceAfter = contract.getHorizonIrradiance(
   stableIrradianceSnapshot,
-  { sol: { visible: false }, yol: { visible: false } },
+  { sol: { visible: false, height: 0 }, yol: { visible: false, height: 0 } },
   60,
-  { solDwellMs: 0, yolDwellMs: 0, solEnvelope: 0.58, yolEnvelope: 0 },
+  { solDwellUm: 0, yolDwellUm: 0 },
 );
-assert.ok(
-  settingIrradianceAfter.sol > 0 && settingIrradianceAfter.sol < settingIrradianceBefore.sol,
-  "Sols Effekt bleibt beim Untergang erhalten und fällt ohne harten Cut ab",
-);
+assert.ok(settingIrradianceBefore.sol > 0, "Sols Effekt ist nach langer Sichtbarkeit aktiv");
+assert.equal(settingIrradianceAfter.sol, 0, "der Modellwert endet beim Untergang; CSS blendet die Ebenen weich aus");
 
 const solOnlyIrradiance = contract.getHorizonIrradiance(
   stableIrradianceSnapshot,
-  { sol: { visible: true }, yol: { visible: false } },
+  { sol: { visible: true, height: contract.HORIZON_GEOMETRY.maxSkyHeight }, yol: { visible: false, height: 0 } },
   60,
+  matureIrradianceHistory,
 );
 const yolOnlyIrradiance = contract.getHorizonIrradiance(
   stableIrradianceSnapshot,
-  { sol: { visible: false }, yol: { visible: true } },
+  { sol: { visible: false, height: 0 }, yol: { visible: true, height: contract.HORIZON_GEOMETRY.maxSkyHeight } },
   60,
+  matureIrradianceHistory,
 );
 assert.equal(solOnlyIrradiance.mode, "sol", "Sol allein erzeugt den warmen Modus");
 assert.ok(solOnlyIrradiance.warm > 0 && solOnlyIrradiance.cool === 0, "Sol allein hellt ausschließlich warm auf");
@@ -519,16 +574,11 @@ assert.equal(yolOnlyIrradiance.mode, "yol", "Yol allein erzeugt den kühlen Modu
 assert.ok(yolOnlyIrradiance.cool > 0 && yolOnlyIrradiance.warm === 0, "Yol allein färbt ausschließlich kühl");
 assert.ok(yolOnlyIrradiance.shimmer > solOnlyIrradiance.shimmer, "Yols magischer Soloschimmer ist ausgeprägter");
 assert.ok(desertIrradiance.shimmer > yolOnlyIrradiance.shimmer, "gemeinsame Sichtbarkeit schimmert stärker als Yol allein");
-
-const movingSolIrradiance = contract.getHorizonIrradiance(
-  {
-    ...stableIrradianceSnapshot,
-    sol: { ...stableIrradianceSnapshot.sol, angularVelocity: 13.6 },
-  },
-  { sol: { visible: true }, yol: { visible: false } },
-  60,
-);
-assert.ok(solOnlyIrradiance.sol > movingSolIrradiance.sol, "ein stationärer synchroner Körper baut mehr Einstrahlung auf");
+assert.ok(yolOnlyIrradiance.yolMana > 0 && yolOnlyIrradiance.yolParticles > 0, "Yol aktiviert Mana-Schleier und blaue Partikel");
+assert.ok(yolOnlyIrradiance.yolFrost > 0 && yolOnlyIrradiance.yolSnow > 0, "Yols hohe Stufen aktivieren Frost und Schnee");
+assert.ok(yolOnlyIrradiance.yolIcicles > 0, "Yols stärkste Stufe aktiviert Eiszapfen");
+assert.ok(solOnlyIrradiance.solHeat > 0 && solOnlyIrradiance.solSparks > 0, "Sol aktiviert Hitzeflimmern und rote Funken");
+assert.ok(solOnlyIrradiance.solBlaze > 0, "Sols stärkste Stufe aktiviert die glühende Hitzelage");
 assert.equal(contract.ZEHS_PARAMETERS.name, "ZEHS", "Referenzstern besitzt seinen kanonischen Namen");
 assert.equal(contract.ZEHS_PARAMETERS.type, "Referenzstern", "ZEHS ist als Referenzstern klassifiziert");
 assert.equal(contract.ZEHS_PARAMETERS.distanceAu, 40, "ZEHS liegt ungefähr 40 AU entfernt");
@@ -660,9 +710,12 @@ assertLatitude(0, "Standardbreite ist der bisherige Polstand");
 assert.equal(contract.getState().autoCycle, false, "automatisches Neuwürfeln ist standardmäßig aus");
 assert.equal(contract.getState().eraRotationOffsetDegrees, 0, "der erste Zyklus beginnt mit Eras vereinbartem Nullwinkel");
 assert.equal(elementFor("#auto-cycle").getAttribute("aria-pressed"), "false", "Doppelkreis-Schalter meldet den inaktiven Zustand");
-assert.equal(elementFor("#horizon-view").getAttribute("data-irradiance-mode"), "none", "Polstand meldet keinen Einstrahlungseffekt");
-assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-warm"), "0.000", "Polstand besitzt keine warme Tönung");
-assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-cool"), "0.000", "Polstand besitzt keine kühle Tönung");
+assert.equal(elementFor("#horizon-view").getAttribute("data-irradiance-mode"), "none", "vor der Zwei-Um-Schwelle bleibt die Einstrahlung aus");
+assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-warm"), "0.000", "vor der Schwelle besitzt Sol keine warme Tönung");
+assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-cool"), "0.000", "vor der Schwelle besitzt Yol keine kühle Tönung");
+assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-sparks"), "0.000", "Sol-Funken starten deaktiviert");
+assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-snow"), "0.000", "Yol-Schnee startet deaktiviert");
+assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-icicles"), "0.000", "Yol-Eiszapfen starten deaktiviert");
 
 slider.value = "54000";
 slider.emit("input");
@@ -818,6 +871,11 @@ const irradianceBeforeThemeChange = {
   warm: elementFor("#horizon-view").style.getPropertyValue("--irradiance-warm"),
   cool: elementFor("#horizon-view").style.getPropertyValue("--irradiance-cool"),
   shimmer: elementFor("#horizon-view").style.getPropertyValue("--irradiance-shimmer"),
+  heat: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-heat"),
+  sparks: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-sparks"),
+  mana: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-mana"),
+  snow: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-snow"),
+  icicles: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-icicles"),
 };
 elementFor("#theme-toggle").emit("click");
 assert.equal(documentElement.dataset.theme, "light", "Theme-Schalter aktiviert helles Pergament");
@@ -830,6 +888,11 @@ assert.deepEqual(
     warm: elementFor("#horizon-view").style.getPropertyValue("--irradiance-warm"),
     cool: elementFor("#horizon-view").style.getPropertyValue("--irradiance-cool"),
     shimmer: elementFor("#horizon-view").style.getPropertyValue("--irradiance-shimmer"),
+    heat: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-heat"),
+    sparks: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-sparks"),
+    mana: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-mana"),
+    snow: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-snow"),
+    icicles: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-icicles"),
   },
   irradianceBeforeThemeChange,
   "Tagmodus bewahrt die berechnete Einstrahlung unverändert",
@@ -1037,7 +1100,7 @@ for (const direction of ["north", "east", "south", "west"]) {
           latitude,
           bodyName,
         );
-        const dwellProperty = `${bodyName}DwellMs`;
+        const dwellProperty = `${bodyName}DwellUm`;
         const envelopeProperty = `${bodyName}Envelope`;
         if (
           before.visible &&
@@ -1046,7 +1109,7 @@ for (const direction of ["north", "east", "south", "west"]) {
         ) {
           assert.ok(
             historyAfter[dwellProperty] >= historyBefore[dwellProperty],
-            `${segmentIndex}/${bodyName}/${direction}/${latitude}: Verweildauer addiert sich über die Phasengrenze`,
+            `${segmentIndex}/${bodyName}/${direction}/${latitude}: sichtbare Um addieren sich über die Phasengrenze`,
           );
           assert.ok(
             historyAfter[envelopeProperty] >= historyBefore[envelopeProperty],
@@ -1063,7 +1126,7 @@ assert.ok(
   "reale Phasengrenzen mit unveränderter Sichtposition führen Einstrahlung weiter",
 );
 
-let smoothIrradianceSettings = 0;
+let cleanIrradianceSettings = 0;
 for (const direction of ["north", "east", "south", "west"]) {
   for (const latitude of [30, 60]) {
     for (
@@ -1084,20 +1147,16 @@ for (const direction of ["north", "east", "south", "west"]) {
           beforeHistory[envelopeProperty] > 0.01
         ) {
           assert.ok(
-            afterHistory[envelopeProperty] > 0,
-            `${bodyName}/${direction}/${latitude}: Untergang setzt den Effekt nicht auf null`,
+            afterHistory[envelopeProperty] === 0,
+            `${bodyName}/${direction}/${latitude}: Untergang beendet die Zwei-Um-Bedingung im Modell`,
           );
-          assert.ok(
-            afterHistory[envelopeProperty] < beforeHistory[envelopeProperty],
-            `${bodyName}/${direction}/${latitude}: Untergang startet den langsamen Effektabbau`,
-          );
-          smoothIrradianceSettings += 1;
+          cleanIrradianceSettings += 1;
         }
       }
     }
   }
 }
-assert.ok(smoothIrradianceSettings > 0, "reale Sol-/Yol-Untergänge besitzen einen langsamen Effektabbau");
+assert.ok(cleanIrradianceSettings > 0, "reale Sol-/Yol-Untergänge setzen die sichtbare Um-Serie zurück");
 
 const autoCycleButton = elementFor("#auto-cycle");
 autoCycleButton.emit("click");

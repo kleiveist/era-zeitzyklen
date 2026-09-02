@@ -487,6 +487,13 @@ for (const className of [
   "horizon-irradiance",
   "horizon-irradiance-warm",
   "horizon-irradiance-cool",
+  "horizon-sol-heat-noise",
+  "horizon-sol-embers",
+  "horizon-yol-mana-noise",
+  "horizon-yol-blue-points",
+  "horizon-yol-frost-crystals",
+  "horizon-yol-snow",
+  "horizon-yol-icicles",
   "horizon-shimmer",
   "orbit-nebula",
   "orbit-distant-worlds",
@@ -634,22 +641,31 @@ requireMatch(
 );
 reject("index.html", /horizon-clouds-pixel-hd\.png/i, "die frühere gemeinsame Wolkenebene wird nicht mehr verwendet");
 reject("index.html", /horizon-clouds-desert-/i, "für die Wüste existiert keine Wolkenebene");
-requireMatch("index.html", /id=["']horizon-irradiance["'][\s\S]*horizon-irradiance-warm[\s\S]*horizon-irradiance-cool[\s\S]*horizon-shimmer-a[\s\S]*horizon-shimmer-b/i, "Einstrahlung besitzt warme, kühle und zweifache Schimmerebenen");
+requireMatch("index.html", /id=["']horizon-irradiance["'][\s\S]*horizon-sol-effects[\s\S]*horizon-irradiance-warm[\s\S]*horizon-sol-heat-noise[\s\S]*horizon-sol-embers-a[\s\S]*horizon-sol-embers-b/i, "Sol besitzt getrennte Farb-, Hitzeflimmer- und zweifache Funkenlagen");
+requireMatch("index.html", /id=["']horizon-irradiance["'][\s\S]*horizon-yol-effects[\s\S]*horizon-irradiance-cool[\s\S]*horizon-yol-mana-noise[\s\S]*horizon-yol-mana-veil-a[\s\S]*horizon-yol-mana-veil-b/i, "Yol besitzt getrennte Farb-, Mana- und Schleierlagen");
+requireMatch("index.html", /horizon-yol-blue-points[\s\S]*horizon-yol-frost-crystals[\s\S]*horizon-yol-snow-a[\s\S]*horizon-yol-snow-b[\s\S]*horizon-yol-icicles/i, "Yols höhere Stufen enthalten blaue Punkte, Frost, Schnee und Eiszapfen");
+requireMatch("index.html", /horizon-dual-interference[\s\S]*horizon-shimmer-a[\s\S]*horizon-shimmer-b/i, "gemeinsame Sichtbarkeit besitzt zwei eigene Interferenzlagen");
 requireMatch("index.html", /id=["']horizon-warm-field["'][\s\S]*id=["']horizon-cool-field["'][\s\S]*id=["']horizon-shimmer-spectrum["']/i, "Einstrahlung verwendet hochauflösende kontinuierliche Farbfelder");
 requireMatch("index.html", /id=["']horizon-shimmer-noise["'][^>]*filterRes=["']3360 1120["'][\s\S]*<feTurbulence\b[^>]*numOctaves=["']3["']/i, "Schimmerrauschen wird mit hoher Filterauflösung erzeugt");
+requireMatch("index.html", /id=["']horizon-sol-heat-noise["'][^>]*filterRes=["']3360 1120["'][\s\S]*id=["']horizon-yol-mana-noise["'][^>]*filterRes=["']3360 1120["']/i, "Sol-Hitze und Yol-Mana verwenden getrennte hochauflösende Filter");
+requireMatch("index.html", /id=["']horizon-sol-spark-shape["'][\s\S]*fill=["']#ff542f["'][\s\S]*fill=["']#ffd05a["']/i, "Sols gestaffelte Funken verwenden rote und glühend gelbe Vektorfarben");
+requireMatch("index.html", /id=["']horizon-yol-snowflake-shape["'][\s\S]*stroke=["']#a9f4ff["'][\s\S]*fill=["']url\(#horizon-yol-ice\)["']/i, "Yols Kältestufen verwenden gezeichnete Schneeflocken, Frost und Eis");
 requireMatch("index.html", /<rect\b[^>]*class=["'][^"']*horizon-shimmer-a[^"']*["'][^>]*filter=["']url\(#horizon-shimmer-noise\)["']/i, "erste Schimmerebene ist ein glattes Vektorfeld statt Pixelkreuzen");
 requireMatch("index.html", /<rect\b[^>]*class=["'][^"']*horizon-shimmer-b[^"']*["'][^>]*filter=["']url\(#horizon-shimmer-noise\)["']/i, "zweite Schimmerebene ist ein glattes Vektorfeld statt Pixelkreuzen");
 requireMatch("styles.css", /\.horizon-irradiance\s*\{[^}]*image-rendering\s*:\s*auto[^}]*shape-rendering\s*:\s*geometricPrecision/is, "Einstrahlung wird nicht pixelig skaliert");
 requireMatch("styles.css", /\.horizon-shimmer-a\s*\{[^}]*animation\s*:\s*horizon-shimmer-a\s+8\.4s\s+ease-in-out/is, "Schimmer bewegt sich kontinuierlich statt in Rasterstufen");
 requireMatch("styles.css", /\.horizon-shimmer-b\s*\{[^}]*animation\s*:\s*horizon-shimmer-b\s+11\.6s\s+ease-in-out/is, "zweite Schimmerlage bewegt sich kontinuierlich");
 reject("styles.css", /\.horizon-shimmer-(?:a|b)\s*\{[^}]*animation\s*:[^;]*steps\s*\(/is, "Einstrahlung verwendet keine pixeligen Animationsschritte");
-requireMatch("styles.css", /--irradiance-warm\s*:\s*0[\s\S]*--irradiance-cool\s*:\s*0[\s\S]*--irradiance-shimmer\s*:\s*0/i, "Einstrahlung startet visuell vollständig deaktiviert");
-requireMatch("app.js", /latitudeStrength:\s*Object\.freeze\(\{\s*0:\s*0,\s*30:\s*0\.64,\s*60:\s*1\s*\}\)/i, "Einstrahlung ist am Pol aus und bei 60 Grad stärker als bei 30 Grad");
-requireMatch("app.js", /delayMs\s*:\s*2200[\s\S]*buildupMs\s*:\s*12000[\s\S]*decayMs\s*:\s*9000[\s\S]*sampleMs\s*:\s*200/i, "Einstrahlung besitzt fein abgetasteten langsamen Aufbau und Abbau");
-requireMatch("app.js", /function\s+buildIrradianceTimeline[\s\S]*?previous\[bodyName\]\.dwellMs\s*\+\s*elapsedMs[\s\S]*?buildupRetention[\s\S]*?Math\.exp\(-elapsedMs\s*\/\s*IRRADIANCE_MODEL\.decayMs\)/i, "sichtbare Phasen führen die Hüllkurve fort und Untergänge bauen sie langsam ab");
+requireMatch("styles.css", /--irradiance-warm\s*:\s*0[\s\S]*--irradiance-sol-heat\s*:\s*0[\s\S]*--irradiance-yol-mana\s*:\s*0[\s\S]*--irradiance-yol-icicles\s*:\s*0[\s\S]*--irradiance-dual\s*:\s*0/i, "alle Effektstufen starten visuell vollständig deaktiviert");
+requireMatch("styles.css", /\.horizon-irradiance-warm,[\s\S]*?\.horizon-sol-heat-noise,[\s\S]*?\.horizon-sol-embers,[\s\S]*?\.horizon-yol-mana-noise,[\s\S]*?\.horizon-yol-snow,[\s\S]*?\.horizon-yol-icicles,[\s\S]*?\.horizon-dual-interference\s*\{[^}]*transition\s*:\s*opacity\s+900ms\s+ease-in-out/is, "mehrere Effektlagen besitzen eine weiche Aktivierungsblende");
+requireMatch("styles.css", /:root\[data-theme=["']light["']\][\s\S]*?\.horizon-yol-frost-crystals,[\s\S]*?\.horizon-yol-snow,[\s\S]*?\.horizon-yol-icicles,[\s\S]*?\.horizon-dual-interference\s*\{[^}]*mix-blend-mode\s*:\s*multiply/is, "Frost, Schnee, Eis und Interferenz bleiben im hellen Theme kontrastreich");
+requireMatch("app.js", /activationDelayUm\s*:\s*2[\s\S]*activationFloor\s*:\s*0\.08[\s\S]*buildupUm\s*:\s*6[\s\S]*heightFloor\s*:\s*0\.28[\s\S]*sampleUm\s*:\s*0\.05/i, "Einstrahlung verwendet die exakte Zwei-Um-Schwelle und weltzeitbasierte Abstufung");
+requireMatch("app.js", /function\s+advanceIrradianceHistory[\s\S]*?previous\.dwellUm\s*\+\s*elapsedUm[\s\S]*?getIrradianceBuildup\(dwellUm\)/i, "sichtbare Um werden phasenübergreifend innerhalb des aktiven Zyklus fortgeführt");
+requireMatch("app.js", /Dwell-Um is the source of truth[\s\S]*?const\s+buildup\s*=\s*visible\s*\?\s*getIrradianceBuildup\(dwellUm\)\s*:\s*0/i, "die Zwei-Um-Schwelle wird aus sichtbaren Um statt aus einem veralteten Cachewert bestimmt");
+requireMatch("app.js", /projectionHeight\s*\/[\s\S]*HORIZON_GEOMETRY\.maxSkyHeight[\s\S]*heightMaximum[\s\S]*buildup\s*\*\s*heightMaximum/i, "das Effektmaximum folgt der tatsächlichen Höhe des Himmelskörpers");
 requireMatch("index.html", /id=["']horizon-cool-field["'][\s\S]*?#347cff[\s\S]*?#203de8/i, "Yols Einstrahlungsfeld verwendet die klarere blaue Palette");
-requireMatch("app.js", /--irradiance-cool[\s\S]*?horizonIrradiance\.cool\s*\*\s*0\.42/i, "Yols blauer Effekt wird leicht verstärkt");
-requireMatch("app.js", /data-irradiance-mode[\s\S]*--irradiance-warm[\s\S]*--irradiance-cool[\s\S]*--irradiance-shimmer/i, "der berechnete Einstrahlungszustand steuert die Live-Grafik");
+requireMatch("app.js", /--irradiance-cool[\s\S]*?horizonIrradiance\.cool\s*\*\s*0\.72/i, "Yols blaue Grundwirkung ist sichtbar verstärkt");
+requireMatch("app.js", /data-sol-effect-stage[\s\S]*data-yol-effect-stage[\s\S]*--irradiance-sol-heat[\s\S]*--irradiance-sol-sparks[\s\S]*--irradiance-yol-mana[\s\S]*--irradiance-yol-snow[\s\S]*--irradiance-yol-icicles/i, "der berechnete Stufenplan steuert alle Live-Grafikebenen");
 requireMatch("index.html", /id=["']convection-field["'][^>]*orbit-convection-hd\.png/i, "Orbit-Konvektion verwendet eine hochauflösende RGBA-Textur");
 requireMatch("index.html", /id=["']horizon-convection-field["'][^>]*horizon-convection-hd\.png/i, "Horizont-Konvektion verwendet eine hochauflösende RGBA-Textur");
 reject("index.html", /class=["'][^"']*(?:convection-band|convection-shard|horizon-shards)\b/i, "alte niedrig aufgelöste Konvektionsflächen sind entfernt");

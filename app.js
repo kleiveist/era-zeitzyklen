@@ -88,13 +88,12 @@
   });
   const HORIZON_LATITUDE_ORDER = Object.freeze([0, 30, 60]);
   const IRRADIANCE_MODEL = Object.freeze({
-    latitudeStrength: Object.freeze({ 0: 0, 30: 0.64, 60: 1 }),
-    delayMs: 2200,
-    buildupMs: 12000,
-    decayMs: 9000,
+    activationDelayUm: 2,
+    activationFloor: 0.08,
+    buildupUm: 6,
+    heightFloor: 0.28,
     sampleMs: 200,
-    relativeSpeedScale: 4,
-    minimumStability: 0.18,
+    sampleUm: 0.05,
   });
   const ZEHS_PARAMETERS = Object.freeze({
     id: "zehs",
@@ -1313,20 +1312,52 @@
     });
   }
 
+  function getIrradianceBuildup(dwellUm) {
+    const visibleUm = Math.max(0, Number(dwellUm) || 0);
+    if (visibleUm < IRRADIANCE_MODEL.activationDelayUm) return 0;
+    const activeUm = visibleUm - IRRADIANCE_MODEL.activationDelayUm;
+    const growth = 1 - Math.exp(-activeUm / IRRADIANCE_MODEL.buildupUm);
+    return clamp(
+      IRRADIANCE_MODEL.activationFloor +
+        (1 - IRRADIANCE_MODEL.activationFloor) * growth,
+      0,
+      1,
+    );
+  }
+
+  function advanceIrradianceHistory(previous, visible, elapsedMs, elapsedUm) {
+    if (!visible) {
+      return { visible: false, dwellMs: 0, dwellUm: 0, envelope: 0 };
+    }
+    const continued = Boolean(previous.visible);
+    const dwellMs = continued ? previous.dwellMs + elapsedMs : 0;
+    const dwellUm = continued ? previous.dwellUm + elapsedUm : 0;
+    return {
+      visible: true,
+      dwellMs,
+      dwellUm,
+      envelope: getIrradianceBuildup(dwellUm),
+    };
+  }
+
   function buildIrradianceTimeline(directionId, latitudeDegrees) {
     const direction = HORIZON_DIRECTIONS[directionId] ? directionId : "north";
     const latitude = normalizeHorizonLatitude(latitudeDegrees);
     const samples = [];
     let previous = {
-      sol: { visible: false, dwellMs: 0, envelope: 0 },
-      yol: { visible: false, dwellMs: 0, envelope: 0 },
+      sol: { visible: false, dwellMs: 0, dwellUm: 0, envelope: 0 },
+      yol: { visible: false, dwellMs: 0, dwellUm: 0, envelope: 0 },
     };
     let previousMs = 0;
+    let previousCycleUm = 0;
 
     for (let ms = 0; ms <= state.presentationMs; ms += IRRADIANCE_MODEL.sampleMs) {
       const sampleMs = Math.min(ms, state.presentationMs);
       const elapsedMs = samples.length === 0 ? 0 : Math.max(0, sampleMs - previousMs);
       const snapshot = getSnapshot(sampleMs, { exact: true });
+      const elapsedUm = samples.length === 0
+        ? 0
+        : Math.max(0, snapshot.cycleUm - previousCycleUm);
       const isConvection = snapshot.template.motion === "convection";
       const viewBasis = getViewBasis(
         direction,
@@ -1347,34 +1378,25 @@
           latitude,
         );
         const visible = Boolean(!isConvection && snapshot[bodyName].visible && projection.visible);
-        const dwellMs = visible
-          ? previous[bodyName].visible
-            ? previous[bodyName].dwellMs + elapsedMs
-            : 0
-          : 0;
-        let envelope = previous[bodyName].envelope;
-        if (visible && dwellMs >= IRRADIANCE_MODEL.delayMs) {
-          const buildupRetention = Math.exp(-elapsedMs / IRRADIANCE_MODEL.buildupMs);
-          envelope = 1 - (1 - envelope) * buildupRetention;
-        } else if (!visible) {
-          envelope *= Math.exp(-elapsedMs / IRRADIANCE_MODEL.decayMs);
-        }
-        if (envelope < 0.000001) envelope = 0;
-        next[bodyName] = {
+        next[bodyName] = advanceIrradianceHistory(
+          previous[bodyName],
           visible,
-          dwellMs,
-          envelope: clamp(envelope, 0, 1),
-        };
+          elapsedMs,
+          elapsedUm,
+        );
       }
       samples.push(Object.freeze({
         ms: sampleMs,
         solDwellMs: next.sol.dwellMs,
         yolDwellMs: next.yol.dwellMs,
+        solDwellUm: next.sol.dwellUm,
+        yolDwellUm: next.yol.dwellUm,
         solEnvelope: next.sol.envelope,
         yolEnvelope: next.yol.envelope,
       }));
       previous = next;
       previousMs = sampleMs;
+      previousCycleUm = snapshot.cycleUm;
       if (sampleMs === state.presentationMs) break;
     }
     return Object.freeze(samples);
@@ -1435,11 +1457,10 @@
       0,
       mode.presentationMs,
     );
-    const lookbackMs = Math.max(
-      120000,
-      IRRADIANCE_MODEL.delayMs +
-        Math.max(IRRADIANCE_MODEL.buildupMs, IRRADIANCE_MODEL.decayMs) * 8,
-    );
+    const lookbackUm = IRRADIANCE_MODEL.activationDelayUm +
+      IRRADIANCE_MODEL.buildupUm * 8;
+    const lookbackMs = lookbackUm * mode.millisecondsPerUm;
+    const sampleStepMs = IRRADIANCE_MODEL.sampleUm * mode.millisecondsPerUm;
     const canContinue = cachedState &&
       cachedState.kind === "linear-world-time" &&
       cachedState.timeMode === mode.id &&
@@ -1453,11 +1474,13 @@
           sol: {
             visible: cachedState.solVisible,
             dwellMs: cachedState.solDwellMs,
+            dwellUm: cachedState.solDwellUm,
             envelope: cachedState.solEnvelope,
           },
           yol: {
             visible: cachedState.yolVisible,
             dwellMs: cachedState.yolDwellMs,
+            dwellUm: cachedState.yolDwellUm,
             envelope: cachedState.yolEnvelope,
           },
         }
@@ -1471,8 +1494,8 @@
             mode.id,
           );
           return {
-            sol: { visible: visibility.sol, dwellMs: 0, envelope: 0 },
-            yol: { visible: visibility.yol, dwellMs: 0, envelope: 0 },
+            sol: { visible: visibility.sol, dwellMs: 0, dwellUm: 0, envelope: 0 },
+            yol: { visible: visibility.yol, dwellMs: 0, dwellUm: 0, envelope: 0 },
           };
         })();
     let previousMs = startMs;
@@ -1480,9 +1503,10 @@
     while (previousMs < boundedTarget) {
       const sampleMs = Math.min(
         boundedTarget,
-        previousMs + IRRADIANCE_MODEL.sampleMs,
+        previousMs + sampleStepMs,
       );
       const elapsedMs = sampleMs - previousMs;
+      const elapsedUm = elapsedMs / mode.millisecondsPerUm;
       const visibility = getIrradianceVisibilityState(
         sampleMs,
         direction,
@@ -1494,24 +1518,12 @@
       const next = {};
       for (const bodyName of ["sol", "yol"]) {
         const visible = visibility[bodyName];
-        const dwellMs = visible
-          ? previous[bodyName].visible
-            ? previous[bodyName].dwellMs + elapsedMs
-            : 0
-          : 0;
-        let envelope = previous[bodyName].envelope;
-        if (visible && dwellMs >= IRRADIANCE_MODEL.delayMs) {
-          const buildupRetention = Math.exp(-elapsedMs / IRRADIANCE_MODEL.buildupMs);
-          envelope = 1 - (1 - envelope) * buildupRetention;
-        } else if (!visible) {
-          envelope *= Math.exp(-elapsedMs / IRRADIANCE_MODEL.decayMs);
-        }
-        if (envelope < 0.000001) envelope = 0;
-        next[bodyName] = {
+        next[bodyName] = advanceIrradianceHistory(
+          previous[bodyName],
           visible,
-          dwellMs,
-          envelope: clamp(envelope, 0, 1),
-        };
+          elapsedMs,
+          elapsedUm,
+        );
       }
       previous = next;
       previousMs = sampleMs;
@@ -1525,6 +1537,8 @@
       yolVisible: previous.yol.visible,
       solDwellMs: previous.sol.dwellMs,
       yolDwellMs: previous.yol.dwellMs,
+      solDwellUm: previous.sol.dwellUm,
+      yolDwellUm: previous.yol.dwellUm,
       solEnvelope: previous.sol.envelope,
       yolEnvelope: previous.yol.envelope,
     });
@@ -1536,10 +1550,12 @@
     latitudeDegrees = state.horizonLatitude,
   ) {
     const latitude = normalizeHorizonLatitude(latitudeDegrees);
-    if (!state.scenario || latitude === 0) {
+    if (!state.scenario) {
       return Object.freeze({
         solDwellMs: 0,
         yolDwellMs: 0,
+        solDwellUm: 0,
+        yolDwellUm: 0,
         solEnvelope: 0,
         yolEnvelope: 0,
       });
@@ -1558,6 +1574,8 @@
       return Object.freeze({
         solDwellMs: nextState.solDwellMs,
         yolDwellMs: nextState.yolDwellMs,
+        solDwellUm: nextState.solDwellUm,
+        yolDwellUm: nextState.yolDwellUm,
         solEnvelope: nextState.solEnvelope,
         yolEnvelope: nextState.yolEnvelope,
       });
@@ -1574,12 +1592,29 @@
     const upper = timeline[upperIndex];
     const span = Math.max(1, upper.ms - lower.ms);
     const progress = clamp((boundedMs - lower.ms) / span, 0, 1);
+    const solDwellUm = interpolate(lower.solDwellUm, upper.solDwellUm, progress);
+    const yolDwellUm = interpolate(lower.yolDwellUm, upper.yolDwellUm, progress);
     return Object.freeze({
       solDwellMs: interpolate(lower.solDwellMs, upper.solDwellMs, progress),
       yolDwellMs: interpolate(lower.yolDwellMs, upper.yolDwellMs, progress),
-      solEnvelope: interpolate(lower.solEnvelope, upper.solEnvelope, progress),
-      yolEnvelope: interpolate(lower.yolEnvelope, upper.yolEnvelope, progress),
+      solDwellUm,
+      yolDwellUm,
+      solEnvelope: getIrradianceBuildup(solDwellUm),
+      yolEnvelope: getIrradianceBuildup(yolDwellUm),
     });
+  }
+
+  function irradianceLayerProgress(value, start, end) {
+    const span = Math.max(0.000001, end - start);
+    return smoothstep(clamp((value - start) / span, 0, 1));
+  }
+
+  function irradianceStage(value) {
+    if (value <= 0.0001) return 0;
+    if (value < 0.18) return 1;
+    if (value < 0.4) return 2;
+    if (value < 0.68) return 3;
+    return 4;
   }
 
   function getHorizonIrradiance(
@@ -1589,7 +1624,6 @@
     dwellHistory = null,
   ) {
     const latitude = normalizeHorizonLatitude(latitudeDegrees);
-    const latitudeStrength = IRRADIANCE_MODEL.latitudeStrength[latitude] || 0;
     const isConvection = snapshot?.template?.motion === "convection";
     const sampledMs = Number(snapshot?.positionMs ?? snapshot?.ms);
     const segmentStart = snapshot?.segment
@@ -1598,58 +1632,74 @@
     const fallbackDwellMs = Number.isFinite(sampledMs)
       ? Math.max(0, sampledMs - segmentStart)
       : 0;
+    const sampledCycleUm = Number(snapshot?.cycleUm);
+    const fallbackDwellUm = Number.isFinite(sampledCycleUm) && snapshot?.segment
+      ? Math.max(0, sampledCycleUm - snapshot.segment.umStart)
+      : snapshot?.mode?.millisecondsPerUm
+        ? fallbackDwellMs / snapshot.mode.millisecondsPerUm
+        : 0;
     const belongsToScenario = Boolean(
       state.scenario && state.scenario.segments[snapshot?.segment?.index] === snapshot?.segment,
     );
     const resolvedDwell = dwellHistory || (belongsToScenario
       ? getIrradianceDwellAt(snapshot.ms, state.horizonDirection, latitude)
-      : { solDwellMs: fallbackDwellMs, yolDwellMs: fallbackDwellMs });
+      : {
+          solDwellMs: fallbackDwellMs,
+          yolDwellMs: fallbackDwellMs,
+          solDwellUm: fallbackDwellUm,
+          yolDwellUm: fallbackDwellUm,
+        });
 
     function bodyExposure(bodyName) {
       const body = snapshot?.[bodyName];
       const projection = horizonProjection?.[bodyName];
       const visible = Boolean(
-        latitudeStrength > 0 &&
-          !isConvection &&
+        !isConvection &&
           body?.visible &&
           projection?.visible,
       );
       const dwellMs = Math.max(0, Number(resolvedDwell?.[`${bodyName}DwellMs`]) || 0);
-      const effectiveDwellMs = Math.max(0, dwellMs - IRRADIANCE_MODEL.delayMs);
-      const fallbackBuildup = visible && effectiveDwellMs > 0
-        ? 1 - Math.exp(-effectiveDwellMs / IRRADIANCE_MODEL.buildupMs)
+      const dwellUm = Math.max(0, Number(resolvedDwell?.[`${bodyName}DwellUm`]) || 0);
+      // Dwell-Um is the source of truth. Recomputing here makes the two-Um
+      // threshold exact even if a cached or externally supplied envelope is stale.
+      const buildup = visible ? getIrradianceBuildup(dwellUm) : 0;
+      const projectionHeight = Number(projection?.height);
+      const height = visible
+        ? clamp(
+          Number.isFinite(projectionHeight)
+            ? projectionHeight / HORIZON_GEOMETRY.maxSkyHeight
+            : 1,
+          0,
+          1,
+        )
         : 0;
-      const storedEnvelope = Number(resolvedDwell?.[`${bodyName}Envelope`]);
-      const buildup = clamp(
-        Number.isFinite(storedEnvelope) ? storedEnvelope : fallbackBuildup,
-        0,
-        1,
-      );
+      const heightMaximum = IRRADIANCE_MODEL.heightFloor +
+        (1 - IRRADIANCE_MODEL.heightFloor) * smoothstep(height);
       if (buildup <= 0) {
-        return { value: 0, dwellMs, buildup: 0, stability: 0 };
+        return {
+          value: 0,
+          dwellMs,
+          dwellUm,
+          buildup: 0,
+          height,
+          heightMaximum,
+          intensity: 0,
+        };
       }
 
       const intensity = clamp((Number(body.intensity) || 1) / 10, 0.1, 1);
-      const angularVelocity = Number(body.angularVelocity);
-      const eraAngularVelocity = Number(snapshot?.mode?.eraRotationDegreesPerSecond) ||
-        config.eraRotationDegreesPerSecond;
-      const relativeSpeed = Number.isFinite(angularVelocity)
-        ? Math.abs(angularVelocity - eraAngularVelocity)
-        : eraAngularVelocity;
-      const stability = clamp(
-        1 / (1 + relativeSpeed / IRRADIANCE_MODEL.relativeSpeedScale),
-        IRRADIANCE_MODEL.minimumStability,
-        1,
-      );
       return {
         value: clamp(
-          latitudeStrength * buildup * stability * (0.35 + intensity * 0.65),
+          buildup * heightMaximum * (0.35 + intensity * 0.65),
           0,
           1,
         ),
         dwellMs,
+        dwellUm,
         buildup,
-        stability,
+        height,
+        heightMaximum,
+        intensity,
       };
     }
 
@@ -1667,33 +1717,60 @@
           ? "yol"
           : "none";
     const warm = sol * (mode === "dual" ? 0.82 : 1);
-    const cool = yol * (mode === "dual" ? 0.9 : 1);
+    const cool = yol * (mode === "dual" ? 0.94 : 1);
     const shimmer = mode === "dual"
       ? clamp(
-          Math.max(sol * 0.28, yol * 0.68) + Math.min(sol, yol) * 0.5,
+          Math.max(sol * 0.24, yol * 0.82) + Math.min(sol, yol) * 0.52,
           0,
           1,
         )
       : mode === "yol"
-        ? yol * 0.68
+        ? yol * 0.82
         : mode === "sol"
-          ? sol * 0.28
+          ? sol * 0.24
           : 0;
+    const solHeat = irradianceLayerProgress(sol, 0.04, 0.58);
+    const solSparks = irradianceLayerProgress(sol, 0.22, 0.78);
+    const solBlaze = irradianceLayerProgress(sol, 0.56, 0.95);
+    const yolMana = irradianceLayerProgress(yol, 0.025, 0.5);
+    const yolParticles = irradianceLayerProgress(yol, 0.12, 0.62);
+    const yolFrost = irradianceLayerProgress(yol, 0.28, 0.76);
+    const yolSnow = irradianceLayerProgress(yol, 0.42, 0.86);
+    const yolIcicles = irradianceLayerProgress(yol, 0.62, 0.96);
+    const dualInterference = mode === "dual"
+      ? irradianceLayerProgress(Math.min(sol, yol), 0.12, 0.72)
+      : 0;
 
     return Object.freeze({
       mode,
       latitude,
-      latitudeStrength,
       buildup: Math.max(solExposure.buildup, yolExposure.buildup),
       solBuildup: solExposure.buildup,
       yolBuildup: yolExposure.buildup,
       solDwellMs: solExposure.dwellMs,
       yolDwellMs: yolExposure.dwellMs,
+      solDwellUm: solExposure.dwellUm,
+      yolDwellUm: yolExposure.dwellUm,
+      solHeight: solExposure.height,
+      yolHeight: yolExposure.height,
+      solHeightMaximum: solExposure.heightMaximum,
+      yolHeightMaximum: yolExposure.heightMaximum,
       sol,
       yol,
       warm,
       cool,
       shimmer,
+      solStage: irradianceStage(sol),
+      yolStage: irradianceStage(yol),
+      solHeat,
+      solSparks,
+      solBlaze,
+      yolMana,
+      yolParticles,
+      yolFrost,
+      yolSnow,
+      yolIcicles,
+      dualInterference,
     });
   }
 
@@ -2883,24 +2960,30 @@
       elements.horizonView.setAttribute("data-irradiance-mode", horizonIrradiance.mode);
       elements.horizonView.setAttribute("data-sol-exposure", horizonIrradiance.sol.toFixed(3));
       elements.horizonView.setAttribute("data-yol-exposure", horizonIrradiance.yol.toFixed(3));
+      elements.horizonView.setAttribute("data-sol-effect-stage", String(horizonIrradiance.solStage));
+      elements.horizonView.setAttribute("data-yol-effect-stage", String(horizonIrradiance.yolStage));
+      elements.horizonView.setAttribute("data-sol-visible-um", horizonIrradiance.solDwellUm.toFixed(3));
+      elements.horizonView.setAttribute("data-yol-visible-um", horizonIrradiance.yolDwellUm.toFixed(3));
       elements.horizonView.setAttribute("data-kor-visible", String(korVisible));
       elements.horizonView.setAttribute("data-kors-shard-visible", String(korsShardVisible));
-      elements.horizonView.style.setProperty(
-        "--irradiance-warm",
-        (horizonIrradiance.warm * 0.34).toFixed(3),
-      );
-      elements.horizonView.style.setProperty(
-        "--irradiance-cool",
-        (horizonIrradiance.cool * 0.42).toFixed(3),
-      );
-      elements.horizonView.style.setProperty(
-        "--irradiance-shimmer",
-        horizonIrradiance.shimmer.toFixed(3),
-      );
-      elements.horizonView.style.setProperty(
-        "--irradiance-shimmer-low",
-        (horizonIrradiance.shimmer * 0.48).toFixed(3),
-      );
+      const irradianceProperties = {
+        "--irradiance-warm": horizonIrradiance.warm * 0.62,
+        "--irradiance-cool": horizonIrradiance.cool * 0.72,
+        "--irradiance-shimmer": horizonIrradiance.shimmer * 0.76,
+        "--irradiance-shimmer-low": horizonIrradiance.shimmer * 0.34,
+        "--irradiance-sol-heat": horizonIrradiance.solHeat * 0.62,
+        "--irradiance-sol-sparks": horizonIrradiance.solSparks * 0.94,
+        "--irradiance-sol-blaze": horizonIrradiance.solBlaze * 0.76,
+        "--irradiance-yol-mana": horizonIrradiance.yolMana * 0.84,
+        "--irradiance-yol-particles": horizonIrradiance.yolParticles * 0.96,
+        "--irradiance-yol-frost": horizonIrradiance.yolFrost * 0.78,
+        "--irradiance-yol-snow": horizonIrradiance.yolSnow * 0.92,
+        "--irradiance-yol-icicles": horizonIrradiance.yolIcicles * 0.88,
+        "--irradiance-dual": horizonIrradiance.dualInterference * 0.74,
+      };
+      for (const [property, value] of Object.entries(irradianceProperties)) {
+        elements.horizonView.style.setProperty(property, value.toFixed(3));
+      }
     }
     if (elements.horizonConvectionField) {
       elements.horizonConvectionField.classList.toggle("is-visible", isConvection);
@@ -2919,14 +3002,14 @@
         korVisible || korsShardVisible ? "auf ihren eigenständigen Polpassagen sichtbar" : "außerhalb dieser lokalen Sichtlinie"
       }; beide Weltkörper besitzen getrennte Bahnphasen, ihre Größe und Deckkraft folgen kontinuierlich Entfernung und Horizonthöhe.`;
       const irradianceText = horizonIrradiance.mode === "dual"
-        ? "Die länger anhaltende gemeinsame Einstrahlung mischt warmes Sol- und kühles Yol-Licht mit starkem Schimmer."
+        ? "Sol und Yol sind jeweils seit mindestens zwei Um sichtbar: Hitzeflimmern, rote Funken, Mana-Schleier, Frost und Schnee steigern sich weiter mit Sichtdauer und Himmelshöhe."
         : horizonIrradiance.mode === "sol"
-          ? "Die länger anhaltende Sol-Einstrahlung hellt die Landschaft warm auf."
+          ? "Sol ist seit mindestens zwei Um sichtbar; seine mehrstufige Hitze und die roten Funken folgen Sichtdauer, S-Int und Himmelshöhe."
           : horizonIrradiance.mode === "yol"
-            ? "Die länger anhaltende Yol-Einstrahlung färbt die Landschaft klarer blau und verstärkt den magischen Schimmer."
-            : latitude.degrees === 0
-              ? "Am Polstand entsteht kein zusätzlicher Einstrahlungseffekt."
-              : "Noch hat sich keine anhaltende Einstrahlung aufgebaut.";
+            ? "Yol ist seit mindestens zwei Um sichtbar; Mana-Schleier, blaue Partikel, Frost, Schneeflocken und Eiszapfen steigern sich mit Sichtdauer, S-Int und Himmelshöhe."
+            : solVisible || yolVisible
+              ? "Der Strahlungseffekt bleibt aus, bis der jeweilige sichtbare Himmelskörper zwei vollständige Um ohne Unterbrechung an der Himmelsscheibe stand."
+              : "Kein strahlender Himmelskörper erfüllt derzeit die Zwei-Um-Sichtbedingung.";
       elements.horizonDescription.textContent = `Schematischer Horizont durch die ${latitude.name} bei Blick nach ${direction.name} und ${latitude.degrees} Grad Versatz vom Nordpol in Richtung Äquator. ${visibilityText} ${moonText} ${zehsText} ${irradianceText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht; der Äquator bei 90 Grad bleibt ausgeschlossen.`;
     }
   }

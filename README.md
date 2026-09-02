@@ -230,21 +230,27 @@ Blickrichtung eines von acht unterschiedlichen Wolkenmustern per Screen-Composit
 Polar bleibt dabei deutlich wolkenärmer als Gemäßigt. Bei 60° Wüste bleibt der Himmel wolkenfrei.
 Die astronomischen Positionen und Messwerte bleiben beim Themewechsel unverändert.
 
-Bei 30° und 60° baut sich nach einer kurzen sichtbaren Verweildauer ein zusätzlicher
-Einstrahlungseffekt auf; am Polstand bei 0° bleibt er immer aus. Sol allein hellt das Panorama
-zunehmend warm auf. Yol allein färbt es in einem klareren Blau und erhält einen magischen Schimmer. Sind
-beide sichtbar, mischen sich warme und kalte Farbe mit einem stärkeren Glitzern. S-Intensität,
-Verweildauer und die relative Bewegung zu Era bestimmen die Stärke: exakt synchrone, scheinbar
-ortsfeste Läufe wirken am stärksten. 60° verwendet eine höhere Breitenverstärkung als 30°. Diese
-Regel gilt unverändert im Tag- und Nacht-Theme. Im Erklärmodus wird die Hüllkurve weiterhin in
-200-ms-Schritten vorbereitet. Die beiden linearen Langzeitmodi schreiben sie während der Wiedergabe
-inkrementell fort und rekonstruieren sie nach einem Sprung nur aus einem begrenzten, deterministischen
-Rückblickfenster; dadurch entstehen nicht mehr als eine Million Vorberechnungsschritte pro Ansicht.
-Die Hüllkurve läuft über jede Phasengrenze weiter, solange der projizierte Körper sichtbar bleibt;
-ein Phasenname setzt nichts zurück. Beim Untergang fällt die gespeicherte Wirkung mit einer langsamen 9-Sekunden-Zeitkonstante
-ab, statt hart auf null zu springen. Während der Konvektion entsteht keine neue Einstrahlung, eine
-noch vorhandene Wirkung klingt jedoch ebenfalls weich aus. Warme und kühle Felder sowie das
-spektrale Rauschen werden hochauflösend und kontinuierlich statt als grobe Pixelkreuze gerendert.
+Der Horizont berechnet Sols und Yols Einstrahlung getrennt aus ihrer kontinuierlichen
+Sichtdauer innerhalb des aktiven Zyklus. Ein Körper aktiviert seinen Effekt exakt nach zwei
+vollständigen sichtbaren Um. Die Zählung läuft über Phasengrenzen weiter, solange der projizierte
+Körper an der Himmelsscheibe bleibt; Untergang, Konvektion und Zykluswechsel setzen seine Serie
+zurück. Die Regel gilt auch bei 0°: Entscheidend sind die tatsächliche Sichtbarkeit und Höhe,
+nicht eine pauschale Breitenverstärkung.
+
+Nach der Zwei-Um-Schwelle steigt die Wirkung über weitere sichtbare Um stufenlos an. Das
+erreichbare Maximum folgt der projizierten Himmelshöhe und der jeweiligen S-Intensität. Sol baut
+mehrere warme Lagen aus Farbglut, Hitzeflimmern sowie roten und gelb glühenden Funken auf. Yols
+bewusst stärkere magische Kälte kombiniert blaues Leuchten, Mana-Schleier, kleine blaue Partikel,
+Frostkristalle, Schneeflocken und Eiszapfen. Sind beide Körper lange genug sichtbar, kommt eine
+zweilagige spektrale Interferenz hinzu. Alle Ebenen sind hochauflösende Vektoren beziehungsweise
+Filterfelder und werden im hellen wie im dunklen Theme aus denselben Modellwerten gespeist.
+
+Der Effekt verwendet Weltzeit in Um statt Darstellungssekunden. Deshalb entsteht bei demselben
+Um-Stand im 5-s/Um-Prüfmodus und in der 15-min/Um-Spielsimulation dieselbe Stärke. Der Erklärmodus
+tastet seine semantische Zeitfahrt weiterhin in 200-ms-Schritten ab; beide linearen Modi arbeiten
+in 0,05-Um-Schritten und rekonstruieren Sprünge aus einem begrenzten deterministischen
+Rückblickfenster. Beim Untergang fällt der Modellwert sofort auf null; eine 900-ms-CSS-Blende lässt
+die sichtbaren Grafikebenen weich verschwinden, ohne unsichtbare Weltzeit weiterzuspeichern.
 
 Die Daten fließen in einer festen Reihenfolge:
 
@@ -254,8 +260,10 @@ getSnapshot(ms)
   → unveränderte Nordpol-Orbitansicht
   → Projektion derselben Punkte in den gewählten Horizontblick
   → additive Höhenkorrektur für Sol/Yol, invertierte Breitenkorrektur für ZEHS
-  → phasenübergreifende Hüllkurve aus Sichtbarkeit, langsamem Aufbau und langsamem Abbau
-  → deterministische Einstrahlung aus Hüllkurve, S-Int und relativer Bewegung
+  → pro Körper und Zyklus gezählte kontinuierlich sichtbare Um
+  → Aktivierung nach exakt zwei Um und weiterer stufenloser Aufbau
+  → deterministische Einstrahlung aus Sichtdauer, projizierter Höhe und S-Int
+  → getrennte Sol-, Yol- und gemeinsame Interferenzlagen
 ```
 
 Der Vorwärtsanteil eines Weltpunkts bestimmt Sichtbarkeit und Höhe, sein Rechtsanteil die
@@ -434,8 +442,9 @@ Zeitfassung, Theme-Speicherung, automatische Anschlusszyklen, Kompass- und Breit
 Tastatur, Zustandsinvarianz bei Projektionswechseln, die invertierte ZEHS-Breitenhöhe, die
 synchrone 5,6°/s-Kopplung, die vollständige Sol-/Yol-Einstrahlungsmatrix, jede erzeugte
 Phasengrenze und mindestens 200 Geometriesnapshots. Dabei werden Winkel, Radialwerte,
-Horizontpunkte und die kontinuierliche Einstrahlungshüllkurve in allen Blickrichtungen und Breiten sowie die
-positionsgleiche Übergabe von Sol, Yol, ZEHS und Eras Rotation an den nächsten Vollzyklus geprüft.
+Horizontpunkte sowie Zwei-Um-Schwelle, Höhenmaximum und mehrstufige Einstrahlung in allen
+Blickrichtungen und Breiten geprüft. Hinzu kommt die positionsgleiche Übergabe von Sol, Yol,
+ZEHS und Eras Rotation an den nächsten Vollzyklus.
 
 Der Zeitmodus-Vertrag prüft zusätzlich 5 Sekunden beziehungsweise 15 Minuten = 1 Um = 360°
 Era-Rotation, den 64-Stunden-Prüfpfad und den 480-Tage-Spielpfad, die 400-Um-Konvektion, rAF-Zeitanker ohne
@@ -457,7 +466,8 @@ SVG-Verläufe, orbitale Richtungspfeile und die frühere horizontabhängige Skal
 Y-Radien. Außerdem prüft er die präzisen Vektorbahnen, alle 48 Laufzeit-Panoramaslots, sämtliche
 24 kombinierten 3:1-Originale samt 48 RGBA-Ebenen, ihre pixelgenaue Rekonstruktion, identische
 Tag-/Nacht-Masken, eigenständige Tagespaletten, die feste Horizontebenen-Reihenfolge, den
-hochaufgelösten Schimmer und den gemeinsamen Geometrievertrag.
+hochaufgelösten Sol-Hitzelagen, Yol-Mana-, Schnee- und Eisstufen, den zweilagigen gemeinsamen
+Schimmer und den gemeinsamen Geometrievertrag.
 
 ## Grenzen der Darstellung
 

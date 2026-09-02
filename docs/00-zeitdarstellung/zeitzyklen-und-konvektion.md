@@ -80,6 +80,14 @@ oder Yols auf einer Skala von 1 bis 10:
 - `S-Int 30 min max–min` bezeichnet einen regelmäßigen Wechsel zwischen
   höchster und niedrigster Intensität innerhalb des angegebenen Intervalls.
 
+In der Horizontdarstellung bestimmt `S-Int` zusammen mit der tatsächlichen
+Himmelshöhe das erreichbare Maximum des grafischen Strahlungseffekts. Dieser
+beginnt für Sol und Yol jeweils erst nach zwei vollständig und ohne Unterbrechung
+sichtbaren Um und steigert sich danach mit der weiteren Sichtdauer. Yols
+Mana-Schleier, Frost, Schneeflocken und Eiszapfen verbildlichen magische Kälte;
+sie ändern nicht die Weltenregel, dass Yols Strahlung Wasser nicht unmittelbar
+gefrieren lässt.
+
 Eine Kalender- oder Simulationszeile führt Zeit, Sonnenphase und Intensität
 getrennt. Bereinigte Notationsbeispiele sind:
 

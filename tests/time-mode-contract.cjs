@@ -250,8 +250,11 @@ contract.selectCycle(1, { cycleUm: 0 });
 const state1 = contract.getState();
 const scenario1 = state1.scenario;
 const start1 = snapshotAt(0, scenario1, 1);
+const cycleStartIrradiance = contract.getIrradianceDwellAt(0, "north", 60);
 assert.equal(state1.seed, contract.deriveCycleSeed(state1.rootSeed, 1), "Folgeseed wird reproduzierbar abgeleitet");
 assert.equal(start1.absoluteWorldUm, 46080, "absolute Weltzeit läuft über den Zykluswechsel weiter");
+assert.equal(cycleStartIrradiance.solDwellUm, 0, "ein neuer Zyklus startet Sols sichtbare Um-Serie bei null");
+assert.equal(cycleStartIrradiance.yolDwellUm, 0, "ein neuer Zyklus startet Yols sichtbare Um-Serie bei null");
 for (const bodyName of ["sol", "yol"]) {
   assert.ok(
     angularDistance(end0[bodyName].angle, start1[bodyName].angle) < 1e-9,
@@ -377,6 +380,31 @@ for (const bodyName of ["sol", "yol"]) {
       gameplayFrameAfterSwitch.snapshot[bodyName].angle,
     ) < 1e-9,
     `${bodyName}: Moduswechsel verändert am selben Um nicht den Weltwinkel`,
+  );
+}
+for (const property of [
+  "solDwellUm",
+  "yolDwellUm",
+  "solBuildup",
+  "yolBuildup",
+  "sol",
+  "yol",
+  "solHeat",
+  "solSparks",
+  "solBlaze",
+  "yolMana",
+  "yolParticles",
+  "yolFrost",
+  "yolSnow",
+  "yolIcicles",
+  "dualInterference",
+]) {
+  assert.ok(
+    Math.abs(
+      inspectionFrameBeforeGameplay.horizonIrradiance[property] -
+        gameplayFrameAfterSwitch.horizonIrradiance[property],
+    ) < 1e-8,
+    `${property}: Prüf- und Spielpfad berechnen am selben Um dieselbe Einstrahlung`,
   );
 }
 

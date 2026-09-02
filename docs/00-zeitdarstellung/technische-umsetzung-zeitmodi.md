@@ -206,6 +206,31 @@ Die Konvektion blendet nur Sol und Yol aus. Beide Kor-Welten werden normal
 weiterberechnet und bleiben sichtbar, sofern Entfernung, Era-Verdeckung und
 lokale Horizontebene dies zulassen.
 
+### 7.2 Einstrahlung am Horizont
+
+Die Einstrahlung folgt Weltzeit und wird für Sol und Yol getrennt geführt. Ein
+Effekt beginnt erst, wenn der zugehörige Körper zwei vollständige Um ohne
+Unterbrechung an der gewählten Himmelsscheibe sichtbar war. Sichtbarkeit über
+eine Phasengrenze hinweg führt die Serie fort; Untergang, Konvektion oder ein
+neuer Zyklus setzen sie auf null zurück.
+
+Nach der Schwelle wächst die Hüllkurve über weitere sichtbare Um. Ihr Maximum
+verknüpft die projizierte Höhe des Körpers mit dessen `S-Int`. Der Breitengrad
+ist nur Teil der Projektion und kein eigener Intensitätsmultiplikator. Dadurch
+gelten für jeden Zeitmodus bei demselben Um-Stand dieselben Modellwerte:
+
+- der Erklärmodus tastet seinen semantischen Pfad in 200-ms-Schritten ab;
+- Prüf- und Spielsimulation tasten beide in 0,05-Um-Schritten ab;
+- Moduszeit und Wiedergabetempo verändern die Einstrahlung nicht;
+- der Cache-Schlüssel trennt Zyklus, Zeitmodus, Blickrichtung und Breitenstufe.
+
+Sol steuert gestaffelte Farbglut, Hitzeflimmern und zwei Funkenlagen. Yol
+steuert eine stärkere Mana-Grundwirkung, zwei Schleier, blaue Partikel,
+Frostkristalle, zwei Schneelagen und Eiszapfen. Haben beide Körper ihre
+Schwelle erreicht, werden zwei zusätzliche Interferenzlagen aktiv. Der
+Modellwert endet beim Untergang sofort; ausschließlich die 900-ms-CSS-Blende
+sorgt für das weiche optische Verschwinden.
+
 ## 8. Timestampbasierte Animation
 
 `requestAnimationFrame` entscheidet nur, wann neu gerendert wird. `tick()`
@@ -289,6 +314,8 @@ zusätzlich 6×; es beschleunigt nur die Wiedergabe und ändert weder
 - stetige Phasen- und Zyklusanschlüsse;
 - reproduzierbare Folgeseeds;
 - Erhalt des Um-Stands beim Moduswechsel;
+- identische Einstrahlungswerte am selben Um im Prüf- und Spielpfad;
+- Rücksetzung der sichtbaren Um-Serien am Zyklusanfang;
 - alle drei Zoomstufen in beiden linearen Modi;
 - horizontales Scrubbing in Zyklus- und Abschnittsansicht;
 - das zusätzliche Wiedergabetempo 6×;
@@ -296,7 +323,9 @@ zusätzlich 6×; es beschleunigt nur die Wiedergabe und ändert weder
 
 `tests/smoke.cjs` ergänzt den Vertrag um die sechsminütige Phasenfolge,
 Interaktionen, gemeinsame Orbit-/Horizontgeometrie und seedstabile
-Szenarioerzeugung.
+Szenarioerzeugung. Zusätzlich prüft er die exakte Zwei-Um-Schwelle,
+phasenübergreifende Sichtdauer, Zyklus-Reset, Höhen- und S-Int-Maximum sowie
+die getrennten Sol-, Yol- und Interferenzstufen.
 
 `tests/moon-contract.cjs` prüft zusätzlich getrennte 3D-Zustände,
 Phasen und Bahnformen, je zwei Sicht-, Nähe-, Horizont- und
