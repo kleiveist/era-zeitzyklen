@@ -196,6 +196,16 @@ gewählte Modellpunkt Um 45.880 liegt innerhalb der Konvektion, ist jedoch kein
 neu festgelegter kanonischer Einzelzeitpunkt. Auch die Zweifachpassage ist eine
 Darstellungsregel und keine neue kanonische Umlaufzeit.
 
+`getMoonCollapseEffect(cycleIndex, cycleUm)` legt um diesen Modellpunkt ein
+symmetrisches 20-Um-Fenster. Im 300er-Rhythmus steigt die Rotintensität von Um
+45.870 bis Um 45.880 linear von 0 auf 1 und fällt anschließend bis Um 45.890
+linear auf 0 zurück. Der Zustand wird aus der Weltzeit berechnet und ist deshalb
+im Erklär-, Prüf- und Spielmodus am selben Um identisch. Orbit- und
+Horizontansicht verwenden dieselbe Intensität, aber jeweils eine eigene
+hochauflösende rote Flächen-, Rausch-, Riss- und Ringlage. Zusätzliche Kern- und
+Finalimpulse werden erst nahe dem Maximum eingeblendet; reduzierte Bewegung
+schaltet ihre Animation ab, nicht jedoch die rote Zustandsanzeige.
+
 Die scheinbare Größe folgt der Entfernung. Im Horizont kommt ein stetiger
 Höhenfaktor hinzu, sodass die Weltkörper schon beim Untergang fast punktklein und
 transparent werden. Sol und Yol erhalten dort ebenfalls einen Größenfaktor

@@ -695,6 +695,7 @@ for (const name of [
   "IRRADIANCE_MODEL",
   "ZEHS_PARAMETERS",
   "MOON_ORBIT_MODEL",
+  "MOON_COLLAPSE_EFFECT",
   "normalizeDegrees",
   "normalizeHorizonLatitude",
   "getLatitudeLift",
@@ -705,6 +706,7 @@ for (const name of [
   "ensureOrbitClearance",
   "solveEccentricAnomaly",
   "getMoonOrbitState",
+  "getMoonCollapseEffect",
   "getMoonMapPoint",
   "isMoonOccludedByEra",
   "getViewBasis",
@@ -797,6 +799,13 @@ requireMatch("app.js", /worldPosition\s*=\s*Object\.freeze\(\{[\s\S]*?x:[\s\S]*?
 requireMatch("app.js", /orbitalPassesPerCycle\s*:\s*2\b/i, "beide Kor-Welten besitzen zwei Sichtpassagen pro Zyklus");
 requireMatch("app.js", /initialPhaseOffsetRadians\s*:\s*-?[\d.]+[\s\S]*?initialPhaseOffsetRadians\s*:\s*-?[\d.]+/i, "beide Kor-Welten besitzen getrennte Phasenpläne");
 requireMatch("app.js", /alignmentCycleNumber\s*:\s*300[\s\S]*?alignmentCycleUm\s*:\s*config\.regularUm\s*\+\s*config\.convectionDurationUm\s*\/\s*2/i, "300er-Ausrichtung liegt in der Mitte der dokumentierten Konvektion");
+requireMatch("app.js", /MOON_COLLAPSE_EFFECT\s*=\s*Object\.freeze\(\{[\s\S]*?centerUm\s*:\s*MOON_ORBIT_MODEL\.alignmentCycleUm[\s\S]*?approachUm\s*:\s*10[\s\S]*?aftermathUm\s*:\s*10/i, "roter Zusammenbruch wächst zehn Um vor und fällt zehn Um nach der 300er-Ausrichtung");
+requireMatch("app.js", /function\s+getMoonCollapseEffect[\s\S]*?1\s*-\s*Math\.abs\(deltaUm\)\s*\/\s*rampDuration/i, "Rotintensität folgt dem symmetrischen Weltzeitabstand zum Zusammenbruch");
+requireMatch("index.html", /id=["']orbit-moon-collapse-noise["'][^>]*filterRes=["']3360 2080["'][\s\S]*id=["']horizon-moon-collapse-noise["'][^>]*filterRes=["']3360 1120["']/i, "beide roten Störfelder werden hochauflösend berechnet");
+requireMatch("index.html", /id=["']orbit-moon-collapse-effect["'][\s\S]*moon-collapse-red-wash[\s\S]*moon-collapse-red-field[\s\S]*moon-collapse-red-noise[\s\S]*id=["']orbit-moon-collapse-core["']/i, "Orbit besitzt rote Fläche, Störfeld und Kollapskern");
+requireMatch("index.html", /id=["']horizon-moon-collapse-effect["'][\s\S]*moon-collapse-red-wash[\s\S]*moon-collapse-red-field[\s\S]*moon-collapse-red-noise[\s\S]*id=["']horizon-moon-collapse-core["']/i, "Horizont besitzt dieselben gestaffelten roten Effektlagen");
+requireMatch("styles.css", /\.moon-collapse-red-wash\s*\{[^}]*--moon-collapse-intensity[\s\S]*?\.moon-collapse-red-noise\s*\{[^}]*--moon-collapse-core-intensity[\s\S]*?\.moon-collapse-cross\s*\{[^}]*--moon-collapse-shock-intensity/is, "rote Fläche, Kernrauschen und Finalimpuls besitzen getrennte Intensitätsstufen");
+requireMatch("styles.css", /@media\s*\([^)]*prefers-reduced-motion\s*:\s*reduce[^)]*\)[\s\S]*?\.moon-collapse-red-noise,[\s\S]*?\.moon-collapse-ring,[\s\S]*?\.moon-collapse-rifts/is, "roter Zusammenbruch respektiert reduzierte Bewegung");
 requireMatch("app.js", /setBodyElementState\([\s\S]*?visualScale:\s*horizonProjection\.sol\.apparentScale[\s\S]*?visualScale:\s*horizonProjection\.yol\.apparentScale/i, "Sol und Yol werden im Horizont aus der Bahnentfernung skaliert");
 requireMatch("index.html", /id=["']cycle-jump-input["'][^>]*max=["']300["'][\s\S]*?id=["']moon-alignment-jump["']/i, "Prüfmodus besitzt direkte Zyklus- und 300er-Navigation");
 requireMatch(

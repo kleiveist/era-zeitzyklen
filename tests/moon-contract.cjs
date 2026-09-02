@@ -7,6 +7,7 @@ require("./smoke.cjs");
 const contract = global.ERA_CYCLE_CONTRACT;
 const config = global.ERA_PHASES.config;
 const model = contract.MOON_ORBIT_MODEL;
+const collapseModel = contract.MOON_COLLAPSE_EFFECT;
 const worldNames = ["kor", "korsShard"];
 
 assert.ok(Object.isFrozen(model), "Bahnmodell der Kor-Welten ist read-only");
@@ -23,6 +24,49 @@ assert.notEqual(
   model.bodies.kor.initialPhaseOffsetRadians,
   model.bodies.korsShard.initialPhaseOffsetRadians,
   "Kor's Shard ist nicht an Kors Bahnphase gekoppelt",
+);
+assert.ok(Object.isFrozen(collapseModel), "roter Zusammenbruchseffekt ist read-only");
+assert.equal(collapseModel.firstCycleNumber, 300, "erster roter Zusammenbruch liegt im 300. Zyklus");
+assert.equal(collapseModel.centerUm, model.alignmentCycleUm, "Effektmaximum folgt der gemeinsamen Nordausrichtung");
+assert.equal(collapseModel.approachUm, 10, "Rotaufbau beginnt zehn Um vor dem Maximum");
+assert.equal(collapseModel.aftermathUm, 10, "Rotabnahme endet zehn Um nach dem Maximum");
+
+const collapseSamples = [
+  contract.getMoonCollapseEffect(299, model.alignmentCycleUm - 10),
+  contract.getMoonCollapseEffect(299, model.alignmentCycleUm - 5),
+  contract.getMoonCollapseEffect(299, model.alignmentCycleUm),
+  contract.getMoonCollapseEffect(299, model.alignmentCycleUm + 5),
+  contract.getMoonCollapseEffect(299, model.alignmentCycleUm + 10),
+];
+assert.deepEqual(
+  collapseSamples.map((sample) => sample.intensity),
+  [0, 0.5, 1, 0.5, 0],
+  "Rotintensität steigt zehn Um linear an und fällt zehn Um linear ab",
+);
+assert.deepEqual(
+  collapseSamples.map((sample) => sample.phase),
+  ["approach", "approach", "collapse", "aftermath", "aftermath"],
+  "Ereignis unterscheidet Annäherung, Maximum und Nachbeben",
+);
+assert.equal(
+  contract.getMoonCollapseEffect(299, model.alignmentCycleUm - 10.001).active,
+  false,
+  "vor dem 20-Um-Fenster bleibt die Welt unverändert",
+);
+assert.equal(
+  contract.getMoonCollapseEffect(299, model.alignmentCycleUm + 10.001).active,
+  false,
+  "nach dem 20-Um-Fenster ist die Rotabnahme beendet",
+);
+assert.equal(
+  contract.getMoonCollapseEffect(298, model.alignmentCycleUm).intensity,
+  0,
+  "Zyklus 299 erhält am selben Um keinen falschen Zusammenbruch",
+);
+assert.equal(
+  contract.getMoonCollapseEffect(599, model.alignmentCycleUm).intensity,
+  1,
+  "bestätigter 300-Zyklen-Rhythmus wiederholt das Maximum in Zyklus 600",
 );
 
 function separation(first, second) {
@@ -160,6 +204,8 @@ contract.setTimeMode("inspection", { announce: false });
 contract.selectCycle(299, { cycleUm: model.alignmentCycleUm });
 const alignmentFrame = contract.getLastRenderFrame();
 assert.equal(alignmentFrame.snapshot.template.id, "convection", "300er-Ausrichtung liegt innerhalb der Konvektion");
+assert.equal(alignmentFrame.snapshot.moonCollapse.phase, "collapse", "Ausrichtung öffnet den roten Zusammenbruch am Maximum");
+assert.equal(alignmentFrame.snapshot.moonCollapse.intensity, 1, "Ausrichtung erreicht volle Rotintensität");
 for (const bodyName of worldNames) {
   assert.deepEqual(
     alignmentFrame.worldPoints[bodyName],
@@ -174,6 +220,20 @@ assert.equal(global.document.querySelector("#kor-body").getAttribute("aria-hidde
 assert.equal(global.document.querySelector("#kors-shard-body").getAttribute("aria-hidden"), "false", "Konvektion blendet Kor's Shard nicht regelwidrig aus");
 assert.ok(global.document.querySelector("#kor-orbit-front").getAttribute("d").length > 20, "vordere Kor-Polbahn wird gezeichnet");
 assert.ok(global.document.querySelector("#kor-orbit-rear").getAttribute("d").length > 20, "rückwärtige Kor-Polbahn wird gezeichnet");
+for (const viewId of ["#orbit-view", "#horizon-view"]) {
+  const view = global.document.querySelector(viewId);
+  assert.equal(view.getAttribute("data-moon-collapse-phase"), "collapse", `${viewId}: Maximum ist als Kollapsphase markiert`);
+  assert.equal(view.getAttribute("data-moon-collapse-intensity"), "1.000", `${viewId}: volle Rotintensität erreicht die Grafik`);
+  assert.equal(view.style.getPropertyValue("--moon-collapse-intensity"), "1.000", `${viewId}: rote Flächenebene erhält volle Stärke`);
+  assert.equal(view.style.getPropertyValue("--moon-collapse-core-intensity"), "1.000", `${viewId}: Kollapskern erhält volle Stärke`);
+  assert.equal(view.style.getPropertyValue("--moon-collapse-shock-intensity"), "1.000", `${viewId}: Finalimpuls erhält volle Stärke`);
+  assert.equal(view.classList.contains("is-moon-collapse-active"), true, `${viewId}: rote Effektklasse ist aktiv`);
+}
+assert.equal(global.document.querySelector("#orbit-moon-collapse-effect").getAttribute("aria-hidden"), "false", "Orbit zeigt den roten Zusammenbruch");
+assert.equal(global.document.querySelector("#horizon-moon-collapse-effect").getAttribute("aria-hidden"), "false", "Horizont zeigt den roten Zusammenbruch");
+assert.match(global.document.querySelector("#orbit-moon-collapse-core").getAttribute("transform"), /^translate\(/, "Orbitkern folgt dem gemeinsamen Mondpunkt");
+assert.match(global.document.querySelector("#horizon-moon-collapse-core").getAttribute("transform"), /^translate\(/, "Horizontkern folgt der projizierten Einflussachse");
+assert.equal(global.document.querySelector("#convection-title").textContent, "Gemeinsamer Nordpol-Zusammenbruch", "Konvektionshinweis benennt das Maximum");
 
 global.document.querySelector("#cycle-jump-input").value = "300";
 global.document.querySelector("#moon-alignment-jump").click();

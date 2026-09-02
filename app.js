@@ -254,6 +254,14 @@
       }),
     }),
   });
+  const MOON_COLLAPSE_EFFECT = Object.freeze({
+    cycleInterval: MOON_ORBIT_MODEL.supercycleLength,
+    firstCycleNumber: MOON_ORBIT_MODEL.alignmentCycleNumber,
+    centerUm: MOON_ORBIT_MODEL.alignmentCycleUm,
+    approachUm: 10,
+    aftermathUm: 10,
+    modelStatus: "Illustrativer roter Einflusszusammenbruch der gemeinsamen Nordausrichtung",
+  });
   const HORIZON_PROJECTION_SCALE = Object.freeze({
     celestial: 0.76,
     zehs: 0.88,
@@ -289,6 +297,8 @@
     yolBody: document.querySelector("#yol-body"),
     korBody: document.querySelector("#kor-body"),
     korsShardBody: document.querySelector("#kors-shard-body"),
+    orbitMoonCollapseEffect: document.querySelector("#orbit-moon-collapse-effect"),
+    orbitMoonCollapseCore: document.querySelector("#orbit-moon-collapse-core"),
     solDisc: document.querySelector("#sol-disc"),
     yolDisc: document.querySelector("#yol-disc"),
     solHalo: document.querySelector("#sol-halo"),
@@ -305,6 +315,9 @@
     eraViewArrow: document.querySelector("#era-view-arrow"),
     eraViewLetter: document.querySelector("#era-view-letter"),
     convectionMessage: document.querySelector("#convection-message"),
+    convectionKicker: document.querySelector("#convection-kicker"),
+    convectionTitle: document.querySelector("#convection-title"),
+    convectionDetail: document.querySelector("#convection-detail"),
     horizonDirectionGroup: document.querySelector("#horizon-direction-group"),
     horizonDirectionButtons: Object.freeze({
       north: document.querySelector("#horizon-direction-north"),
@@ -326,6 +339,8 @@
     horizonYolBody: document.querySelector("#horizon-yol-body"),
     horizonKorBody: document.querySelector("#horizon-kor-body"),
     horizonKorsShardBody: document.querySelector("#horizon-kors-shard-body"),
+    horizonMoonCollapseEffect: document.querySelector("#horizon-moon-collapse-effect"),
+    horizonMoonCollapseCore: document.querySelector("#horizon-moon-collapse-core"),
     horizonZehsStar: document.querySelector("#horizon-zehs-star"),
     horizonLeftLabel: document.querySelector("#horizon-left-label"),
     horizonCenterLabel: document.querySelector("#horizon-center-label"),
@@ -990,6 +1005,59 @@
       northAlignment:
         worldPosition.z > 0 && Math.hypot(worldPosition.x, worldPosition.y) < 0.001,
       modelStatus: MOON_ORBIT_MODEL.modelStatus,
+    });
+  }
+
+  function getMoonCollapseEffect(cycleIndexOrSnapshot = 0, cycleUmValue = 0) {
+    const snapshotLike = cycleIndexOrSnapshot && typeof cycleIndexOrSnapshot === "object"
+      ? cycleIndexOrSnapshot
+      : null;
+    const rawCycleIndex = snapshotLike?.cycleIndex ?? cycleIndexOrSnapshot;
+    const rawCycleUm = snapshotLike?.cycleUm ?? cycleUmValue;
+    const cycleIndex = Math.max(0, Math.floor(Number(rawCycleIndex) || 0));
+    const cycleNumber = cycleIndex + 1;
+    const cycleUm = clamp(Number(rawCycleUm) || 0, 0, config.totalUm);
+    const deltaUm = cycleUm - MOON_COLLAPSE_EFFECT.centerUm;
+    const isAlignmentCycle =
+      cycleNumber >= MOON_COLLAPSE_EFFECT.firstCycleNumber &&
+      cycleNumber % MOON_COLLAPSE_EFFECT.cycleInterval === 0;
+    const inApproach =
+      isAlignmentCycle &&
+      deltaUm >= -MOON_COLLAPSE_EFFECT.approachUm &&
+      deltaUm < 0;
+    const atCollapse = isAlignmentCycle && Math.abs(deltaUm) < 0.000001;
+    const inAftermath =
+      isAlignmentCycle &&
+      deltaUm > 0 &&
+      deltaUm <= MOON_COLLAPSE_EFFECT.aftermathUm;
+    const active = inApproach || atCollapse || inAftermath;
+    const rampDuration = deltaUm <= 0
+      ? MOON_COLLAPSE_EFFECT.approachUm
+      : MOON_COLLAPSE_EFFECT.aftermathUm;
+    const intensity = active
+      ? clamp(1 - Math.abs(deltaUm) / rampDuration, 0, 1)
+      : 0;
+    const phase = !active
+      ? "idle"
+      : atCollapse
+        ? "collapse"
+        : deltaUm < 0
+          ? "approach"
+          : "aftermath";
+
+    return Object.freeze({
+      active,
+      visible: intensity > 0,
+      phase,
+      intensity,
+      cycleIndex,
+      cycleNumber,
+      cycleUm,
+      centerUm: MOON_COLLAPSE_EFFECT.centerUm,
+      deltaUm,
+      windowStartUm: MOON_COLLAPSE_EFFECT.centerUm - MOON_COLLAPSE_EFFECT.approachUm,
+      windowEndUm: MOON_COLLAPSE_EFFECT.centerUm + MOON_COLLAPSE_EFFECT.aftermathUm,
+      modelStatus: MOON_COLLAPSE_EFFECT.modelStatus,
     });
   }
 
@@ -2228,6 +2296,7 @@
     }
 
     const absoluteWorldUm = cycleIndex * config.totalUm + cycleUm;
+    const moonCollapse = getMoonCollapseEffect(cycleIndex, cycleUm);
 
     return {
       ms: boundedMs,
@@ -2240,6 +2309,7 @@
       progress,
       cycleUm,
       absoluteWorldUm,
+      moonCollapse,
       cycleProgress: cycleUm / config.totalUm,
       positionMs,
       sol: bodySnapshot("sol"),
@@ -2772,6 +2842,30 @@
     }
   }
 
+  function updateMoonCollapseLayer(view, layer, core, effect, origin) {
+    if (!view || !effect) return;
+    const intensity = clamp(Number(effect.intensity) || 0, 0, 1);
+    const coreIntensity = smoothstep(intensity);
+    const shockIntensity = clamp((intensity - 0.72) / 0.28, 0, 1);
+    view.classList.toggle("is-moon-collapse-active", effect.visible);
+    view.setAttribute("data-moon-collapse-phase", effect.phase);
+    view.setAttribute("data-moon-collapse-intensity", intensity.toFixed(3));
+    view.style.setProperty("--moon-collapse-intensity", intensity.toFixed(3));
+    view.style.setProperty("--moon-collapse-core-intensity", coreIntensity.toFixed(3));
+    view.style.setProperty("--moon-collapse-shock-intensity", shockIntensity.toFixed(3));
+    if (layer) {
+      layer.setAttribute("aria-hidden", String(!effect.visible));
+      layer.setAttribute("data-effect-phase", effect.phase);
+      layer.setAttribute("data-effect-intensity", intensity.toFixed(3));
+    }
+    if (core && origin) {
+      core.setAttribute(
+        "transform",
+        `translate(${Number(origin.x).toFixed(3)} ${Number(origin.y).toFixed(3)})`,
+      );
+    }
+  }
+
   function updateOrbitGeometry(frame) {
     const { snapshot, worldPoints, moonMapPoints } = frame;
     const isConvection = snapshot.template.motion === "convection";
@@ -2842,6 +2936,16 @@
     }
     positionOrbitLabel(elements.solLabel, worldPoints.sol, snapshot.sol, "sol");
     positionOrbitLabel(elements.yolLabel, worldPoints.yol, snapshot.yol, "yol");
+    updateMoonCollapseLayer(
+      elements.orbitView,
+      elements.orbitMoonCollapseEffect,
+      elements.orbitMoonCollapseCore,
+      snapshot.moonCollapse,
+      {
+        x: (moonMapPoints.kor.x + moonMapPoints.korsShard.x) / 2,
+        y: (moonMapPoints.kor.y + moonMapPoints.korsShard.y) / 2,
+      },
+    );
     elements.orbitView.classList.toggle("is-convection", isConvection);
     elements.orbitView.setAttribute("data-horizon-latitude", String(state.horizonLatitude));
     elements.orbitView.setAttribute(
@@ -2853,8 +2957,31 @@
       String(snapshot.kor.alignmentCycle && snapshot.korsShard.alignmentCycle),
     );
     elements.convectionMessage.hidden = !isConvection;
+    elements.convectionMessage.classList.toggle(
+      "is-moon-collapse-active",
+      snapshot.moonCollapse.visible,
+    );
+    if (isConvection && snapshot.moonCollapse.visible) {
+      const collapseTitle = snapshot.moonCollapse.phase === "approach"
+        ? "Der rote Einfluss verdichtet sich"
+        : snapshot.moonCollapse.phase === "collapse"
+          ? "Gemeinsamer Nordpol-Zusammenbruch"
+          : "Das rote Nachbeben klingt ab";
+      if (elements.convectionKicker) elements.convectionKicker.textContent = "300ER-NORDAUSRICHTUNG";
+      if (elements.convectionTitle) elements.convectionTitle.textContent = collapseTitle;
+      if (elements.convectionDetail) {
+        elements.convectionDetail.textContent = `Kor und Kor’s Shard überlagern ihre Einflussachse · Rotstufe ${Math.round(snapshot.moonCollapse.intensity * 100)} %`;
+      }
+    } else {
+      if (elements.convectionKicker) elements.convectionKicker.textContent = "KONVEKTION";
+      if (elements.convectionTitle) elements.convectionTitle.textContent = "Sol und Yol sind nicht sichtbar";
+      if (elements.convectionDetail) elements.convectionDetail.textContent = "Splitterwelten und Sphärenreiche Heras treten hervor.";
+    }
+    const collapseDescription = snapshot.moonCollapse.visible
+      ? ` Der rote Einflusszusammenbruch der gemeinsamen Nordausrichtung befindet sich in der Phase ${snapshot.moonCollapse.phase} bei ${Math.round(snapshot.moonCollapse.intensity * 100)} Prozent Intensität.`
+      : "";
     elements.orbitDescription.textContent = isConvection
-      ? "Nordpol-Draufsicht während der Konvektion: Sol und Yol sind nicht sichtbar. Kor und Kor’s Shard laufen ohne Rücksetzung auf ihren Polbahnen weiter; ZEHS bleibt als ungefähr 40 AU entfernter Referenzpunkt kartiert."
+      ? `Nordpol-Draufsicht während der Konvektion: Sol und Yol sind nicht sichtbar. Kor und Kor’s Shard laufen ohne Rücksetzung auf ihren Polbahnen weiter; ZEHS bleibt als ungefähr 40 AU entfernter Referenzpunkt kartiert.${collapseDescription}`
       : `${snapshot.template.label}: schematische Sol-/Yol-Orbits und die getrennten, kantenständigen Polbahnen von Kor und Kor’s Shard aus derselben Weltzeit. Gestrichelte Bahnabschnitte liegen rückwärtig, volle nordwärts vor Era. ZEHS bleibt als annähernd fester Referenzpunkt markiert.`;
   }
 
@@ -2948,6 +3075,24 @@
     }
     updateCelestialInstrument(frame);
     if (elements.horizonView) {
+      updateMoonCollapseLayer(
+        elements.horizonView,
+        elements.horizonMoonCollapseEffect,
+        elements.horizonMoonCollapseCore,
+        snapshot.moonCollapse,
+        {
+          x: clamp(
+            (horizonProjection.kor.x + horizonProjection.korsShard.x) / 2,
+            36,
+            HORIZON_GEOMETRY.width - 36,
+          ),
+          y: clamp(
+            (horizonProjection.kor.y + horizonProjection.korsShard.y) / 2,
+            28,
+            HORIZON_GEOMETRY.horizonY - 12,
+          ),
+        },
+      );
       elements.horizonView.classList.toggle("is-convection", isConvection);
       elements.horizonView.setAttribute(
         "data-era-rotation",
@@ -3006,6 +3151,9 @@
       const moonText = `Kor und Kor’s Shard sind ${
         korVisible || korsShardVisible ? "auf ihren eigenständigen Polpassagen sichtbar" : "außerhalb dieser lokalen Sichtlinie"
       }; beide Weltkörper besitzen getrennte Bahnphasen, ihre Größe und Deckkraft folgen kontinuierlich Entfernung und Horizonthöhe.`;
+      const collapseText = snapshot.moonCollapse.visible
+        ? ` Der rote Einflusszusammenbruch der gemeinsamen Nordausrichtung liegt in der Phase ${snapshot.moonCollapse.phase} bei ${Math.round(snapshot.moonCollapse.intensity * 100)} Prozent; die rote Überlagerung erfasst Himmel und Landschaft.`
+        : "";
       const irradianceText = horizonIrradiance.mode === "dual"
         ? "Sol und Yol sind jeweils seit mindestens zwei Um sichtbar: Warme Sol-Schleier und blaue Yol-Kälteschleier sowie beide farbgetrennten Partikelstürme laufen gleichzeitig; der dezente Regenbogenschimmer steigt mit Sichtdauer und Himmelshöhe."
         : horizonIrradiance.mode === "sol"
@@ -3015,7 +3163,7 @@
             : solVisible || yolVisible
               ? "Der Strahlungseffekt bleibt aus, bis der jeweilige sichtbare Himmelskörper zwei vollständige Um ohne Unterbrechung an der Himmelsscheibe stand."
               : "Kein strahlender Himmelskörper erfüllt derzeit die Zwei-Um-Sichtbedingung.";
-      elements.horizonDescription.textContent = `Schematischer Horizont durch die ${latitude.name} bei Blick nach ${direction.name} und ${latitude.degrees} Grad Versatz vom Nordpol in Richtung Äquator. ${visibilityText} ${moonText} ${zehsText} ${irradianceText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht; der Äquator bei 90 Grad bleibt ausgeschlossen.`;
+      elements.horizonDescription.textContent = `Schematischer Horizont durch die ${latitude.name} bei Blick nach ${direction.name} und ${latitude.degrees} Grad Versatz vom Nordpol in Richtung Äquator. ${visibilityText} ${moonText}${collapseText} ${zehsText} ${irradianceText} Die Projektion verwendet dieselben Weltpositionen wie die Nordpol-Draufsicht; der Äquator bei 90 Grad bleibt ausgeschlossen.`;
     }
   }
 
@@ -4158,6 +4306,7 @@
     CELESTIAL_INSTRUMENT_ORDER,
     CELESTIAL_INSTRUMENTS,
     MOON_ORBIT_MODEL,
+    MOON_COLLAPSE_EFFECT,
     normalizeTimeMode,
     modeMsToCycleUm,
     cycleUmToModeMs,
@@ -4172,6 +4321,7 @@
     ensureOrbitClearance,
     solveEccentricAnomaly,
     getMoonOrbitState,
+    getMoonCollapseEffect,
     getMoonMapPoint,
     isMoonOccludedByEra,
     getViewBasis,

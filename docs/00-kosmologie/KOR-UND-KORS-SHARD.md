@@ -102,6 +102,13 @@ der Konvektion löst ein außergewöhnlich schweres Weltereignis aus. Nach Eras
 Zeitrechnung liegen zwischen zwei solchen Ereignissen 3.000 Mohn, also im
 irdischen Vergleich ungefähr 2.400 Jahre.
 
+Das Nordpol-Observatorium stellt den wachsenden Einfluss in seinen Karten als
+rote Verdichtung dar. Im Webmodell beginnt sie zehn Um vor dem gewählten
+Ausrichtungsmaximum, erreicht dort vollständige Stärke und klingt während der
+folgenden zehn Um wieder ab. Diese rote Zusammenbruchsdarstellung bezeichnet
+die überlagerte Einflusswirkung. Sie widerspricht daher nicht dem getrennten
+Abstand beider Weltkörper und zeigt keinen körperlichen Zusammenstoß.
+
 Die erhaltenen Quellen bewahren keinen gemeinsamen Eigennamen für dieses
 Ereignis. Auch ein gleichwertiges Gegenereignis nach 150 Zyklen ist nicht
 überliefert. Schwere Annäherungen über dem Südpol bleiben möglich, folgen aber
@@ -208,4 +215,6 @@ Welten unter anderem:
 - kontinuierliche Anschlüsse ohne Positionssprung;
 - entfernungsabhängige Größe und Kepler-Geschwindigkeit;
 - die gemeinsame Nordausrichtung in der Konvektion des 300. Zyklus;
+- den zehn Um langen roten Aufbau, das Maximum und die zehn Um lange Abnahme;
+- identische Rotintensität in Nordpolkarte und Horizontverlauf;
 - das Fehlen eines erfundenen spiegelgleichen Sonderereignisses im 150. Zyklus.

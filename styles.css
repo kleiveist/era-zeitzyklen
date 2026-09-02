@@ -1533,6 +1533,145 @@ main {
   mix-blend-mode: screen;
 }
 
+#orbit-view,
+#horizon-view {
+  --moon-collapse-intensity: 0;
+  --moon-collapse-core-intensity: 0;
+  --moon-collapse-shock-intensity: 0;
+}
+
+.moon-collapse-effect {
+  pointer-events: none;
+  image-rendering: auto;
+  shape-rendering: geometricPrecision;
+}
+
+.moon-collapse-red-wash,
+.moon-collapse-red-field,
+.moon-collapse-red-noise,
+.moon-collapse-ring,
+.moon-collapse-rifts,
+.moon-collapse-cross,
+.moon-collapse-pixels {
+  transition: opacity 120ms linear;
+}
+
+.moon-collapse-red-wash {
+  fill: #84000e;
+  opacity: calc(var(--moon-collapse-intensity) * 0.72);
+  mix-blend-mode: multiply;
+}
+
+.moon-collapse-red-field {
+  opacity: calc(var(--moon-collapse-intensity) * 0.78);
+  mix-blend-mode: color;
+}
+
+.moon-collapse-red-noise {
+  opacity: calc(var(--moon-collapse-core-intensity) * 0.38);
+  mix-blend-mode: screen;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.moon-collapse-ring {
+  fill: none;
+  stroke: #ffb078;
+  stroke-width: 3;
+  stroke-dasharray: 10 8 3 8;
+  opacity: var(--moon-collapse-core-intensity);
+  vector-effect: non-scaling-stroke;
+}
+
+.moon-collapse-ring-b {
+  stroke: #ff3b30;
+  stroke-width: 5;
+  stroke-dasharray: 18 10 4 10;
+}
+
+.moon-collapse-ring-c {
+  stroke: #9e0015;
+  stroke-width: 8;
+  stroke-dasharray: 28 16 6 16;
+}
+
+.moon-collapse-rifts {
+  fill: none;
+  stroke: #ff5a42;
+  stroke-width: 5;
+  opacity: var(--moon-collapse-core-intensity);
+  paint-order: stroke;
+  vector-effect: non-scaling-stroke;
+}
+
+.moon-collapse-cross {
+  fill: #ff331f;
+  opacity: calc(var(--moon-collapse-shock-intensity) * 0.74);
+  mix-blend-mode: screen;
+}
+
+.moon-collapse-pixels {
+  fill: #ffd09a;
+  opacity: var(--moon-collapse-shock-intensity);
+  mix-blend-mode: screen;
+}
+
+.is-moon-collapse-active .moon-collapse-red-noise {
+  animation: moon-collapse-noise-drift 1.6s steps(6, end) infinite alternate;
+}
+
+.is-moon-collapse-active .moon-collapse-ring-a {
+  animation: moon-collapse-ring-flow 1.1s steps(12, end) infinite;
+}
+
+.is-moon-collapse-active .moon-collapse-ring-b {
+  animation: moon-collapse-ring-flow 0.74s steps(12, end) infinite reverse;
+}
+
+.is-moon-collapse-active .moon-collapse-ring-c {
+  animation: moon-collapse-ring-flow 0.52s steps(12, end) infinite;
+}
+
+.is-moon-collapse-active .moon-collapse-rifts,
+.is-moon-collapse-active .moon-collapse-pixels {
+  animation: moon-collapse-pulse 0.48s steps(2, end) infinite alternate;
+}
+
+@keyframes moon-collapse-noise-drift {
+  from { transform: translate3d(-1.2%, -0.8%, 0) scale(1.02); }
+  to { transform: translate3d(1.1%, 0.9%, 0) scale(1.05); }
+}
+
+@keyframes moon-collapse-ring-flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -72; }
+}
+
+@keyframes moon-collapse-pulse {
+  from { filter: brightness(0.82); }
+  to { filter: brightness(1.28); }
+}
+
+:root[data-theme="light"] .moon-collapse-red-wash {
+  fill: #a10013;
+  opacity: calc(var(--moon-collapse-intensity) * 0.62);
+}
+
+:root[data-theme="light"] .moon-collapse-red-field {
+  opacity: calc(var(--moon-collapse-intensity) * 0.72);
+  mix-blend-mode: normal;
+}
+
+.convection-message.is-moon-collapse-active {
+  border-color: #ff392f;
+  background: #360006;
+  box-shadow: 4px 4px 0 var(--shadow), inset 0 0 0 2px #ff7560;
+}
+
+.convection-message.is-moon-collapse-active .convection-kicker {
+  color: #ff7560;
+}
+
 :root[data-theme="light"] .is-convection .convection-artwork {
   opacity: 0.58;
   mix-blend-mode: multiply;
@@ -4381,7 +4520,11 @@ footer {
   .horizon-yol-blue-points,
   .horizon-yol-orb-storm,
   .horizon-shimmer-a,
-  .horizon-shimmer-b {
+  .horizon-shimmer-b,
+  .moon-collapse-red-noise,
+  .moon-collapse-ring,
+  .moon-collapse-rifts,
+  .moon-collapse-pixels {
     animation: none;
   }
 }

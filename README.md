@@ -291,6 +291,12 @@ HD-Texturen zeigen den verdichteten Dunkelzustand mit verschlungenen Energiestr�
 Kristallsplittern und fernen Splitterwelten. Eine eigene 3:1-Panoramaebene liegt über dem Horizont;
 die Orbitkarte verwendet eine zweite, um Era herum freigestellte Fassung.
 
+Bei der gemeinsamen Nordausrichtung jedes 300. Zyklus liegt das illustrative Maximum auf Um
+45.880. Ab Um 45.870 färben getrennte rote Vektorlagen Orbitkarte und Horizont stetig ein; am
+Modellmaximum sind rote Fläche, Störfeld, Risse und Kollapsringe vollständig aktiv. Bis Um 45.890
+klingt dieselbe Intensität symmetrisch wieder ab. Die Grafik bezeichnet die Überlagerung von Kors
+Einfluss als Zusammenbruch, nicht einen körperlichen Zusammenstoß der beiden Welten.
+
 ## Zeitmodell
 
 Kanonische Eckwerte:
@@ -466,7 +472,9 @@ Der Kor-Vertrag prüft getrennte kontinuierliche 3D-Zustände und Phasen sowie j
 Sichtpassagen, Nähefenster, Horizontauftritte und Era-Verdeckungen pro Zyklus. Hinzu kommen
 schnellere Periapsisbewegung, entfernungsabhängige Größe, der fast unsichtbare
 Horizontuntergang, stetige Zyklusgrenzen und die gemeinsame Nordpolausrichtung in der
-Konvektion des 300. Zyklus.
+Konvektion des 300. Zyklus. Der Vertrag prüft außerdem den linearen roten Aufbau über zehn Um,
+das Maximum am Ausrichtungspunkt, die zehn Um lange Abnahme und dieselbe Effektstärke in Orbit-
+und Horizontansicht.
 
 Der visuelle Vertrag liest HTML, CSS und JavaScript statisch und dekodiert die RGBA-PNGs ohne
 Zusatzpaket. Er untersagt unter anderem `backdrop-filter`, Gauß-Weichzeichnung, Pillenradien, alte

@@ -204,6 +204,8 @@
                 shape-rendering="crispEdges"
                 stroke-linecap="square"
                 stroke-linejoin="miter"
+                data-moon-collapse-phase="idle"
+                data-moon-collapse-intensity="0.000"
               >
                 <title id="orbit-title">Orbitale Nordpol-Draufsicht auf Era, Sol, Yol, Kor und Kor’s Shard</title>
                 <desc id="orbit-description">
@@ -228,6 +230,16 @@
                   <pattern id="era-front-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
                     <path class="era-front-pixel" d="M0 0H4V4H0Z" />
                   </pattern>
+                  <radialGradient id="orbit-moon-collapse-field" cx="50%" cy="50%" r="72%">
+                    <stop offset="0" stop-color="#ff392f" stop-opacity=".96" />
+                    <stop offset=".38" stop-color="#cf071c" stop-opacity=".92" />
+                    <stop offset=".76" stop-color="#79000f" stop-opacity=".88" />
+                    <stop offset="1" stop-color="#300008" stop-opacity=".82" />
+                  </radialGradient>
+                  <filter id="orbit-moon-collapse-noise" x="-8%" y="-12%" width="116%" height="124%" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB" filterRes="3360 2080">
+                    <feTurbulence type="fractalNoise" baseFrequency=".012 .024" numOctaves="4" seed="103" stitchTiles="stitch" result="collapse-noise" />
+                    <feColorMatrix in="collapse-noise" type="matrix" values="1.5 0 0 0 .18  0 .12 0 0 0  0 0 .1 0 0  0 0 0 .82 0" />
+                  </filter>
                   <clipPath id="era-clip">
                     <path d="M396 178H444V182H464V190H480V202H490V218H498V238H502V282H498V302H490V318H480V330H464V338H444V342H396V338H376V330H360V318H350V302H342V282H338V238H342V218H350V202H360V190H376V182H396Z" />
                   </clipPath>
@@ -452,12 +464,26 @@
                   <image class="celestial-artwork zehs-artwork" href="assets/images/zehs-star-hd.png" x="-30" y="-30" width="60" height="60" preserveAspectRatio="xMidYMid meet" aria-hidden="true" />
                   <text x="0" y="46" text-anchor="middle">ZEHS · REFERENZ</text>
                 </g>
+
+                <g id="orbit-moon-collapse-effect" class="moon-collapse-effect orbit-moon-collapse-effect" aria-hidden="true" data-effect-phase="idle" data-effect-intensity="0.000" shape-rendering="geometricPrecision">
+                  <rect class="moon-collapse-red-wash" x="0" y="0" width="840" height="520" />
+                  <rect class="moon-collapse-red-field" x="0" y="0" width="840" height="520" fill="url(#orbit-moon-collapse-field)" />
+                  <rect class="moon-collapse-red-noise" x="-28" y="-20" width="896" height="560" filter="url(#orbit-moon-collapse-noise)" />
+                  <g id="orbit-moon-collapse-core" class="moon-collapse-core" transform="translate(420 260)">
+                    <circle class="moon-collapse-ring moon-collapse-ring-a" r="58" />
+                    <circle class="moon-collapse-ring moon-collapse-ring-b" r="112" />
+                    <circle class="moon-collapse-ring moon-collapse-ring-c" r="178" />
+                    <path class="moon-collapse-rifts" d="M-410-126-244-82-142-94-60-34M410-118 254-70 146-88 62-30M-402 132-230 82-132 96-58 36M404 126 242 76 138 92 60 34M-8-254-18-152-6-82 0-42M10 254 18 154 8 84 0 42" />
+                    <path class="moon-collapse-cross" d="M-300-4H-92V-12H-48V-24H-20V-48H20V-24H48V-12H92V-4H300V4H92V12H48V24H20V48H-20V24H-48V12H-92V4H-300Z" />
+                    <path class="moon-collapse-pixels" d="M-214-146H-202V-134H-214ZM-164 112H-154V122H-164ZM-102-186H-94V-178H-102ZM-72 156H-58V170H-72ZM-34-92H-24V-82H-34ZM24 82H36V94H24ZM58-164H72V-150H58ZM104 174H112V182H104ZM148-118H158V-108H148ZM198 136H210V148H198ZM-278 42H-268V52H-278ZM266-54H278V-42H266Z" />
+                  </g>
+                </g>
               </svg>
 
               <div id="convection-message" class="convection-message" hidden>
-                <span class="convection-kicker">KONVEKTION</span>
-                <strong>Sol und Yol sind nicht sichtbar</strong>
-                <span>Splitterwelten und Sphärenreiche Heras treten hervor.</span>
+                <span id="convection-kicker" class="convection-kicker">KONVEKTION</span>
+                <strong id="convection-title">Sol und Yol sind nicht sichtbar</strong>
+                <span id="convection-detail">Splitterwelten und Sphärenreiche Heras treten hervor.</span>
               </div>
             </figure>
 
@@ -509,6 +535,8 @@
                   data-latitude-degrees="0"
                   data-biome="polar"
                   data-panorama="polar-north"
+                  data-moon-collapse-phase="idle"
+                  data-moon-collapse-intensity="0.000"
                   shape-rendering="crispEdges"
                   stroke-linecap="square"
                   stroke-linejoin="miter"
@@ -529,6 +557,16 @@
                       <stop offset=".48" stop-color="#34a8ff" stop-opacity=".48" />
                       <stop offset="1" stop-color="#203de8" stop-opacity="0" />
                     </radialGradient>
+                    <radialGradient id="horizon-moon-collapse-field" cx="50%" cy="48%" r="78%">
+                      <stop offset="0" stop-color="#ff3a30" stop-opacity=".98" />
+                      <stop offset=".36" stop-color="#d0081d" stop-opacity=".94" />
+                      <stop offset=".72" stop-color="#800010" stop-opacity=".9" />
+                      <stop offset="1" stop-color="#330008" stop-opacity=".84" />
+                    </radialGradient>
+                    <filter id="horizon-moon-collapse-noise" x="-8%" y="-18%" width="116%" height="136%" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB" filterRes="3360 1120">
+                      <feTurbulence type="fractalNoise" baseFrequency=".014 .038" numOctaves="4" seed="109" stitchTiles="stitch" result="collapse-noise" />
+                      <feColorMatrix in="collapse-noise" type="matrix" values="1.55 0 0 0 .2  0 .1 0 0 0  0 0 .08 0 0  0 0 0 .84 0" />
+                    </filter>
                     <linearGradient id="horizon-shimmer-spectrum" x1="0" y1="0" x2="1" y2="1">
                       <stop offset="0" stop-color="#72e9ff" />
                       <stop offset=".34" stop-color="#b9a3ff" />
@@ -881,6 +919,19 @@
                   <text id="horizon-left-label" class="horizon-compass-label" x="40" y="268">W · WESTEN</text>
                   <text id="horizon-center-label" class="horizon-compass-label is-center" x="420" y="268" text-anchor="middle">N · NORDEN</text>
                   <text id="horizon-right-label" class="horizon-compass-label" x="800" y="268" text-anchor="end">O · OSTEN</text>
+                  <g id="horizon-moon-collapse-effect" class="moon-collapse-effect horizon-moon-collapse-effect" aria-hidden="true" data-effect-phase="idle" data-effect-intensity="0.000" shape-rendering="geometricPrecision">
+                    <rect class="moon-collapse-red-wash" x="0" y="0" width="840" height="280" />
+                    <rect class="moon-collapse-red-field" x="0" y="0" width="840" height="280" fill="url(#horizon-moon-collapse-field)" />
+                    <rect class="moon-collapse-red-noise" x="-28" y="-18" width="896" height="316" filter="url(#horizon-moon-collapse-noise)" />
+                    <g id="horizon-moon-collapse-core" class="moon-collapse-core" transform="translate(420 96)">
+                      <circle class="moon-collapse-ring moon-collapse-ring-a" r="42" />
+                      <circle class="moon-collapse-ring moon-collapse-ring-b" r="82" />
+                      <circle class="moon-collapse-ring moon-collapse-ring-c" r="132" />
+                      <path class="moon-collapse-rifts" d="M-410-76-246-42-142-56-54-18M410-72 252-40 148-54 56-18M-406 80-238 44-136 58-54 20M406 76 244 42 140 56 56 20M-6-152-14-92-4-48 0-28M8 158 14 94 6 50 0 28" />
+                      <path class="moon-collapse-cross" d="M-270-3H-82V-9H-42V-18H-18V-38H18V-18H42V-9H82V-3H270V3H82V9H42V18H18V38H-18V18H-42V9H-82V3H-270Z" />
+                      <path class="moon-collapse-pixels" d="M-224-82H-214V-72H-224ZM-168 58H-158V68H-168ZM-108-104H-100V-96H-108ZM-66 92H-54V104H-66ZM-28-58H-20V-50H-28ZM22 52H32V62H22ZM62-94H74V-82H62ZM108 98H116V106H108ZM154-64H164V-54H154ZM204 72H216V84H204ZM-282 24H-272V34H-282ZM270-30H280V-18H270Z" />
+                    </g>
+                  </g>
                 </svg>
               </figure>
 
