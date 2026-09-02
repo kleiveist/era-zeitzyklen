@@ -92,6 +92,7 @@
     activationFloor: 0.08,
     buildupUm: 6,
     heightFloor: 0.28,
+    latitudeStrength: Object.freeze({ 0: 0.46, 30: 0.73, 60: 1 }),
     sampleMs: 200,
     sampleUm: 0.05,
   });
@@ -1624,6 +1625,7 @@
     dwellHistory = null,
   ) {
     const latitude = normalizeHorizonLatitude(latitudeDegrees);
+    const latitudeStrength = IRRADIANCE_MODEL.latitudeStrength[latitude] || 1;
     const isConvection = snapshot?.template?.motion === "convection";
     const sampledMs = Number(snapshot?.positionMs ?? snapshot?.ms);
     const segmentStart = snapshot?.segment
@@ -1690,7 +1692,7 @@
       const intensity = clamp((Number(body.intensity) || 1) / 10, 0.1, 1);
       return {
         value: clamp(
-          buildup * heightMaximum * (0.35 + intensity * 0.65),
+          buildup * heightMaximum * latitudeStrength * (0.35 + intensity * 0.65),
           0,
           1,
         ),
@@ -1730,13 +1732,15 @@
           ? sol * 0.24
           : 0;
     const solHeat = irradianceLayerProgress(sol, 0.04, 0.58);
-    const solSparks = irradianceLayerProgress(sol, 0.22, 0.78);
-    const solBlaze = irradianceLayerProgress(sol, 0.56, 0.95);
+    const solSparks = irradianceLayerProgress(sol, 0.36, 0.72);
+    const solBlaze = irradianceLayerProgress(sol, 0.54, 0.88);
+    const solStorm = irradianceLayerProgress(sol, 0.68, 0.96);
     const yolMana = irradianceLayerProgress(yol, 0.025, 0.5);
-    const yolParticles = irradianceLayerProgress(yol, 0.12, 0.62);
-    const yolFrost = irradianceLayerProgress(yol, 0.28, 0.76);
-    const yolSnow = irradianceLayerProgress(yol, 0.42, 0.86);
-    const yolIcicles = irradianceLayerProgress(yol, 0.62, 0.96);
+    const yolParticles = irradianceLayerProgress(yol, 0.06, 0.58);
+    const yolFrost = irradianceLayerProgress(yol, 0.1, 0.46) * latitudeStrength;
+    const yolSnow = irradianceLayerProgress(yol, 0.24, 0.62) * latitudeStrength;
+    const yolIcicles = irradianceLayerProgress(yol, 0.4, 0.72) * latitudeStrength;
+    const yolStorm = irradianceLayerProgress(yol, 0.68, 0.96);
     const dualInterference = mode === "dual"
       ? irradianceLayerProgress(Math.min(sol, yol), 0.12, 0.72)
       : 0;
@@ -1744,6 +1748,7 @@
     return Object.freeze({
       mode,
       latitude,
+      latitudeStrength,
       buildup: Math.max(solExposure.buildup, yolExposure.buildup),
       solBuildup: solExposure.buildup,
       yolBuildup: yolExposure.buildup,
@@ -1765,11 +1770,13 @@
       solHeat,
       solSparks,
       solBlaze,
+      solStorm,
       yolMana,
       yolParticles,
       yolFrost,
       yolSnow,
       yolIcicles,
+      yolStorm,
       dualInterference,
     });
   }
@@ -2962,6 +2969,8 @@
       elements.horizonView.setAttribute("data-yol-exposure", horizonIrradiance.yol.toFixed(3));
       elements.horizonView.setAttribute("data-sol-effect-stage", String(horizonIrradiance.solStage));
       elements.horizonView.setAttribute("data-yol-effect-stage", String(horizonIrradiance.yolStage));
+      elements.horizonView.setAttribute("data-sol-storm", horizonIrradiance.solStorm.toFixed(3));
+      elements.horizonView.setAttribute("data-yol-storm", horizonIrradiance.yolStorm.toFixed(3));
       elements.horizonView.setAttribute("data-sol-visible-um", horizonIrradiance.solDwellUm.toFixed(3));
       elements.horizonView.setAttribute("data-yol-visible-um", horizonIrradiance.yolDwellUm.toFixed(3));
       elements.horizonView.setAttribute("data-kor-visible", String(korVisible));
@@ -2969,17 +2978,19 @@
       const irradianceProperties = {
         "--irradiance-warm": horizonIrradiance.warm * 0.62,
         "--irradiance-cool": horizonIrradiance.cool * 0.72,
-        "--irradiance-shimmer": horizonIrradiance.shimmer * 0.76,
-        "--irradiance-shimmer-low": horizonIrradiance.shimmer * 0.34,
+        "--irradiance-shimmer": horizonIrradiance.shimmer * 0.38,
+        "--irradiance-shimmer-low": horizonIrradiance.shimmer * 0.16,
         "--irradiance-sol-heat": horizonIrradiance.solHeat * 0.62,
         "--irradiance-sol-sparks": horizonIrradiance.solSparks * 0.94,
         "--irradiance-sol-blaze": horizonIrradiance.solBlaze * 0.76,
-        "--irradiance-yol-mana": horizonIrradiance.yolMana * 0.84,
+        "--irradiance-sol-storm": horizonIrradiance.solStorm * 0.98,
+        "--irradiance-yol-mana": horizonIrradiance.yolMana * 0.24,
         "--irradiance-yol-particles": horizonIrradiance.yolParticles * 0.96,
-        "--irradiance-yol-frost": horizonIrradiance.yolFrost * 0.78,
-        "--irradiance-yol-snow": horizonIrradiance.yolSnow * 0.92,
-        "--irradiance-yol-icicles": horizonIrradiance.yolIcicles * 0.88,
-        "--irradiance-dual": horizonIrradiance.dualInterference * 0.74,
+        "--irradiance-yol-frost": horizonIrradiance.yolFrost,
+        "--irradiance-yol-snow": horizonIrradiance.yolSnow * 0.96,
+        "--irradiance-yol-icicles": horizonIrradiance.yolIcicles,
+        "--irradiance-yol-storm": horizonIrradiance.yolStorm * 0.98,
+        "--irradiance-dual": horizonIrradiance.dualInterference * 0.34,
       };
       for (const [property, value] of Object.entries(irradianceProperties)) {
         elements.horizonView.style.setProperty(property, value.toFixed(3));
@@ -3002,11 +3013,11 @@
         korVisible || korsShardVisible ? "auf ihren eigenständigen Polpassagen sichtbar" : "außerhalb dieser lokalen Sichtlinie"
       }; beide Weltkörper besitzen getrennte Bahnphasen, ihre Größe und Deckkraft folgen kontinuierlich Entfernung und Horizonthöhe.`;
       const irradianceText = horizonIrradiance.mode === "dual"
-        ? "Sol und Yol sind jeweils seit mindestens zwei Um sichtbar: Hitzeflimmern, rote Funken, Mana-Schleier, Frost und Schnee steigern sich weiter mit Sichtdauer und Himmelshöhe."
+        ? "Sol und Yol sind jeweils seit mindestens zwei Um sichtbar: Beide Glüheffekte und beide farbgetrennten Partikelstürme laufen gleichzeitig; der dezente Regenbogenschimmer steigt mit Sichtdauer und Himmelshöhe."
         : horizonIrradiance.mode === "sol"
-          ? "Sol ist seit mindestens zwei Um sichtbar; seine mehrstufige Hitze und die roten Funken folgen Sichtdauer, S-Int und Himmelshöhe."
+          ? "Sol ist seit mindestens zwei Um sichtbar; Hitze und gelbrote Tanzpunkte folgen Sichtdauer, S-Int und Himmelshöhe und werden in der letzten Stufe zum schnellen Funkensturm."
           : horizonIrradiance.mode === "yol"
-            ? "Yol ist seit mindestens zwei Um sichtbar; Mana-Schleier, blaue Partikel, Frost, Schneeflocken und Eiszapfen steigern sich mit Sichtdauer, S-Int und Himmelshöhe."
+            ? "Yol ist seit mindestens zwei Um sichtbar; dünne kalte Strömungen und blaue Leuchtkugeln steigern sich mit Sichtdauer, S-Int und Himmelshöhe und werden in der letzten Stufe zum schnellen Eislichtsturm."
             : solVisible || yolVisible
               ? "Der Strahlungseffekt bleibt aus, bis der jeweilige sichtbare Himmelskörper zwei vollständige Um ohne Unterbrechung an der Himmelsscheibe stand."
               : "Kein strahlender Himmelskörper erfüllt derzeit die Zwei-Um-Sichtbedingung.";

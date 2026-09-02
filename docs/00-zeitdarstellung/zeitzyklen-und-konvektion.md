@@ -81,12 +81,16 @@ oder Yols auf einer Skala von 1 bis 10:
   höchster und niedrigster Intensität innerhalb des angegebenen Intervalls.
 
 In der Horizontdarstellung bestimmt `S-Int` zusammen mit der tatsächlichen
-Himmelshöhe das erreichbare Maximum des grafischen Strahlungseffekts. Dieser
+Himmelshöhe und der Breitenstaffelung `60° stark > 30° mittel > 0° leicht` das
+erreichbare Maximum des grafischen Strahlungseffekts. Dieser
 beginnt für Sol und Yol jeweils erst nach zwei vollständig und ohne Unterbrechung
-sichtbaren Um und steigert sich danach mit der weiteren Sichtdauer. Yols
-Mana-Schleier, Frost, Schneeflocken und Eiszapfen verbildlichen magische Kälte;
-sie ändern nicht die Weltenregel, dass Yols Strahlung Wasser nicht unmittelbar
-gefrieren lässt.
+sichtbaren Um und steigert sich danach mit der weiteren Sichtdauer. Yols dünne
+cyanblaue Strömungen, kleine blaue Leuchtkugeln, eine deutliche Frostkante,
+Schneeflocken und Eiszapfen
+verbildlichen magische Kälte; sie ändern nicht die Weltenregel, dass Yols
+Strahlung Wasser nicht unmittelbar gefrieren lässt. Die Partikelstürme der
+höchsten Darstellungsstufe sind ebenfalls visuelle Intensitätszeichen und keine
+zusätzliche kanonische Wetterphase.
 
 Eine Kalender- oder Simulationszeile führt Zeit, Sonnenphase und Intensität
 getrennt. Bereinigte Notationsbeispiele sind:

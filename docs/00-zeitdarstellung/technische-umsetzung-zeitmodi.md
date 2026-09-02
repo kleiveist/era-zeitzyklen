@@ -215,21 +215,29 @@ eine Phasengrenze hinweg führt die Serie fort; Untergang, Konvektion oder ein
 neuer Zyklus setzen sie auf null zurück.
 
 Nach der Schwelle wächst die Hüllkurve über weitere sichtbare Um. Ihr Maximum
-verknüpft die projizierte Höhe des Körpers mit dessen `S-Int`. Der Breitengrad
-ist nur Teil der Projektion und kein eigener Intensitätsmultiplikator. Dadurch
-gelten für jeden Zeitmodus bei demselben Um-Stand dieselben Modellwerte:
+verknüpft die projizierte Höhe des Körpers mit dessen `S-Int` und einer festen
+Breitenstaffelung. 60° verwendet 1,00, 30° verwendet 0,73 und 0° am Nordpol
+verwendet 0,46. Dadurch nimmt der Effekt nach Norden ab. Für jeden Zeitmodus
+gelten bei demselben Um-Stand und derselben Breitenstufe dieselben Modellwerte:
 
 - der Erklärmodus tastet seinen semantischen Pfad in 200-ms-Schritten ab;
 - Prüf- und Spielsimulation tasten beide in 0,05-Um-Schritten ab;
 - Moduszeit und Wiedergabetempo verändern die Einstrahlung nicht;
 - der Cache-Schlüssel trennt Zyklus, Zeitmodus, Blickrichtung und Breitenstufe.
 
-Sol steuert gestaffelte Farbglut, Hitzeflimmern und zwei Funkenlagen. Yol
-steuert eine stärkere Mana-Grundwirkung, zwei Schleier, blaue Partikel,
-Frostkristalle, zwei Schneelagen und Eiszapfen. Haben beide Körper ihre
-Schwelle erreicht, werden zwei zusätzliche Interferenzlagen aktiv. Der
-Modellwert endet beim Untergang sofort; ausschließlich die 900-ms-CSS-Blende
-sorgt für das weiche optische Verschwinden.
+Sol steuert gestaffelte Farbglut, Hitzeflimmern und zwei gelbrote
+Leuchtpunktlagen. Yol steuert eine stärkere kalte Grundwirkung, zwei dünne
+cyanblaue Linienströmungen, blaue Glühwürmchen-Kugeln, eine gefüllte Frostkante,
+kräftige Kristalllinien, zwei Schneelagen und hell konturierte Eiszapfen. Die
+Glühkerne beider Körper sind verkleinert; eine gemeinsame Alpha-Höhenmaske
+reduziert ihre Wirkung stetig zum oberen Bildrand. Die vierte Effektstufe schaltet pro Körper zwei
+gegenläufige Sturmfelder mit mindestens 48 zusätzlichen, in weniger als
+0,8 Sekunden bewegten Partikeln frei. Haben beide Körper ihre Schwelle und
+Sturmstufe erreicht, bleiben beide Farbstürme gleichzeitig sichtbar. Zwei
+zusätzliche Interferenzlagen bilden dabei einen dezenten Regenbogenhintergrund,
+dessen Helligkeit mit der gemeinsamen Sichtdauer wächst. Der Modellwert endet
+beim Untergang sofort; ausschließlich die 900-ms-CSS-Blende sorgt für das
+weiche optische Verschwinden.
 
 ## 8. Timestampbasierte Animation
 

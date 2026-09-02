@@ -392,11 +392,13 @@ for (const property of [
   "solHeat",
   "solSparks",
   "solBlaze",
+  "solStorm",
   "yolMana",
   "yolParticles",
   "yolFrost",
   "yolSnow",
   "yolIcicles",
+  "yolStorm",
   "dualInterference",
 ]) {
   assert.ok(

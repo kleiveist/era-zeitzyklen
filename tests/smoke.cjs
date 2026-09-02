@@ -396,6 +396,11 @@ assert.equal(contract.formatEraTime(46080), "Mohn 10 · Dir 0 · Tan 0 · Um 0")
 assert.equal(contract.IRRADIANCE_MODEL.activationDelayUm, 2, "Einstrahlung beginnt exakt nach zwei sichtbaren Um");
 assert.equal(contract.IRRADIANCE_MODEL.sampleMs, 200, "Einstrahlung wird fein genug für einen glatten Verlauf abgetastet");
 assert.equal(contract.IRRADIANCE_MODEL.sampleUm, 0.05, "lineare Modi tasten die sichtbare Weltzeit unabhängig vom Echtzeitprofil ab");
+assert.deepEqual(
+  contract.IRRADIANCE_MODEL.latitudeStrength,
+  { 0: 0.46, 30: 0.73, 60: 1 },
+  "Einstrahlung nimmt vom 60-Grad-Rand über 30 Grad zum Nordpol abgestuft ab",
+);
 assert.ok(contract.IRRADIANCE_MODEL.buildupUm > contract.IRRADIANCE_MODEL.activationDelayUm, "Einstrahlung steigert sich über mehrere weitere Um");
 assert.ok(contract.IRRADIANCE_MODEL.heightFloor > 0, "ein niedriger Sonnenstand besitzt eine schwache, aber sichtbare Maximalstufe");
 assert.equal(contract.HORIZON_PROJECTION_SCALE.celestial, 0.76, "alle Sol-/Yol-Phasen verwenden dieselbe Horizonthöhe");
@@ -441,8 +446,18 @@ assert.equal(polarIrradiance.mode, "dual", "die Zwei-Um-Regel gilt auch am Pol, 
 assert.equal(temperateIrradiance.mode, "dual", "gemeinsame Sichtbarkeit mischt Sol und Yol");
 assert.ok(temperateIrradiance.warm > 0 && temperateIrradiance.cool > 0, "Dualeinstrahlung enthält warme und kalte Farbe");
 assert.ok(temperateIrradiance.shimmer > 0, "Dualeinstrahlung erzeugt Schimmer");
-assert.equal(polarIrradiance.sol, temperateIrradiance.sol, "Breitengrad ersetzt nicht die tatsächliche Himmelshöhe");
-assert.equal(desertIrradiance.yol, temperateIrradiance.yol, "gleiche Projekthöhe ergibt in jedem Biom dasselbe Maximum");
+assert.ok(
+  desertIrradiance.sol > temperateIrradiance.sol && temperateIrradiance.sol > polarIrradiance.sol,
+  "Sols Effekt ist bei gleicher Himmelshöhe an 60 Grad am stärksten, bei 30 Grad mittel und am Nordpol leicht",
+);
+assert.ok(
+  desertIrradiance.yol > temperateIrradiance.yol && temperateIrradiance.yol > polarIrradiance.yol,
+  "Yols Effekt ist bei gleicher Himmelshöhe an 60 Grad am stärksten, bei 30 Grad mittel und am Nordpol leicht",
+);
+assert.ok(
+  desertIrradiance.yolFrost > temperateIrradiance.yolFrost && temperateIrradiance.yolFrost > polarIrradiance.yolFrost,
+  "auch Yols deutlichere Eis-Lagen folgen der Breitenstaffelung",
+);
 
 const beforeDelayIrradiance = contract.getHorizonIrradiance(
   stableIrradianceSnapshot,
@@ -579,6 +594,9 @@ assert.ok(yolOnlyIrradiance.yolFrost > 0 && yolOnlyIrradiance.yolSnow > 0, "Yols
 assert.ok(yolOnlyIrradiance.yolIcicles > 0, "Yols stärkste Stufe aktiviert Eiszapfen");
 assert.ok(solOnlyIrradiance.solHeat > 0 && solOnlyIrradiance.solSparks > 0, "Sol aktiviert Hitzeflimmern und rote Funken");
 assert.ok(solOnlyIrradiance.solBlaze > 0, "Sols stärkste Stufe aktiviert die glühende Hitzelage");
+assert.ok(solOnlyIrradiance.solStorm > 0, "Sols vierte Stufe aktiviert den schnellen gelbroten Partikelsturm");
+assert.ok(yolOnlyIrradiance.yolStorm > 0, "Yols vierte Stufe aktiviert den schnellen blauen Leuchtkugelsturm");
+assert.ok(desertIrradiance.solStorm > 0 && desertIrradiance.yolStorm > 0, "bei gemeinsamer Sichtbarkeit bleiben beide farbgetrennten Stürme gleichzeitig aktiv");
 assert.equal(contract.ZEHS_PARAMETERS.name, "ZEHS", "Referenzstern besitzt seinen kanonischen Namen");
 assert.equal(contract.ZEHS_PARAMETERS.type, "Referenzstern", "ZEHS ist als Referenzstern klassifiziert");
 assert.equal(contract.ZEHS_PARAMETERS.distanceAu, 40, "ZEHS liegt ungefähr 40 AU entfernt");
@@ -714,8 +732,10 @@ assert.equal(elementFor("#horizon-view").getAttribute("data-irradiance-mode"), "
 assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-warm"), "0.000", "vor der Schwelle besitzt Sol keine warme Tönung");
 assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-cool"), "0.000", "vor der Schwelle besitzt Yol keine kühle Tönung");
 assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-sparks"), "0.000", "Sol-Funken starten deaktiviert");
+assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-storm"), "0.000", "Sols Partikelsturm startet deaktiviert");
 assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-snow"), "0.000", "Yol-Schnee startet deaktiviert");
 assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-icicles"), "0.000", "Yol-Eiszapfen starten deaktiviert");
+assert.equal(elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-storm"), "0.000", "Yols Leuchtkugelsturm startet deaktiviert");
 
 slider.value = "54000";
 slider.emit("input");
@@ -873,9 +893,11 @@ const irradianceBeforeThemeChange = {
   shimmer: elementFor("#horizon-view").style.getPropertyValue("--irradiance-shimmer"),
   heat: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-heat"),
   sparks: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-sparks"),
+  solStorm: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-storm"),
   mana: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-mana"),
   snow: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-snow"),
   icicles: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-icicles"),
+  yolStorm: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-storm"),
 };
 elementFor("#theme-toggle").emit("click");
 assert.equal(documentElement.dataset.theme, "light", "Theme-Schalter aktiviert helles Pergament");
@@ -890,9 +912,11 @@ assert.deepEqual(
     shimmer: elementFor("#horizon-view").style.getPropertyValue("--irradiance-shimmer"),
     heat: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-heat"),
     sparks: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-sparks"),
+    solStorm: elementFor("#horizon-view").style.getPropertyValue("--irradiance-sol-storm"),
     mana: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-mana"),
     snow: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-snow"),
     icicles: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-icicles"),
+    yolStorm: elementFor("#horizon-view").style.getPropertyValue("--irradiance-yol-storm"),
   },
   irradianceBeforeThemeChange,
   "Tagmodus bewahrt die berechnete Einstrahlung unverändert",

@@ -234,16 +234,23 @@ Der Horizont berechnet Sols und Yols Einstrahlung getrennt aus ihrer kontinuierl
 Sichtdauer innerhalb des aktiven Zyklus. Ein Körper aktiviert seinen Effekt exakt nach zwei
 vollständigen sichtbaren Um. Die Zählung läuft über Phasengrenzen weiter, solange der projizierte
 Körper an der Himmelsscheibe bleibt; Untergang, Konvektion und Zykluswechsel setzen seine Serie
-zurück. Die Regel gilt auch bei 0°: Entscheidend sind die tatsächliche Sichtbarkeit und Höhe,
-nicht eine pauschale Breitenverstärkung.
+zurück. Die Zwei-Um-Regel gilt auch bei 0°, die erreichbare Effektstärke nimmt jedoch bewusst nach
+Norden ab: 60° verwendet den Faktor 1,00, 30° den mittleren Faktor 0,73 und 0° am Nordpol den
+leichten Faktor 0,46.
 
 Nach der Zwei-Um-Schwelle steigt die Wirkung über weitere sichtbare Um stufenlos an. Das
 erreichbare Maximum folgt der projizierten Himmelshöhe und der jeweiligen S-Intensität. Sol baut
-mehrere warme Lagen aus Farbglut, Hitzeflimmern sowie roten und gelb glühenden Funken auf. Yols
-bewusst stärkere magische Kälte kombiniert blaues Leuchten, Mana-Schleier, kleine blaue Partikel,
-Frostkristalle, Schneeflocken und Eiszapfen. Sind beide Körper lange genug sichtbar, kommt eine
-zweilagige spektrale Interferenz hinzu. Alle Ebenen sind hochauflösende Vektoren beziehungsweise
-Filterfelder und werden im hellen wie im dunklen Theme aus denselben Modellwerten gespeist.
+mehrere warme Lagen aus Farbglut und Hitzeflimmern auf; in den hohen Stufen tanzen kleine gelbrote
+Leuchtpunkte über die Fläche. Beide Punktfarben verwenden verkleinerte Glühkerne und werden zum
+oberen Bildrand über eine stetige Höhenmaske schwächer. Yols bewusst stärkere magische Kälte
+verwendet statt deckender violetter Flächen nur dünne cyanblaue Strömungen, blaue
+Glühwürmchen-Kugeln, eine gefüllte gezackte Frostkante, kräftige Kristalllinien, Schneeflocken und
+hell konturierte Eiszapfen. In Stufe 4 verdichten sich die Punkte jedes Körpers in zwei
+gegenläufige, sehr schnelle Sturmfelder mit jeweils mindestens 48 zusätzlichen Partikeln. Sind
+beide Körper lange genug sichtbar, bleiben beide farbgetrennten Stürme gleichzeitig aktiv und ein
+zweilagiger Regenbogenschimmer wird dezent heller. Alle Ebenen sind hochauflösende Vektoren
+beziehungsweise Filterfelder und werden im hellen wie im dunklen Theme aus denselben Modellwerten
+gespeist.
 
 Der Effekt verwendet Weltzeit in Um statt Darstellungssekunden. Deshalb entsteht bei demselben
 Um-Stand im 5-s/Um-Prüfmodus und in der 15-min/Um-Spielsimulation dieselbe Stärke. Der Erklärmodus
@@ -262,7 +269,7 @@ getSnapshot(ms)
   → additive Höhenkorrektur für Sol/Yol, invertierte Breitenkorrektur für ZEHS
   → pro Körper und Zyklus gezählte kontinuierlich sichtbare Um
   → Aktivierung nach exakt zwei Um und weiterer stufenloser Aufbau
-  → deterministische Einstrahlung aus Sichtdauer, projizierter Höhe und S-Int
+  → deterministische Einstrahlung aus Sichtdauer, projizierter Höhe, S-Int und Breitenfaktor
   → getrennte Sol-, Yol- und gemeinsame Interferenzlagen
 ```
 
@@ -466,8 +473,9 @@ SVG-Verläufe, orbitale Richtungspfeile und die frühere horizontabhängige Skal
 Y-Radien. Außerdem prüft er die präzisen Vektorbahnen, alle 48 Laufzeit-Panoramaslots, sämtliche
 24 kombinierten 3:1-Originale samt 48 RGBA-Ebenen, ihre pixelgenaue Rekonstruktion, identische
 Tag-/Nacht-Masken, eigenständige Tagespaletten, die feste Horizontebenen-Reihenfolge, den
-hochaufgelösten Sol-Hitzelagen, Yol-Mana-, Schnee- und Eisstufen, den zweilagigen gemeinsamen
-Schimmer und den gemeinsamen Geometrievertrag.
+hochaufgelösten Sol-Hitzelagen, Yols balkenfreie cyanblaue Strömungen, beide farbgetrennten
+Partikelstürme, Schnee- und Eisstufen, den dezenten zweilagigen Regenbogenschimmer und den
+gemeinsamen Geometrievertrag.
 
 ## Grenzen der Darstellung
 
